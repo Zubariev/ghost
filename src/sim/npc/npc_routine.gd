@@ -15,6 +15,9 @@
 ##
 ## [br]- An unmet need the NPC can put right alone (hidden groceries: search, approved for
 ##   stage 5a) is fixed first as a timed job in place, then the activity starts.
+## [br]- A ghost sighting holds the NPC (Demo Specification §8.8): the activity is suspended
+##   with its progress kept; on release it resumes only if its window is still open,
+##   otherwise it is skipped — even work that would otherwise finish late.
 ## [br]- Broken (GDD §8.4) stops the schedule at once — the one thing that interrupts —
 ##   and releases any claimed task; on recovery the NPC joins the activity due now, and
 ##   missed activities are not made up.
@@ -23,7 +26,7 @@
 class_name NpcRoutine
 extends RefCounted
 
-enum State { SCHEDULED, MOVING, PERFORMING, WAITING, BROKEN }
+enum State { SCHEDULED, MOVING, PERFORMING, WAITING, BROKEN, HELD }
 ## What the NPC is doing inside the current activity.
 enum JobKind { SPAN, WORK, IDLE }
 
@@ -62,6 +65,8 @@ var _started: bool = false
 var _finished: bool = false
 ## Object being put right by the NPC itself before the activity (or "").
 var _self_fix_object: String = ""
+## The state to return to when a hold ends.
+var _held_from: State = State.SCHEDULED
 var _step_left: int = 0
 var _path: Array[String] = []
 var _next_room: String = ""
@@ -103,6 +108,33 @@ func leave_broken(minute_of_day: int) -> void:
 	_switch_to(schedule.activity_at(minute_of_day))
 
 
+## Suspends the routine where it is (a ghost sighting). Returns false when it cannot be
+## held (Broken, or already held).
+func hold() -> bool:
+	if state == State.BROKEN or state == State.HELD:
+		return false
+	_held_from = state
+	_set_state(State.HELD)
+	return true
+
+
+## Ends a hold at [param minute_of_day]: the suspended activity resumes with its progress
+## if its window is still open; otherwise it is closed (skipped when unfinished) and the
+## activity due now begins.
+func release(minute_of_day: int) -> void:
+	if state != State.HELD:
+		return
+	_set_state(_held_from)
+	var due: Activity = schedule.activity_at(minute_of_day)
+	if due != current:
+		_close_current()
+		_switch_to(due)
+
+
+func is_held() -> bool:
+	return state == State.HELD
+
+
 func is_broken() -> bool:
 	return state == State.BROKEN
 
@@ -115,7 +147,7 @@ func is_doing_activity() -> bool:
 
 ## Spends one game minute: [param minute_of_day] is the minute being spent.
 func step(minute_of_day: int) -> void:
-	if state == State.BROKEN:
+	if state == State.BROKEN or state == State.HELD:
 		return
 	var due: Activity = schedule.activity_at(minute_of_day)
 	if due != current and not _is_running_work():
@@ -251,20 +283,24 @@ func _try_start() -> void:
 			return
 		_wait(unmet)
 		return
-	if not _activity_started:
-		_activity_started = true
-		activity_started.emit(current)
-	if not _started:
+	var first_start: bool = not _activity_started
+	var job_start: bool = not _started
+	_activity_started = true
+	if job_start:
 		_started = true
 		_house.apply_effects(_job_on_start)
-		if current_task != null:
-			task_started.emit(current_task)
 	match _job_kind:
 		JobKind.WORK:
 			_step_left = mini(_step_minutes, get_work_left_minutes())
 		JobKind.IDLE:
 			_step_left = _step_minutes
 	_set_state(State.PERFORMING)
+	# Signals last: a listener may hold the routine (sitting on a hidden ghost), and that
+	# must not be overwritten by this method.
+	if first_start:
+		activity_started.emit(current)
+	if job_start and current_task != null:
+		task_started.emit(current_task)
 
 
 ## Starts fixing the first unmet need the NPC can put right alone, in this room.

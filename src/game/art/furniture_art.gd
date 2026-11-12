@@ -233,6 +233,15 @@ static func _parts(kind: String, uv: Vector2, state: StringName, is_day: bool) -
 				[_quad(Vector2(-36, -80), Vector2(36, -80), Vector2(30, -100), Vector2(-30, -100)), Palette.PORCELAIN],
 				[_rect(-24, -170, 24, -110), Color("aab8c0")],
 			]
+		"dresser":
+			var parts: Array = _box(96, 92, 16, Palette.WOOD, Palette.WOOD_LIGHT)
+			for drawer: int in 3:
+				var y: float = -84.0 + drawer * 28.0
+				parts.append([_rect(-40, y, 40, y + 22), Palette.WOOD_DARK])
+				parts.append([_rect(-5, y + 9, 5, y + 13), Palette.BRASS])
+			if state == &"taken":
+				parts.append([_rect(-42, -60, 42, -50), Palette.DOORWAY])
+			return parts
 		"door_front":
 			return []
 	push_warning("FurnitureArt: no art for '%s'" % kind)

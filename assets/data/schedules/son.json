@@ -1,5 +1,5 @@
 {
-	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7); morale categories and affected_by: Demo Specification §7.6.",
+	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7); morale categories and affected_by: Demo Specification §7.6; anxiety: Demo Specification §8.8.",
 	"npc_id": "son",
 	"name": "Син",
 	"start_room": "children_bedroom",
@@ -189,5 +189,6 @@
 				"cleanliness"
 			]
 		}
-	]
+	],
+	"anxiety": 0.8
 }

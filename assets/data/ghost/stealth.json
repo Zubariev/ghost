@@ -1,0 +1,17 @@
+{
+	"_source": "GDD §6.7, §12.1a; Demo Specification §8.5, §8.8 (stage 5b, approved 2026-11-13). All numbers provisional.",
+	"peripheral_angle_deg": 120,
+	"peripheral_range": 0.5,
+	"deep_angle_deg": 40,
+	"deep_range": 0.33,
+	"contact_morale_penalty": 10,
+	"energy_penalty": {"peripheral": 5, "deep": 15},
+	"inspect_minutes": 1,
+	"search_base_minutes": 10,
+	"search_walk_minutes": 1,
+	"check_minutes": 2,
+	"fright_minutes": 1,
+	"nearby_spot_radius": 0.35,
+	"hide_range": 0.16,
+	"seed": 20261113
+}

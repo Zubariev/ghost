@@ -80,6 +80,12 @@ func is_broken(npc_id: String) -> bool:
 	return _broken.get(npc_id, false)
 
 
+## A one-off penalty from an event outside the schedule (contact with the ghost); ignored
+## while Broken, like every penalty.
+func apply_penalty(npc_id: String, amount: int, reason: String) -> void:
+	_change(npc_id, -amount, reason)
+
+
 ## Sets morale directly (debug tools and tests); Broken and the win are checked as usual.
 func set_morale(npc_id: String, value: int) -> void:
 	_set_value(npc_id, value, "set")

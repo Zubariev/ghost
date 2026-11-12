@@ -1,5 +1,5 @@
 {
-	"_source": "Demo Specification §5.6 [УЗГОДЖЕНО]; shared meals §5.7. work_minutes are [TBD] tuning (provisional values); morale categories and affected_by: Demo Specification §7.6.",
+	"_source": "Demo Specification §5.6 [УЗГОДЖЕНО]; shared meals §5.7. work_minutes are [TBD] tuning (provisional values); morale categories and affected_by: Demo Specification §7.6; anxiety: Demo Specification §8.8.",
 	"npc_id": "grandma",
 	"name": "Бабуся",
 	"start_room": "grandparents_bedroom",
@@ -250,5 +250,6 @@
 				"cleanliness"
 			]
 		}
-	]
+	],
+	"anxiety": 1.2
 }

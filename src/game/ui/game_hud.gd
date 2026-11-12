@@ -14,6 +14,7 @@ var _sim: HouseSim
 var _navigator: GhostNavigator
 var _clock: Label
 var _room: Label
+var _energy: Label
 var _paused: Label
 var _prompt: Label
 var _log: Label
@@ -30,6 +31,8 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	var top := _panel(Vector2(14, 10), Vector2(250, 0))
 	_clock = _label(top, 24, Color(1, 0.95, 0.85))
 	_room = _label(top, 16, Color(0.85, 0.85, 0.9))
+	_energy = _label(top, 12, Color(0.75, 0.9, 1.0, 0.8))
+	_energy.visible = false
 	var help := _label(self, 14, Color(1, 1, 1, 0.7))
 	help.text = tr("HELP_LINE")
 	help.position = Vector2(300, 14)
@@ -83,6 +86,12 @@ func refresh() -> void:
 		var bar: String = "█".repeat(value / 10) + "·".repeat(10 - value / 10)
 		_chips[npc_id].text = "%s%s\n%3d %s" % [routine.schedule.display_name, " ✕" if routine.is_broken() else "", value, bar]
 	_map.queue_redraw()
+
+
+## Shows the ghost energy ledger total (energy itself is not built yet).
+func set_energy_spent(total: int) -> void:
+	_energy.visible = total > 0
+	_energy.text = tr("ENERGY_LINE") % total
 
 
 ## Shows [param text] above [param screen_point]; empty hides it. Unavailable text is grey.

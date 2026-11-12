@@ -7,6 +7,8 @@ var display_name: String = ""
 ## The room the NPC is in when the simulation starts.
 var start_room: String = ""
 var activities: Array[Activity] = []
+## How jumpy the person is: a longer search after a sighting (Demo Specification §8.8).
+var anxiety: float = 1.0
 
 
 static func from_dict(data: Dictionary) -> Schedule:
@@ -14,6 +16,7 @@ static func from_dict(data: Dictionary) -> Schedule:
 	schedule.npc_id = String(data.get("npc_id", ""))
 	schedule.display_name = String(data.get("name", schedule.npc_id))
 	schedule.start_room = String(data.get("start_room", ""))
+	schedule.anxiety = float(data.get("anxiety", 1.0))
 	for entry: Variant in data.get("activities", []):
 		if entry is Dictionary:
 			schedule.activities.append(Activity.from_dict(entry))

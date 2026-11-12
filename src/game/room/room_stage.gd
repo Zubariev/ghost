@@ -7,14 +7,21 @@ extends Node2D
 
 const WALL_FADE_ALPHA: float = 0.45
 const WALL_FADE_SPEED: float = 6.0
-const BACK_DOOR_U: float = 0.62
 
 var sim: HouseSim
 var navigator: GhostNavigator
-## room id -> Array of furniture dictionaries {kind, u, v, object?}
-var furniture: Dictionary = {}
+## Where everything is inside rooms (shared with the stealth system).
+var layout: RoomLayout
 ## Object id the ghost targets (highlighted), or "".
 var target_object: String = ""
+## Detection and hiding (stage 5b); may be null before it is set up.
+var stealth: StealthSystem
+## Sight zones are drawn on the floor (Q, after the monocle is found).
+var show_cones: bool = false
+## The monocle has been taken from the dresser.
+var monocle_taken: bool = false
+## Sight zone sizes from stealth.json (for drawing the cones).
+var sight_config: Dictionary = {}
 
 var _time: float = 0.0
 var _walk_phase: float = 0.0
@@ -31,31 +38,6 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
-## Floor position of a sim object in the current room, or (-1, -1) when not placed here.
-func object_uv(room_id: String, object_id: String) -> Vector2:
-	for piece: Dictionary in furniture.get(room_id, []):
-		if String(piece.get("object", "")) == object_id:
-			return Vector2(float(piece["u"]), float(piece["v"]))
-	return Vector2(-1, -1)
-
-
-## Where a door toward [param other] is on this room's floor, from the floor grid.
-func door_uv(room_id: String, other: String) -> Vector2:
-	var here: RoomState = sim.house.rooms[room_id]
-	var there: RoomState = sim.house.rooms[other]
-	if here.floor_level != there.floor_level:
-		var stairs: Vector2 = _kind_uv(room_id, "stairs")
-		return stairs if stairs.x >= 0.0 else Vector2(0.5, 0.1)
-	var step: Vector2i = there.grid - here.grid
-	if step.x < 0:
-		return Vector2(0.0, 0.5)
-	if step.x > 0:
-		return Vector2(1.0, 0.5)
-	if step.y < 0:
-		return Vector2(BACK_DOOR_U, 0.0)
-	return Vector2(0.5, 1.0)
-
-
 func _draw() -> void:
 	var room_id: String = navigator.room_id
 	var room: RoomState = sim.house.rooms[room_id]
@@ -68,115 +50,106 @@ func _draw() -> void:
 	_draw_lamp_glow(room_id)
 	# Depth-sorted content: [screen y, callable]
 	var items: Array = []
-	for piece: Dictionary in furniture.get(room_id, []):
+	for piece: Dictionary in layout.pieces(room_id):
 		var kind: String = String(piece["kind"])
 		var uv := Vector2(float(piece["u"]), float(piece["v"]))
 		var object_id: String = String(piece.get("object", ""))
 		var state: StringName = sim.house.get_object_state(object_id) if not object_id.is_empty() else &""
+		if piece.has("pickup") and monocle_taken:
+			state = &"taken"
 		var y: float = RoomGeometry.to_screen(uv).y
 		if FurnitureArt.is_flat(kind):
 			y = -10000.0
 		elif FurnitureArt.is_wall(kind):
 			y = -5000.0
-		items.append([y, FurnitureArt.draw.bind(self, kind, uv, state, object_id == target_object and not object_id.is_empty(), sim.house.is_day)])
+		var target_key: String = object_id if not object_id.is_empty() else String(piece.get("pickup", piece.get("hide_id", "")))
+		items.append([y, FurnitureArt.draw.bind(self, kind, uv, state, target_key == target_object and not target_key.is_empty(), sim.house.is_day)])
+	var markers: Array = []
 	for i: int in sim.routines.size():
-		var placed: Dictionary = _person_here(sim.routines[i], i, room_id)
-		if not placed.is_empty():
-			var uv: Vector2 = placed["uv"]
-			items.append([RoomGeometry.to_screen(uv).y, FamilyArt.draw_person.bind(self, sim.routines[i].schedule.npc_id,
-				RoomGeometry.to_screen(uv), RoomGeometry.scale_at(uv.y), String(placed["pose"]), _walk_phase, bool(placed["left"]))])
+		var routine: NpcRoutine = sim.routines[i]
+		var placed: Dictionary = _placed(routine, i, room_id)
+		if placed.is_empty():
+			continue
+		var uv: Vector2 = placed["uv"]
+		var facing_left: bool = Vector2(placed["facing"]).x < 0.0
+		items.append([RoomGeometry.to_screen(uv).y, FamilyArt.draw_person.bind(self, routine.schedule.npc_id,
+			RoomGeometry.to_screen(uv), RoomGeometry.scale_at(uv.y), String(placed["pose"]), _walk_phase, facing_left)])
+		if placed.has("marker"):
+			markers.append([RoomGeometry.to_screen(uv) + Vector2(-6, -150 * RoomGeometry.scale_at(uv.y)), String(placed["marker"])])
 	var ghost_uv: Vector2 = navigator.uv
+	var hidden: bool = stealth != null and not stealth.hidden_in.is_empty()
 	var over_floor: bool = ghost_uv.x >= 0.0 and ghost_uv.x <= 1.0 and ghost_uv.y >= 0.0 and ghost_uv.y <= 1.0
-	items.append([RoomGeometry.to_screen(ghost_uv).y if over_floor else 100000.0, FamilyArt.draw_ghost.bind(self,
-		RoomGeometry.to_screen(ghost_uv), RoomGeometry.scale_at(ghost_uv.y), _time, over_floor)])
+	if not hidden:
+		items.append([RoomGeometry.to_screen(ghost_uv).y if over_floor else 100000.0, FamilyArt.draw_ghost.bind(self,
+			RoomGeometry.to_screen(ghost_uv), RoomGeometry.scale_at(ghost_uv.y), _time, over_floor)])
+	if show_cones:
+		_draw_cones(room_id)
 	items.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
 	for item: Array in items:
 		(item[1] as Callable).call()
+	if hidden:
+		_draw_hidden_glint(ghost_uv)
+	for marker: Array in markers:
+		draw_string(ThemeDB.fallback_font, marker[0], marker[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 30,
+			Color("e0735f") if marker[1] == "!" else Color("f0c36a"))
 	if room.temperature == RoomState.Temperature.COLD:
 		draw_rect(Rect2(0, 0, 1280, 720), Palette.COLD_OVERLAY)
 
 
-## Where (and how) a family member appears in this room, or {} when not here.
-func _person_here(routine: NpcRoutine, index: int, room_id: String) -> Dictionary:
-	var walk: Dictionary = routine.get_walk_progress()
-	if not walk.is_empty():
-		var t: float = float(walk["t"])
-		var from_room: String = String(walk["from"])
-		var to_room: String = String(walk["to"])
-		if from_room == room_id and t < 0.5:
-			var door: Vector2 = door_uv(room_id, to_room)
-			var start: Vector2 = _spot(routine, index, room_id)
-			return {"uv": start.lerp(door, t * 2.0), "pose": "walk", "left": door.x < start.x}
-		if to_room == room_id and t >= 0.5:
-			var door_in: Vector2 = door_uv(room_id, from_room)
-			var middle := Vector2(0.5, 0.6)
-			return {"uv": door_in.lerp(middle, (t - 0.5) * 2.0), "pose": "walk", "left": middle.x < door_in.x}
-		return {}
-	if routine.room_id != room_id:
-		return {}
-	var pose: String = "stand"
-	var activity: Activity = routine.current
-	if routine.is_broken():
-		pose = "broken"
-	elif routine.state == NpcRoutine.State.PERFORMING and activity != null and routine.current_task == null:
-		match activity.animation:
-			"sleep":
-				pose = "sleep"
-			"eat", "rest", "read", "computer", "draw", "dolls":
-				pose = "sit"
-			"tricycle":
-				pose = "tricycle"
-	if pose == "sleep":
-		var bed: Vector2 = _bed_spot(routine, room_id)
-		if bed.x >= 0.0:
-			return {"uv": bed, "pose": "sleep", "left": false}
-	var spot: Vector2 = _spot(routine, index, room_id)
-	if pose == "tricycle":
-		spot.x = 0.5 + 0.3 * sin(_time * 0.6)
-	return {"uv": spot, "pose": pose, "left": spot.x > 0.5}
+## Where a person is drawn, with stealth incidents applied: inspecting people look at the
+## sighting ("?"), searchers stand at the spot they search ("?"), a fright shows "!".
+func _placed(routine: NpcRoutine, index: int, room_id: String) -> Dictionary:
+	var placed: Dictionary = layout.person(routine, index, room_id, sim.routines, _time)
+	if placed.is_empty() or stealth == null:
+		return placed
+	var npc_id: String = routine.schedule.npc_id
+	var phase: StealthSystem.Phase = stealth.phase_of(npc_id)
+	if phase == StealthSystem.Phase.NONE:
+		return placed
+	var focus: Vector2 = stealth.incident_focus(npc_id)
+	if phase == StealthSystem.Phase.SEARCH_WALK or phase == StealthSystem.Phase.SEARCH_CHECK:
+		placed["uv"] = Vector2(clampf(focus.x, 0.05, 0.95), clampf(focus.y + 0.10, 0.05, 0.95))
+	placed["pose"] = "stand"
+	var look: Vector2 = focus - Vector2(placed["uv"])
+	if look.length() > 0.0001:
+		placed["facing"] = look.normalized()
+	placed["marker"] = "!" if phase == StealthSystem.Phase.FRIGHT else "?"
+	return placed
 
 
-## The spot for this person: their task's object, their activity's object, else a slot.
-func _spot(routine: NpcRoutine, index: int, room_id: String) -> Vector2:
-	var object_id: String = ""
-	if routine.current_task != null and routine.current_task.type == HouseTask.Type.REPAIR:
-		object_id = routine.current_task.target_id
-	elif routine.current != null:
-		object_id = routine.current.target_object_id
-	var at: Vector2 = object_uv(room_id, object_id) if not object_id.is_empty() else Vector2(-1, -1)
-	if at.x >= 0.0:
-		var spread: float = (float(index) - 2.5) * 0.06
-		return Vector2(clampf(at.x + spread, 0.08, 0.92), clampf(at.y + 0.12, 0.1, 0.95))
-	return Vector2(0.18 + 0.13 * float(index), 0.62 + 0.08 * float(index % 2))
-
-
-## A place in one of the room's beds for this sleeper: sleepers are shared out over the
-## beds in data order, two to a double bed. (-1, -1) when the room has no free bed.
-func _bed_spot(routine: NpcRoutine, room_id: String) -> Vector2:
-	var sleepers: Array[NpcRoutine] = []
-	for other: NpcRoutine in sim.routines:
-		if other.room_id == room_id and other.state == NpcRoutine.State.PERFORMING and other.current != null \
-				and other.current.animation == "sleep" and other.get_walk_progress().is_empty():
-			sleepers.append(other)
-	var place: int = sleepers.find(routine)
-	for piece: Dictionary in furniture.get(room_id, []):
-		var kind: String = String(piece["kind"])
-		if kind != "bed" and kind != "double_bed":
+## Peripheral (wide, faint) and deep (narrow, strong) sight zones on the floor for everyone
+## in the room who could notice the ghost; clipped to the floor.
+func _draw_cones(room_id: String) -> void:
+	for i: int in sim.routines.size():
+		var routine: NpcRoutine = sim.routines[i]
+		if stealth != null and not stealth.can_notice(routine):
 			continue
-		var capacity: int = 2 if kind == "double_bed" else 1
-		if place < capacity:
-			var offset: float = 0.0 if capacity == 1 else (-0.045 if place == 0 else 0.045)
-			# Sorted just after the bed so the sleeper lies on top of it.
-			return Vector2(float(piece["u"]) + offset, float(piece["v"]) + 0.001)
-		place -= capacity
-	return Vector2(-1, -1)
+		var placed: Dictionary = layout.person(routine, i, room_id, sim.routines, _time)
+		if placed.is_empty():
+			continue
+		_draw_fan(placed["uv"], placed["facing"], float(sight_config.get("peripheral_angle_deg", 120)),
+			float(sight_config.get("peripheral_range", 0.5)), Color(1.0, 0.9, 0.4, 0.16))
+		_draw_fan(placed["uv"], placed["facing"], float(sight_config.get("deep_angle_deg", 40)),
+			float(sight_config.get("deep_range", 0.33)), Color(1.0, 0.45, 0.25, 0.30))
 
 
-func _kind_uv(room_id: String, kind: String) -> Vector2:
-	for piece: Dictionary in furniture.get(room_id, []):
-		if String(piece["kind"]) == kind:
-			return Vector2(float(piece["u"]), float(piece["v"]))
-	return Vector2(-1, -1)
+func _draw_fan(origin: Vector2, look: Vector2, angle_deg: float, reach: float, color: Color) -> void:
+	var points := PackedVector2Array([RoomGeometry.to_screen(origin)])
+	var half: float = deg_to_rad(angle_deg) * 0.5
+	for step: int in 19:
+		var direction: Vector2 = look.normalized().rotated(-half + 2.0 * half * float(step) / 18.0)
+		points.append(RoomGeometry.to_screen(origin + direction * reach))
+	for piece: PackedVector2Array in Geometry2D.intersect_polygons(points, RoomGeometry.floor_polygon()):
+		draw_colored_polygon(piece, color)
+		_outline(piece, Color(color, minf(color.a * 2.5, 0.8)), 2.0)
+
+
+## The hidden ghost: only a faint pair of eyes glinting at its hiding spot.
+func _draw_hidden_glint(uv: Vector2) -> void:
+	var at: Vector2 = RoomGeometry.to_screen(uv) + Vector2(0, -40)
+	var glow: float = 0.55 + 0.35 * sin(_time * 2.5)
+	for side: float in [-7.0, 7.0]:
+		draw_colored_polygon(FurnitureArt._ellipse(at + Vector2(side, 0), 3.5, 5.0, 10), Color(0.75, 0.95, 1.0, glow))
 
 
 # --- Room shell ------------------------------------------------------------------
@@ -241,8 +214,8 @@ func _draw_doors(room_id: String) -> void:
 		elif step.y < 0:
 			var alpha_back: float = float(_wall_alpha["back"])
 			var frame_back: PackedVector2Array = FurnitureArt._rect(
-				RoomGeometry.back_wall_point(BACK_DOOR_U - 0.07, 0.0).x, RoomGeometry.back_wall_point(0, 0.8).y,
-				RoomGeometry.back_wall_point(BACK_DOOR_U + 0.07, 0.0).x, RoomGeometry.BACK_LEFT.y)
+				RoomGeometry.back_wall_point(RoomLayout.BACK_DOOR_U - 0.07, 0.0).x, RoomGeometry.back_wall_point(0, 0.8).y,
+				RoomGeometry.back_wall_point(RoomLayout.BACK_DOOR_U + 0.07, 0.0).x, RoomGeometry.BACK_LEFT.y)
 			var inner_back: PackedVector2Array = FurnitureArt._rect(frame_back[0].x + 10, frame_back[0].y + 10, frame_back[1].x - 10, RoomGeometry.BACK_LEFT.y)
 			draw_colored_polygon(frame_back, _a(Palette.WOOD_DARK, alpha_back))
 			draw_colored_polygon(inner_back, _a(Palette.DOORWAY, alpha_back))
@@ -254,7 +227,7 @@ func _draw_doors(room_id: String) -> void:
 
 
 func _draw_lamp_glow(room_id: String) -> void:
-	for piece: Dictionary in furniture.get(room_id, []):
+	for piece: Dictionary in layout.pieces(room_id):
 		if String(piece["kind"]) != "floor_lamp":
 			continue
 		if sim.house.get_object_state(String(piece.get("object", ""))) != &"lit":

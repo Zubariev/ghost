@@ -124,6 +124,33 @@ static func run_with_morale(morale: MoraleSystem, routines: Array[NpcRoutine], f
 		morale.end_minute()
 
 
+## Kitchen layout for stealth tests: the stove the cook faces, one hiding spot (a counter),
+## an armchair that is both a hiding spot and something people sit in, and a wardrobe
+## that blocks sight.
+static func furniture_data() -> Dictionary:
+	return {
+		"kitchen": [
+			{"kind": "stove", "u": 0.80, "v": 0.30, "object": "stove"},
+			{"kind": "counter", "u": 0.20, "v": 0.20, "hide_id": "hide_counter"},
+			{"kind": "armchair", "u": 0.50, "v": 0.80, "object": "kitchen_armchair", "hide_id": "kitchen_armchair"},
+		],
+		"bedroom": [
+			{"kind": "wardrobe", "u": 0.50, "v": 0.50, "blocks_sight": [0.10, 0.06]},
+		],
+		"dining": [],
+	}
+
+
+## Stealth numbers with the shipped structure; fixture values.
+static func stealth_config(search_base: int = 10) -> Dictionary:
+	return {
+		"peripheral_angle_deg": 120, "peripheral_range": 0.5, "deep_angle_deg": 40, "deep_range": 0.33,
+		"contact_morale_penalty": 10, "energy_penalty": {"peripheral": 5, "deep": 15},
+		"inspect_minutes": 1, "search_base_minutes": search_base, "search_walk_minutes": 1,
+		"check_minutes": 2, "fright_minutes": 1, "nearby_spot_radius": 0.35, "hide_range": 0.16, "seed": 7,
+	}
+
+
 static func house() -> HouseState:
 	return HouseState.from_dict(house_data())
 
