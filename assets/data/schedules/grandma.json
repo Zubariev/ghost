@@ -1,5 +1,5 @@
 {
-	"_source": "Demo Specification §5.6 [УЗГОДЖЕНО]; shared meals §5.7. work_minutes are [TBD] tuning (provisional values).",
+	"_source": "Demo Specification §5.6 [УЗГОДЖЕНО]; shared meals §5.7. work_minutes are [TBD] tuning (provisional values); morale categories and affected_by: Demo Specification §7.6.",
 	"npc_id": "grandma",
 	"name": "Бабуся",
 	"start_room": "grandparents_bedroom",
@@ -29,6 +29,11 @@
 					"object": "meal_food",
 					"set": "ready"
 				}
+			],
+			"affected_by": [
+				"temperature",
+				"cleanliness",
+				"light"
 			]
 		},
 		{
@@ -51,6 +56,11 @@
 					"object": "meal_food",
 					"set": "none"
 				}
+			],
+			"category": "meal",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
 			]
 		},
 		{
@@ -67,6 +77,10 @@
 					"object": "grandma_armchair",
 					"state": "free"
 				}
+			],
+			"affected_by": [
+				"temperature",
+				"cleanliness"
 			]
 		},
 		{
@@ -94,6 +108,11 @@
 					"object": "meal_food",
 					"set": "ready"
 				}
+			],
+			"affected_by": [
+				"temperature",
+				"cleanliness",
+				"light"
 			]
 		},
 		{
@@ -116,6 +135,11 @@
 					"object": "meal_food",
 					"set": "none"
 				}
+			],
+			"category": "meal",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
 			]
 		},
 		{
@@ -126,7 +150,11 @@
 			"kind": "span",
 			"room": "living_room",
 			"target": "grandma_armchair",
-			"animation": "rest"
+			"animation": "rest",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
 		},
 		{
 			"id": "grandma_cook_dinner",
@@ -153,6 +181,11 @@
 					"object": "meal_food",
 					"set": "ready"
 				}
+			],
+			"affected_by": [
+				"temperature",
+				"cleanliness",
+				"light"
 			]
 		},
 		{
@@ -175,6 +208,11 @@
 					"object": "meal_food",
 					"set": "none"
 				}
+			],
+			"category": "meal",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
 			]
 		},
 		{
@@ -185,7 +223,11 @@
 			"kind": "span",
 			"room": "living_room",
 			"target": "grandma_armchair",
-			"animation": "rest"
+			"animation": "rest",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
 		},
 		{
 			"id": "grandma_sleep",
@@ -201,6 +243,11 @@
 					"object": "grandparents_bed",
 					"state": "free"
 				}
+			],
+			"category": "sleep",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
 			]
 		}
 	]

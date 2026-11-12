@@ -13,11 +13,15 @@
 ##   for its role, then the next; with none it potters in its idle room and looks again
 ##   at each step boundary. Priorities choose the next task, never stop the current one.
 ##
+## [br]- Broken (GDD §8.4) stops the schedule at once — the one thing that interrupts —
+##   and releases any claimed task; on recovery the NPC joins the activity due now, and
+##   missed activities are not made up.
+##
 ## Minutes spent walking do not count as work; the minute she arrives is spent walking.
 class_name NpcRoutine
 extends RefCounted
 
-enum State { SCHEDULED, MOVING, PERFORMING, WAITING }
+enum State { SCHEDULED, MOVING, PERFORMING, WAITING, BROKEN }
 ## What the NPC is doing inside the current activity.
 enum JobKind { SPAN, WORK, IDLE }
 
@@ -74,8 +78,39 @@ func begin(minute_of_day: int) -> void:
 	_switch_to(schedule.activity_at(minute_of_day))
 
 
+## Stops everything at once (GDD §8.4). No activity is completed or skipped by it.
+func enter_broken() -> void:
+	if current_task != null:
+		_board.release(current_task.key, schedule.npc_id)
+		current_task = null
+	current = null
+	_path.clear()
+	_set_job(JobKind.SPAN, room_id, 0, [], [], [])
+	_set_state(State.BROKEN)
+
+
+## Leaves Broken and joins the activity due at [param minute_of_day] (from the room she is in).
+func leave_broken(minute_of_day: int) -> void:
+	if state != State.BROKEN:
+		return
+	_set_state(State.SCHEDULED)
+	_switch_to(schedule.activity_at(minute_of_day))
+
+
+func is_broken() -> bool:
+	return state == State.BROKEN
+
+
+## True while actually doing the scheduled activity itself (not walking, waiting,
+## pottering or working on a claimed task).
+func is_doing_activity() -> bool:
+	return state == State.PERFORMING and current != null and current.kind != Activity.Kind.TASKS
+
+
 ## Spends one game minute: [param minute_of_day] is the minute being spent.
 func step(minute_of_day: int) -> void:
+	if state == State.BROKEN:
+		return
 	var due: Activity = schedule.activity_at(minute_of_day)
 	if due != current and not _is_running_work():
 		_close_current()

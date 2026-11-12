@@ -37,6 +37,11 @@ var role: String = ""
 var idle_room: String = ""
 ## For [constant TASKS]: only tasks in these rooms (empty = any room).
 var room_filter: Array[String] = []
+## Morale category: "meal", "sleep" or "" (Demo Specification §7.6).
+var category: String = ""
+## Room conditions that matter while doing it (GDD §9.6): "temperature", "cleanliness",
+## "light" (light = the activity needs light).
+var affected_by: Array[String] = []
 
 
 static func from_dict(data: Dictionary) -> Activity:
@@ -64,6 +69,9 @@ static func from_dict(data: Dictionary) -> Activity:
 	activity.on_start = _dict_array(data.get("on_start", []))
 	activity.on_success = _dict_array(data.get("on_success", []))
 	activity.on_end = _dict_array(data.get("on_end", []))
+	activity.category = String(data.get("category", ""))
+	for condition: Variant in data.get("affected_by", []):
+		activity.affected_by.append(String(condition))
 	if activity.start_minute < 0 or activity.end_minute < 0:
 		push_error("Activity %s: bad start/end time" % activity.id)
 	if activity.kind == Kind.WORK and activity.work_minutes <= 0:

@@ -1,0 +1,29 @@
+{
+	"_source": "GDD §8 / Demo Specification §7 [УЗГОДЖЕНО] rules; all numbers provisional (approved 2026-11-12 for tuning).",
+	"start": 80,
+	"min": 0,
+	"max": 100,
+	"broken_at": 10,
+	"recover_to": 15,
+	"recover_step": 1,
+	"recover_every_minutes": 10,
+	"penalties": {
+		"missed_meal": 8,
+		"sleep_skipped": 12,
+		"sleep_late": 5,
+		"sleep_late_after_minutes": 30,
+		"dark": 4,
+		"cold": 3,
+		"dirty": 2,
+		"periodic_every_minutes": 30,
+		"cap_per_activity": 10
+	},
+	"bonuses": {
+		"meal_good": 10,
+		"meal_poor": 3,
+		"activity_good": 3,
+		"activity_poor": 0,
+		"task_done": 3
+	},
+	"scenario_days": 3
+}

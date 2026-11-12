@@ -4,13 +4,15 @@
 ## [code]{"object": "stove", "state": "working"}[/code] is a requirement,
 ## [code]{"object": "meal_food", "set": "ready"}[/code] and
 ## [code]{"room": "kitchen", "cleanliness": "clean"}[/code] are effects.
-## States change only through [method set_object_state] and [method set_room_cleanliness]
+## States change only through [method set_object_state] and the room setters
 ## — never by themselves (GDD §9.7).
 class_name HouseState
 extends RefCounted
 
 signal object_state_changed(object_id: String, new_state: StringName)
 signal room_cleanliness_changed(room_id: String, cleanliness: RoomState.Cleanliness)
+signal room_temperature_changed(room_id: String, temperature: RoomState.Temperature)
+signal room_light_changed(room_id: String, light: RoomState.Light)
 
 var rooms: Dictionary[String, RoomState] = {}
 var objects: Dictionary[String, ObjectState] = {}
@@ -82,6 +84,28 @@ func set_room_cleanliness(room_id: String, cleanliness: RoomState.Cleanliness) -
 	if room.cleanliness != cleanliness:
 		room.cleanliness = cleanliness
 		room_cleanliness_changed.emit(room_id, cleanliness)
+	return true
+
+
+## Sets a room's temperature; returns false for an unknown room.
+func set_room_temperature(room_id: String, temperature: RoomState.Temperature) -> bool:
+	if not rooms.has(room_id):
+		push_error("HouseState: unknown room %s" % room_id)
+		return false
+	if rooms[room_id].temperature != temperature:
+		rooms[room_id].temperature = temperature
+		room_temperature_changed.emit(room_id, temperature)
+	return true
+
+
+## Sets a room's light; returns false for an unknown room.
+func set_room_light(room_id: String, light: RoomState.Light) -> bool:
+	if not rooms.has(room_id):
+		push_error("HouseState: unknown room %s" % room_id)
+		return false
+	if rooms[room_id].light != light:
+		rooms[room_id].light = light
+		room_light_changed.emit(room_id, light)
 	return true
 
 

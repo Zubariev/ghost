@@ -1,5 +1,5 @@
 {
-	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7).",
+	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7); morale categories and affected_by: Demo Specification §7.6.",
 	"npc_id": "grandpa",
 	"name": "Дідусь",
 	"start_room": "grandparents_bedroom",
@@ -11,7 +11,11 @@
 			"end": "07:00",
 			"kind": "span",
 			"room": "grandparents_bedroom",
-			"animation": "wake"
+			"animation": "wake",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
 		},
 		{
 			"id": "grandpa_breakfast",
@@ -33,6 +37,11 @@
 					"object": "meal_food",
 					"set": "none"
 				}
+			],
+			"category": "meal",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
 			]
 		},
 		{
@@ -42,7 +51,12 @@
 			"end": "12:00",
 			"kind": "span",
 			"room": "library",
-			"animation": "read"
+			"animation": "read",
+			"affected_by": [
+				"temperature",
+				"cleanliness",
+				"light"
+			]
 		},
 		{
 			"id": "grandpa_lunch",
@@ -64,6 +78,11 @@
 					"object": "meal_food",
 					"set": "none"
 				}
+			],
+			"category": "meal",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
 			]
 		},
 		{
@@ -73,7 +92,11 @@
 			"end": "14:00",
 			"kind": "span",
 			"room": "living_room",
-			"animation": "rest"
+			"animation": "rest",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
 		},
 		{
 			"id": "grandpa_read_pm",
@@ -82,7 +105,12 @@
 			"end": "17:00",
 			"kind": "span",
 			"room": "library",
-			"animation": "read"
+			"animation": "read",
+			"affected_by": [
+				"temperature",
+				"cleanliness",
+				"light"
+			]
 		},
 		{
 			"id": "grandpa_rest_evening",
@@ -91,7 +119,11 @@
 			"end": "18:00",
 			"kind": "span",
 			"room": "living_room",
-			"animation": "rest"
+			"animation": "rest",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
 		},
 		{
 			"id": "grandpa_read_evening",
@@ -100,7 +132,12 @@
 			"end": "19:00",
 			"kind": "span",
 			"room": "library",
-			"animation": "read"
+			"animation": "read",
+			"affected_by": [
+				"temperature",
+				"cleanliness",
+				"light"
+			]
 		},
 		{
 			"id": "grandpa_dinner",
@@ -122,6 +159,11 @@
 					"object": "meal_food",
 					"set": "none"
 				}
+			],
+			"category": "meal",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
 			]
 		},
 		{
@@ -131,7 +173,11 @@
 			"end": "21:00",
 			"kind": "span",
 			"room": "living_room",
-			"animation": "rest"
+			"animation": "rest",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
 		},
 		{
 			"id": "grandpa_rest_night",
@@ -140,7 +186,11 @@
 			"end": "22:00",
 			"kind": "span",
 			"room": "living_room",
-			"animation": "rest"
+			"animation": "rest",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
 		},
 		{
 			"id": "grandpa_sleep",
@@ -149,7 +199,12 @@
 			"end": "06:00",
 			"kind": "span",
 			"room": "grandparents_bedroom",
-			"animation": "sleep"
+			"animation": "sleep",
+			"category": "sleep",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
 		}
 	]
 }

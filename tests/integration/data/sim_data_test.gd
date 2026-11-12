@@ -86,3 +86,39 @@ func test_father_repairs_the_stove_before_the_lamp() -> void:
 		sim.advance(1.0)
 	# Assert
 	assert_array(repaired).contains_exactly(["stove", "living_room_lamp"])
+
+
+func test_morale_data_has_every_rule_value() -> void:
+	var rules: Dictionary = JsonData.read(HouseSim.MORALE_PATH)
+	for key: String in ["start", "min", "max", "broken_at", "recover_to", "recover_step", "recover_every_minutes", "scenario_days"]:
+		assert_bool(rules.has(key)).is_true()
+	for key: String in ["missed_meal", "sleep_skipped", "sleep_late", "sleep_late_after_minutes", "dark", "cold", "dirty", "periodic_every_minutes", "cap_per_activity"]:
+		assert_bool(rules["penalties"].has(key)).is_true()
+	for key: String in ["meal_good", "meal_poor", "activity_good", "activity_poor", "task_done"]:
+		assert_bool(rules["bonuses"].has(key)).is_true()
+
+
+func test_undisturbed_first_day_nobody_goes_broken() -> void:
+	# The balance target (decision 5): no one Broken before the first evening.
+	var sim: HouseSim = HouseSim.from_data_files()
+	var broke: Array[String] = []
+	sim.morale.npc_broke.connect(func(npc: String) -> void: broke.append(npc))
+	sim.start()
+	for i: int in GameClock.MINUTES_PER_DAY:
+		sim.advance(1.0)
+	assert_array(broke).is_empty()
+	var broken_at: int = int(JsonData.read(HouseSim.MORALE_PATH)["broken_at"])
+	for routine: NpcRoutine in sim.routines:
+		assert_int(sim.morale.get_morale(routine.schedule.npc_id)).is_greater(broken_at)
+
+
+func test_simulation_stops_when_the_family_leaves() -> void:
+	var sim: HouseSim = HouseSim.from_data_files()
+	sim.start()
+	for routine: NpcRoutine in sim.routines:
+		sim.morale.set_morale(routine.schedule.npc_id, 10)
+	assert_bool(sim.is_over()).is_true()
+	assert_str(sim.morale.outcome).is_equal(MoraleSystem.OUTCOME_WON)
+	var minute_before: int = sim.clock.total_minutes
+	assert_int(sim.advance(60.0)).is_equal(0)
+	assert_int(sim.clock.total_minutes).is_equal(minute_before)
