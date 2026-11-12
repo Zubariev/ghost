@@ -1,24 +1,39 @@
 {
-	"_source": "Demo Specification §4.2 / GDD §9.2. Stage 2: grandma's rooms only. walk_minutes are [TBD] tuning.",
+	"_source": "Demo Specification §4.2 / GDD §9.2; stage 3 rooms. walk_minutes are [TBD] tuning. plan_rect is for the debug view only.",
 	"rooms": [
-		{"id": "grandparents_bedroom", "name": "Спальня бабусі й дідуся", "floor": 1, "plan_rect": [80, 90, 320, 200]},
-		{"id": "upper_corridor", "name": "Коридор (2 поверх)", "floor": 1, "plan_rect": [420, 90, 300, 200]},
-		{"id": "hall", "name": "Хол", "floor": 0, "plan_rect": [420, 400, 200, 230]},
-		{"id": "living_room", "name": "Вітальня", "floor": 0, "plan_rect": [80, 400, 320, 230]},
-		{"id": "dining_room", "name": "Їдальня", "floor": 0, "plan_rect": [640, 400, 260, 230]},
-		{"id": "kitchen", "name": "Кухня", "floor": 0, "plan_rect": [920, 400, 260, 230]}
+		{"id": "parents_bedroom", "name": "Спальня батьків", "floor": 1, "plan_rect": [20, 70, 240, 170]},
+		{"id": "grandparents_bedroom", "name": "Спальня бабусі й дідуся", "floor": 1, "plan_rect": [270, 70, 240, 170]},
+		{"id": "upper_corridor", "name": "Коридор (2 поверх)", "floor": 1, "plan_rect": [520, 70, 240, 170]},
+		{"id": "children_bedroom", "name": "Дитяча спальня", "floor": 1, "plan_rect": [770, 70, 240, 170]},
+		{"id": "upper_bathroom", "name": "Ванна (2 поверх)", "floor": 1, "plan_rect": [1020, 70, 240, 170]},
+		{"id": "workshop", "name": "Майстерня", "floor": 0, "plan_rect": [20, 290, 195, 180]},
+		{"id": "living_room", "name": "Вітальня", "floor": 0, "plan_rect": [225, 290, 195, 180]},
+		{"id": "hall", "name": "Хол", "floor": 0, "plan_rect": [430, 290, 195, 180]},
+		{"id": "dining_room", "name": "Їдальня", "floor": 0, "plan_rect": [635, 290, 195, 180]},
+		{"id": "kitchen", "name": "Кухня", "floor": 0, "plan_rect": [840, 290, 195, 180]},
+		{"id": "library", "name": "Бібліотека", "floor": 0, "plan_rect": [1045, 290, 215, 180]}
 	],
 	"doors": [
+		{"a": "parents_bedroom", "b": "upper_corridor", "walk_minutes": 1},
 		{"a": "grandparents_bedroom", "b": "upper_corridor", "walk_minutes": 1},
+		{"a": "children_bedroom", "b": "upper_corridor", "walk_minutes": 1},
+		{"a": "upper_bathroom", "b": "upper_corridor", "walk_minutes": 1},
 		{"a": "upper_corridor", "b": "hall", "walk_minutes": 3},
 		{"a": "hall", "b": "living_room", "walk_minutes": 1},
+		{"a": "living_room", "b": "workshop", "walk_minutes": 1},
 		{"a": "hall", "b": "dining_room", "walk_minutes": 1},
-		{"a": "dining_room", "b": "kitchen", "walk_minutes": 1}
+		{"a": "dining_room", "b": "kitchen", "walk_minutes": 1},
+		{"a": "hall", "b": "library", "walk_minutes": 2}
 	],
 	"objects": [
-		{"id": "stove", "name": "Плита", "room": "kitchen", "states": ["working", "broken"], "state": "working"},
+		{"id": "stove", "name": "Плита", "room": "kitchen", "states": ["working", "broken"], "state": "working",
+			"repair": {"broken": "broken", "fixed": "working", "critical": true}},
 		{"id": "grocery_basket", "name": "Корзина продуктів", "room": "kitchen", "states": ["available", "hidden"], "state": "available"},
 		{"id": "meal_food", "name": "Готова їжа", "room": "dining_room", "states": ["none", "ready"], "state": "none"},
+		{"id": "computer", "name": "Комп'ютер сина", "room": "children_bedroom", "states": ["working", "broken"], "state": "working",
+			"repair": {"broken": "broken", "fixed": "working", "critical": true}},
+		{"id": "living_room_lamp", "name": "Лампа у вітальні", "room": "living_room", "states": ["working", "broken"], "state": "working",
+			"repair": {"broken": "broken", "fixed": "working", "critical": false}},
 		{"id": "grandma_armchair", "name": "Крісло бабусі", "room": "living_room", "states": ["free", "occupied"], "state": "free"},
 		{"id": "grandparents_bed", "name": "Ліжко бабусі й дідуся", "room": "grandparents_bedroom", "states": ["free", "occupied"], "state": "free"}
 	]

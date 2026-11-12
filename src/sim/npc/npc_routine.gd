@@ -1,6 +1,6 @@
 ## Runs one NPC's fixed daily schedule, one game minute at a time.
 ##
-## Agreed rules (GDD §6.2–6.5, §9.7; Demo Specification §5.3–5.6):
+## Agreed rules (GDD §6.2–6.5, §9.7, §10.4; Demo Specification §5.3–5.6):
 ## [br]- An activity whose requirements are unmet waits at its place; when its window
 ##   ends it is skipped.
 ## [br]- A late activity never shifts the windows after it.
@@ -9,18 +9,25 @@
 ## [br]- Work that is running when its window ends is finished (food is ready late).
 ## [br]- Work waiting mid-way keeps its progress, and is abandoned if its window ends.
 ## [br]- A room that cannot be reached means waiting, never a replacement room.
+## [br]- In a work window ([constant Activity.Kind.TASKS]) the NPC takes the best open task
+##   for its role, then the next; with none it potters in its idle room and looks again
+##   at each step boundary. Priorities choose the next task, never stop the current one.
 ##
 ## Minutes spent walking do not count as work; the minute she arrives is spent walking.
 class_name NpcRoutine
 extends RefCounted
 
 enum State { SCHEDULED, MOVING, PERFORMING, WAITING }
+## What the NPC is doing inside the current activity.
+enum JobKind { SPAN, WORK, IDLE }
 
 signal state_changed(new_state: State)
 signal activity_started(activity: Activity)
 signal activity_waiting(activity: Activity, unmet: Array[Dictionary])
 signal activity_completed(activity: Activity)
 signal activity_skipped(activity: Activity, work_done_minutes: int)
+signal task_started(task: HouseTask)
+signal task_completed(task: HouseTask)
 signal room_entered(room_id: String)
 
 var schedule: Schedule
@@ -29,11 +36,21 @@ var room_id: String = ""
 var state: State = State.SCHEDULED
 ## The activity being pursued (may be past its window while finishing work).
 var current: Activity = null
-## Minutes of work done on the current [constant Activity.WORK] activity.
+## The claimed task in a work window, or null (none, or pottering).
+var current_task: HouseTask = null
+## Minutes of work done on the current job.
 var work_done_minutes: int = 0
 
 var _house: HouseState
+var _board: TaskBoard
 var _step_minutes: int
+var _activity_started: bool = false
+var _job_kind: JobKind = JobKind.SPAN
+var _job_room: String = ""
+var _job_work_minutes: int = 0
+var _job_requirements: Array[Dictionary] = []
+var _job_on_start: Array[Dictionary] = []
+var _job_on_success: Array[Dictionary] = []
 var _started: bool = false
 var _finished: bool = false
 var _step_left: int = 0
@@ -43,9 +60,11 @@ var _leg_minutes: int = 0
 var _leg_left: int = 0
 
 
-func _init(npc_schedule: Schedule, house: HouseState, work_step_minutes: int) -> void:
+## [param board] is needed only by schedules with work windows.
+func _init(npc_schedule: Schedule, house: HouseState, work_step_minutes: int, board: TaskBoard = null) -> void:
 	schedule = npc_schedule
 	_house = house
+	_board = board
 	_step_minutes = maxi(1, work_step_minutes)
 	room_id = schedule.start_room
 
@@ -68,7 +87,12 @@ func step(minute_of_day: int) -> void:
 	if state == State.WAITING:
 		_try_start()
 	if state == State.PERFORMING and not minute_used:
-		_advance_work()
+		_advance_work(minute_of_day)
+
+
+## True while pottering in a work window with no task.
+func is_idle() -> bool:
+	return _job_kind == JobKind.IDLE
 
 
 ## While walking: the room being left, the room ahead and how far along (0..1).
@@ -84,60 +108,113 @@ func get_walk_progress() -> Dictionary:
 
 
 func get_work_left_minutes() -> int:
-	if current == null or current.kind != Activity.Kind.WORK:
+	if _job_kind != JobKind.WORK:
 		return 0
-	return maxi(0, current.work_minutes - work_done_minutes)
+	return maxi(0, _job_work_minutes - work_done_minutes)
+
+
+func get_job_work_minutes() -> int:
+	return _job_work_minutes if _job_kind == JobKind.WORK else 0
 
 
 func _is_running_work() -> bool:
-	return current != null and current.kind == Activity.Kind.WORK \
-		and _started and not _finished and state == State.PERFORMING
+	return _job_kind == JobKind.WORK and _started and not _finished and state == State.PERFORMING
 
 
 func _close_current() -> void:
 	if current == null:
 		return
-	if current.kind == Activity.Kind.SPAN and _started:
-		activity_completed.emit(current)
-	elif not _finished:
-		activity_skipped.emit(current, work_done_minutes)
+	if current_task != null:
+		_board.release(current_task.key, schedule.npc_id)
+		current_task = null
+	_house.apply_effects(current.on_end)
+	match current.kind:
+		Activity.Kind.SPAN:
+			if _activity_started:
+				activity_completed.emit(current)
+			else:
+				activity_skipped.emit(current, 0)
+		Activity.Kind.WORK:
+			if not _finished:
+				activity_skipped.emit(current, work_done_minutes)
+		Activity.Kind.TASKS:
+			activity_completed.emit(current)
 
 
 func _switch_to(activity: Activity) -> void:
 	current = activity
+	current_task = null
+	_activity_started = false
+	_path.clear()
+	if activity == null:
+		_set_job(JobKind.SPAN, room_id, 0, [], [], [])
+		_set_state(State.SCHEDULED)
+		return
+	match activity.kind:
+		Activity.Kind.WORK:
+			_set_job(JobKind.WORK, activity.room_id, activity.work_minutes, activity.requirements, activity.on_start, activity.on_success)
+		Activity.Kind.TASKS:
+			_choose_task_job()
+		_:
+			_set_job(JobKind.SPAN, activity.room_id, 0, activity.requirements, activity.on_start, activity.on_success)
+	_try_start()
+
+
+## Claims the best task for the window's role, or falls back to pottering.
+func _choose_task_job() -> void:
+	var empty: Array[Dictionary] = []
+	current_task = null
+	if _board != null:
+		current_task = _board.pick(current.role, schedule.npc_id, room_id, current.room_filter)
+	if current_task != null:
+		_set_job(JobKind.WORK, current_task.room_id, current_task.work_minutes, empty, empty, current_task.on_success)
+	else:
+		_set_job(JobKind.IDLE, current.idle_room, 0, empty, empty, empty)
+
+
+func _set_job(kind: JobKind, job_room: String, minutes: int, requirements: Array[Dictionary],
+		on_start: Array[Dictionary], on_success: Array[Dictionary]) -> void:
+	_job_kind = kind
+	_job_room = job_room
+	_job_work_minutes = minutes
+	_job_requirements = requirements
+	_job_on_start = on_start
+	_job_on_success = on_success
 	_started = false
 	_finished = false
 	work_done_minutes = 0
 	_step_left = 0
-	_path.clear()
-	if activity == null:
-		_set_state(State.SCHEDULED)
-		return
-	_try_start()
 
 
-## Moves toward the activity's room, or starts it when its requirements are met.
+## Moves toward the job's room, or starts the job when its requirements are met.
 func _try_start() -> void:
 	if current == null or _finished:
 		return
-	if room_id != current.room_id:
-		_path = _house.find_path(room_id, current.room_id)
+	if room_id != _job_room:
+		_path = _house.find_path(room_id, _job_room)
 		if _path.is_empty():
-			_wait([{"room": current.room_id}])
+			_wait([{"room": _job_room}])
 		else:
 			_begin_leg()
 			_set_state(State.MOVING)
 		return
-	var unmet: Array[Dictionary] = _house.unmet_requirements(current.requirements)
+	var unmet: Array[Dictionary] = _house.unmet_requirements(_job_requirements)
 	if not unmet.is_empty():
 		_wait(unmet)
 		return
+	if not _activity_started:
+		_activity_started = true
+		activity_started.emit(current)
 	if not _started:
 		_started = true
-		_house.apply_effects(current.on_start)
-		activity_started.emit(current)
-	if current.kind == Activity.Kind.WORK:
-		_step_left = mini(_step_minutes, get_work_left_minutes())
+		_house.apply_effects(_job_on_start)
+		if current_task != null:
+			task_started.emit(current_task)
+	match _job_kind:
+		JobKind.WORK:
+			_step_left = mini(_step_minutes, get_work_left_minutes())
+		JobKind.IDLE:
+			_step_left = _step_minutes
 	_set_state(State.PERFORMING)
 
 
@@ -166,24 +243,47 @@ func _advance_move() -> void:
 		_begin_leg()
 
 
-func _advance_work() -> void:
-	if current.kind != Activity.Kind.WORK:
-		return
+func _advance_work(minute_of_day: int) -> void:
+	match _job_kind:
+		JobKind.SPAN:
+			return
+		JobKind.IDLE:
+			_step_left -= 1
+			if _step_left <= 0:
+				# Step boundary while pottering: look for a task.
+				_choose_task_job()
+				_try_start()
+			return
 	work_done_minutes += 1
 	_step_left -= 1
-	if work_done_minutes >= current.work_minutes:
-		_finished = true
-		_house.apply_effects(current.on_success)
-		activity_completed.emit(current)
-		_set_state(State.SCHEDULED)
+	if work_done_minutes >= _job_work_minutes:
+		_finish_job(minute_of_day)
 		return
 	if _step_left <= 0:
 		# Between steps: the only point where a changed condition stops the work.
-		var unmet: Array[Dictionary] = _house.unmet_requirements(current.requirements)
+		var unmet: Array[Dictionary] = _house.unmet_requirements(_job_requirements)
 		if unmet.is_empty():
 			_step_left = mini(_step_minutes, get_work_left_minutes())
 		else:
 			_wait(unmet)
+
+
+func _finish_job(minute_of_day: int) -> void:
+	_finished = true
+	_house.apply_effects(_job_on_success)
+	if current_task == null:
+		activity_completed.emit(current)
+		_set_state(State.SCHEDULED)
+		return
+	var done: HouseTask = current_task
+	_board.release(done.key, schedule.npc_id)
+	current_task = null
+	task_completed.emit(done)
+	if current.contains(minute_of_day):
+		_choose_task_job()
+		_try_start()
+	else:
+		_set_state(State.SCHEDULED)
 
 
 func _set_state(new_state: State) -> void:

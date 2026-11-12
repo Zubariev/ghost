@@ -121,14 +121,31 @@ func test_meal_waits_for_late_food_then_eats_until_window_end() -> void:
 	_house.set_object_state("basket", &"available")
 	# Act
 	Fx.run(_routine, Fx.COOK_START + 50, Fx.MEAL_START + 40)
-	# Assert: eating late, food used
+	# Assert: eating late; shared food stays out while the meal window lasts
 	assert_str(_routine.current.id).is_equal("meal")
 	assert_int(_routine.state).is_equal(NpcRoutine.State.PERFORMING)
-	assert_str(String(_house.get_object_state("food"))).is_equal("none")
+	assert_str(String(_house.get_object_state("food"))).is_equal("ready")
 	# Act: the meal still ends with its window (late start does not extend it)
 	Fx.run(_routine, Fx.MEAL_START + 40, Fx.MEAL_END + 1)
 	assert_array(_completed).contains(["cook", "meal"])
 	assert_str(_routine.current.id).is_equal("rest")
+	# Assert: food is cleared when the meal window ends
+	assert_str(String(_house.get_object_state("food"))).is_equal("none")
+
+
+func test_two_eaters_share_one_cooking() -> void:
+	# Arrange: food is ready before the meal; a second NPC with the same schedule
+	_house.set_object_state("food", &"ready")
+	var other: NpcRoutine = Fx.routine(_house)
+	_routine.begin(Fx.MEAL_START)
+	other.begin(Fx.MEAL_START)
+	# Act: both walk to the dining room and eat
+	for minute: int in range(Fx.MEAL_START, Fx.MEAL_START + 10):
+		_routine.step(minute)
+		other.step(minute)
+	# Assert: both are eating
+	assert_int(_routine.state).is_equal(NpcRoutine.State.PERFORMING)
+	assert_int(other.state).is_equal(NpcRoutine.State.PERFORMING)
 
 
 func test_waiting_work_is_abandoned_when_window_ends() -> void:

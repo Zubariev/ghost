@@ -1,0 +1,146 @@
+{
+	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7).",
+	"npc_id": "daughter",
+	"name": "Донька",
+	"start_room": "children_bedroom",
+	"activities": [
+		{
+			"id": "daughter_breakfast",
+			"name": "Сніданок",
+			"start": "07:00",
+			"end": "08:00",
+			"kind": "span",
+			"room": "dining_room",
+			"target": "meal_food",
+			"animation": "eat",
+			"requires": [
+				{
+					"object": "meal_food",
+					"state": "ready"
+				}
+			],
+			"on_end": [
+				{
+					"object": "meal_food",
+					"set": "none"
+				}
+			]
+		},
+		{
+			"id": "daughter_dolls_morning",
+			"name": "Грається ляльками",
+			"start": "08:00",
+			"end": "09:00",
+			"kind": "span",
+			"room": "children_bedroom",
+			"animation": "dolls"
+		},
+		{
+			"id": "daughter_draw",
+			"name": "Малює",
+			"start": "09:00",
+			"end": "12:00",
+			"kind": "span",
+			"room": "children_bedroom",
+			"animation": "draw"
+		},
+		{
+			"id": "daughter_lunch",
+			"name": "Обід",
+			"start": "12:00",
+			"end": "13:00",
+			"kind": "span",
+			"room": "dining_room",
+			"target": "meal_food",
+			"animation": "eat",
+			"requires": [
+				{
+					"object": "meal_food",
+					"state": "ready"
+				}
+			],
+			"on_end": [
+				{
+					"object": "meal_food",
+					"set": "none"
+				}
+			]
+		},
+		{
+			"id": "daughter_dolls_noon",
+			"name": "Грається ляльками",
+			"start": "13:00",
+			"end": "14:00",
+			"kind": "span",
+			"room": "living_room",
+			"animation": "dolls"
+		},
+		{
+			"id": "daughter_tricycle",
+			"name": "Катається на велосипеді",
+			"start": "14:00",
+			"end": "17:00",
+			"kind": "span",
+			"room": "hall",
+			"animation": "tricycle"
+		},
+		{
+			"id": "daughter_dolls_evening",
+			"name": "Грається ляльками",
+			"start": "17:00",
+			"end": "19:00",
+			"kind": "span",
+			"room": "living_room",
+			"animation": "dolls"
+		},
+		{
+			"id": "daughter_dinner",
+			"name": "Вечеря",
+			"start": "19:00",
+			"end": "20:00",
+			"kind": "span",
+			"room": "dining_room",
+			"target": "meal_food",
+			"animation": "eat",
+			"requires": [
+				{
+					"object": "meal_food",
+					"state": "ready"
+				}
+			],
+			"on_end": [
+				{
+					"object": "meal_food",
+					"set": "none"
+				}
+			]
+		},
+		{
+			"id": "daughter_dolls_night",
+			"name": "Грається ляльками",
+			"start": "20:00",
+			"end": "21:00",
+			"kind": "span",
+			"room": "living_room",
+			"animation": "dolls"
+		},
+		{
+			"id": "daughter_bedtime",
+			"name": "Готується до сну",
+			"start": "21:00",
+			"end": "22:00",
+			"kind": "span",
+			"room": "upper_bathroom",
+			"animation": "wash"
+		},
+		{
+			"id": "daughter_sleep",
+			"name": "Сон",
+			"start": "22:00",
+			"end": "07:00",
+			"kind": "span",
+			"room": "children_bedroom",
+			"animation": "sleep"
+		}
+	]
+}

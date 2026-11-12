@@ -1,14 +1,17 @@
 ## One entry of an NPC's schedule (GDD §6.2 fields).
 ##
-## Two kinds:
+## Three kinds:
 ## [br]- [constant WORK] takes a fixed number of minutes (cooking). It runs in steps; its
 ##   requirements are checked only between steps, and once running it may finish after
 ##   its window ends (Demo Specification §5.6).
 ## [br]- [constant SPAN] fills the rest of its window once started (meals, rest, sleep).
+## [br]- [constant TASKS] is a work window (GDD §10.4): the NPC takes the best open task for
+##   its [member role] from the [TaskBoard], one after another, and potters in
+##   [member idle_room] when there is none.
 class_name Activity
 extends RefCounted
 
-enum Kind { WORK, SPAN }
+enum Kind { WORK, SPAN, TASKS }
 
 var id: String = ""
 var display_name: String = ""
@@ -26,6 +29,14 @@ var work_minutes: int = 0
 var requirements: Array[Dictionary] = []
 var on_start: Array[Dictionary] = []
 var on_success: Array[Dictionary] = []
+## Effects applied when the window closes, whatever happened (shared meal food is cleared).
+var on_end: Array[Dictionary] = []
+## For [constant TASKS]: "repair" or "clean".
+var role: String = ""
+## For [constant TASKS]: where the NPC potters with nothing to do (also [member room_id]).
+var idle_room: String = ""
+## For [constant TASKS]: only tasks in these rooms (empty = any room).
+var room_filter: Array[String] = []
 
 
 static func from_dict(data: Dictionary) -> Activity:
@@ -34,18 +45,31 @@ static func from_dict(data: Dictionary) -> Activity:
 	activity.display_name = String(data.get("name", activity.id))
 	activity.start_minute = GameClock.parse_time(String(data.get("start", "")))
 	activity.end_minute = GameClock.parse_time(String(data.get("end", "")))
-	activity.kind = Kind.WORK if String(data.get("kind", "span")) == "work" else Kind.SPAN
-	activity.room_id = String(data.get("room", ""))
+	match String(data.get("kind", "span")):
+		"work":
+			activity.kind = Kind.WORK
+		"tasks":
+			activity.kind = Kind.TASKS
+		_:
+			activity.kind = Kind.SPAN
+	activity.role = String(data.get("role", ""))
+	activity.idle_room = String(data.get("idle_room", ""))
+	for room: Variant in data.get("room_filter", []):
+		activity.room_filter.append(String(room))
+	activity.room_id = String(data.get("room", activity.idle_room))
 	activity.target_object_id = String(data.get("target", ""))
 	activity.animation = String(data.get("animation", ""))
 	activity.work_minutes = int(data.get("work_minutes", 0))
 	activity.requirements = _dict_array(data.get("requires", []))
 	activity.on_start = _dict_array(data.get("on_start", []))
 	activity.on_success = _dict_array(data.get("on_success", []))
+	activity.on_end = _dict_array(data.get("on_end", []))
 	if activity.start_minute < 0 or activity.end_minute < 0:
 		push_error("Activity %s: bad start/end time" % activity.id)
 	if activity.kind == Kind.WORK and activity.work_minutes <= 0:
 		push_error("Activity %s: work needs work_minutes > 0" % activity.id)
+	if activity.kind == Kind.TASKS and (activity.role.is_empty() or activity.idle_room.is_empty()):
+		push_error("Activity %s: tasks need a role and an idle_room" % activity.id)
 	return activity
 
 

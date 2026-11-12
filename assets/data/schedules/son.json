@@ -1,0 +1,149 @@
+{
+	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7).",
+	"npc_id": "son",
+	"name": "Син",
+	"start_room": "children_bedroom",
+	"activities": [
+		{
+			"id": "son_breakfast",
+			"name": "Сніданок",
+			"start": "07:00",
+			"end": "08:00",
+			"kind": "span",
+			"room": "dining_room",
+			"target": "meal_food",
+			"animation": "eat",
+			"requires": [
+				{
+					"object": "meal_food",
+					"state": "ready"
+				}
+			],
+			"on_end": [
+				{
+					"object": "meal_food",
+					"set": "none"
+				}
+			]
+		},
+		{
+			"id": "son_play_morning",
+			"name": "Грає на комп'ютері",
+			"start": "08:00",
+			"end": "12:00",
+			"kind": "span",
+			"room": "children_bedroom",
+			"animation": "computer",
+			"requires": [
+				{
+					"object": "computer",
+					"state": "working"
+				}
+			]
+		},
+		{
+			"id": "son_lunch",
+			"name": "Обід",
+			"start": "12:00",
+			"end": "13:00",
+			"kind": "span",
+			"room": "dining_room",
+			"target": "meal_food",
+			"animation": "eat",
+			"requires": [
+				{
+					"object": "meal_food",
+					"state": "ready"
+				}
+			],
+			"on_end": [
+				{
+					"object": "meal_food",
+					"set": "none"
+				}
+			]
+		},
+		{
+			"id": "son_comics_noon",
+			"name": "Читає комікси",
+			"start": "13:00",
+			"end": "14:00",
+			"kind": "span",
+			"room": "library",
+			"animation": "read"
+		},
+		{
+			"id": "son_help_mother",
+			"name": "Допомагає матері",
+			"start": "14:00",
+			"end": "17:00",
+			"kind": "tasks",
+			"role": "clean",
+			"idle_room": "kitchen"
+		},
+		{
+			"id": "son_play_evening",
+			"name": "Грає на комп'ютері",
+			"start": "17:00",
+			"end": "19:00",
+			"kind": "span",
+			"room": "children_bedroom",
+			"animation": "computer",
+			"requires": [
+				{
+					"object": "computer",
+					"state": "working"
+				}
+			]
+		},
+		{
+			"id": "son_dinner",
+			"name": "Вечеря",
+			"start": "19:00",
+			"end": "20:00",
+			"kind": "span",
+			"room": "dining_room",
+			"target": "meal_food",
+			"animation": "eat",
+			"requires": [
+				{
+					"object": "meal_food",
+					"state": "ready"
+				}
+			],
+			"on_end": [
+				{
+					"object": "meal_food",
+					"set": "none"
+				}
+			]
+		},
+		{
+			"id": "son_comics_evening",
+			"name": "Читає комікси",
+			"start": "20:00",
+			"end": "21:00",
+			"kind": "span",
+			"room": "library",
+			"animation": "read"
+		},
+		{
+			"id": "son_bedtime",
+			"name": "Готується до сну",
+			"start": "21:00",
+			"end": "22:00",
+			"kind": "span",
+			"room": "upper_bathroom",
+			"animation": "wash"
+		},
+		{
+			"id": "son_sleep",
+			"name": "Сон",
+			"start": "22:00",
+			"end": "07:00",
+			"kind": "span",
+			"room": "children_bedroom",
+			"animation": "sleep"
+		}
+	]
+}

@@ -1,0 +1,5 @@
+{
+	"_source": "GDD §10.4 [УЗГОДЖЕНО ЯК ПРИНЦИП]; values approved 2026-11-12 for stage 3. work_minutes are [TBD] tuning.",
+	"repair": {"work_minutes": 45, "critical_priority": 9, "priority": 5},
+	"clean": {"work_minutes": 30, "dirty_priority": 5, "normal_priority": 2}
+}

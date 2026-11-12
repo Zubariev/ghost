@@ -2,12 +2,15 @@
 ##
 ## Requirements and effects are plain dictionaries from data:
 ## [code]{"object": "stove", "state": "working"}[/code] is a requirement,
-## [code]{"object": "meal_food", "set": "ready"}[/code] is an effect.
-## States change only through [method set_object_state] — never by themselves (GDD §9.7).
+## [code]{"object": "meal_food", "set": "ready"}[/code] and
+## [code]{"room": "kitchen", "cleanliness": "clean"}[/code] are effects.
+## States change only through [method set_object_state] and [method set_room_cleanliness]
+## — never by themselves (GDD §9.7).
 class_name HouseState
 extends RefCounted
 
 signal object_state_changed(object_id: String, new_state: StringName)
+signal room_cleanliness_changed(room_id: String, cleanliness: RoomState.Cleanliness)
 
 var rooms: Dictionary[String, RoomState] = {}
 var objects: Dictionary[String, ObjectState] = {}
@@ -70,9 +73,43 @@ func unmet_requirements(requirements: Array[Dictionary]) -> Array[Dictionary]:
 	return unmet
 
 
+## Sets a room's cleanliness; returns false for an unknown room.
+func set_room_cleanliness(room_id: String, cleanliness: RoomState.Cleanliness) -> bool:
+	if not rooms.has(room_id):
+		push_error("HouseState: unknown room %s" % room_id)
+		return false
+	var room: RoomState = rooms[room_id]
+	if room.cleanliness != cleanliness:
+		room.cleanliness = cleanliness
+		room_cleanliness_changed.emit(room_id, cleanliness)
+	return true
+
+
 func apply_effects(effects: Array[Dictionary]) -> void:
 	for effect: Dictionary in effects:
-		set_object_state(String(effect.get("object", "")), StringName(effect.get("set", "")))
+		if effect.has("room"):
+			var key: String = String(effect.get("cleanliness", "")).to_upper()
+			if RoomState.Cleanliness.has(key):
+				set_room_cleanliness(String(effect["room"]), RoomState.Cleanliness[key])
+			else:
+				push_error("HouseState: unknown cleanliness '%s'" % effect.get("cleanliness"))
+		else:
+			set_object_state(String(effect.get("object", "")), StringName(effect.get("set", "")))
+
+
+## Total walking minutes of the shortest route; 0 when already there, -1 when unreachable.
+func path_cost(from_room: String, to_room: String) -> int:
+	if from_room == to_room:
+		return 0 if rooms.has(from_room) else -1
+	var route: Array[String] = find_path(from_room, to_room)
+	if route.is_empty():
+		return -1
+	var total: int = 0
+	var at: String = from_room
+	for next: String in route:
+		total += walk_minutes(at, next)
+		at = next
+	return total
 
 
 func walk_minutes(room_a: String, room_b: String) -> int:

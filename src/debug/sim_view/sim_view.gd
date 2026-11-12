@@ -1,43 +1,49 @@
-## DEBUG ONLY — not part of the game. A plan view of the house simulation:
-## rooms as boxes, grandma as a token, object states, her activity and state,
-## an event log, and buttons that stand in for the ghost (stove, groceries).
+## DEBUG ONLY — not part of the game. A plan view of the house simulation: rooms as
+## boxes (tinted by cleanliness), the family as tokens, object states, each person's
+## activity, state and task, an event log, and controls that stand in for the ghost.
 ##
 ## Keys: Space pause · 1/2/3 ×1/×2/×4 · F debug fast-forward ×30 (debug only).
+## Mouse: click a room to make it dirty. Buttons: break/repair objects, hide groceries.
 ## Run with `--capture=<dir>` for a scripted, deterministic run that saves screenshots.
 extends Node2D
 
-const LOG_LINES: int = 9
+const LOG_LINES: int = 11
 const DEBUG_FAST_SPEED: float = 30.0
 const STATE_NAMES: Dictionary = {
-	NpcRoutine.State.SCHEDULED: "idle (scheduled)",
+	NpcRoutine.State.SCHEDULED: "idle",
 	NpcRoutine.State.MOVING: "walking",
 	NpcRoutine.State.PERFORMING: "doing it",
 	NpcRoutine.State.WAITING: "WAITING",
 }
+const NPC_COLORS: Array[Color] = [
+	Color("6fa8dc"), Color("e06666"), Color("f0c36a"), Color("93c47d"), Color("b4a7d6"), Color("f6b26b"),
+]
+const REPAIRABLE: Array[String] = ["stove", "computer", "living_room_lamp"]
 const BACKGROUND := Color("16141c")
-const ROOM_FILL := Color("2b2833")
+const ROOM_FILL := {
+	RoomState.Cleanliness.CLEAN: Color("2f3a33"),
+	RoomState.Cleanliness.NORMAL: Color("2b2833"),
+	RoomState.Cleanliness.DIRTY: Color("4a3424"),
+}
 const ROOM_EDGE := Color("6e6880")
-const DOOR := Color("8f86a6")
+const DOOR := Color("5f587a")
 const TEXT := Color("e8e4f0")
 const DIM_TEXT := Color("a29cb3")
 const OK := Color("7fc98a")
 const BAD := Color("e0735f")
-const TOKEN := Color("f0c36a")
 
 var _sim: HouseSim
-var _routine: NpcRoutine
 var _fast: bool = false
 var _log_lines: Array[String] = []
 var _status: Label
 var _log: Label
-var _stove_button: Button
+var _object_buttons: Dictionary[String, Button] = {}
 var _basket_button: Button
 
 
 func _ready() -> void:
 	get_window().content_scale_size = Vector2i(1280, 720)
 	_sim = HouseSim.from_data_files()
-	_routine = _sim.routines[0]
 	_connect_log()
 	_build_panel()
 	_sim.start()
@@ -55,6 +61,12 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var point: Vector2 = get_global_mouse_position()
+		for room: RoomState in _sim.house.rooms.values():
+			if room.plan_rect.has_point(point):
+				_make_dirty(room.id)
+				return
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	match (event as InputEventKey).physical_keycode:
@@ -76,40 +88,55 @@ func _unhandled_input(event: InputEvent) -> void:
 func _draw() -> void:
 	draw_rect(Rect2(-200, -200, 1680, 1120), BACKGROUND)
 	var font: Font = ThemeDB.fallback_font
-	draw_string(font, Vector2(80, 40), "DEBUG — house simulation (stage 2)", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, TEXT)
-	draw_string(font, Vector2(80, 76), "Upper floor", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, DIM_TEXT)
-	draw_string(font, Vector2(80, 386), "Ground floor", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, DIM_TEXT)
+	draw_string(font, Vector2(20, 24), "DEBUG — house simulation (stage 3) · click a room to make it dirty", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, TEXT)
+	draw_string(font, Vector2(20, 60), "Upper floor", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, DIM_TEXT)
+	draw_string(font, Vector2(20, 280), "Ground floor", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, DIM_TEXT)
 	for room: RoomState in _sim.house.rooms.values():
 		for other: RoomState in _sim.house.rooms.values():
 			if room.id < other.id and _sim.house.walk_minutes(room.id, other.id) > 0:
-				var a: Vector2 = room.plan_rect.get_center()
-				var b: Vector2 = other.plan_rect.get_center()
-				draw_line(a, b, DOOR, 3.0)
-				draw_string(font, a.lerp(b, 0.5) + Vector2(6, -6), "%d min" % _sim.house.walk_minutes(room.id, other.id), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, DOOR)
+				draw_line(room.plan_rect.get_center(), other.plan_rect.get_center(), DOOR, 2.0)
 	for room: RoomState in _sim.house.rooms.values():
-		draw_rect(room.plan_rect, ROOM_FILL)
+		draw_rect(room.plan_rect, ROOM_FILL[room.cleanliness])
 		draw_rect(room.plan_rect, ROOM_EDGE, false, 2.0)
-		draw_string(font, room.plan_rect.position + Vector2(10, 22), room.display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, TEXT)
+		draw_string(font, room.plan_rect.position + Vector2(8, 18), room.display_name, HORIZONTAL_ALIGNMENT_LEFT, room.plan_rect.size.x - 16, 13, TEXT)
+		var clean_text: String = String(RoomState.Cleanliness.keys()[room.cleanliness]).to_lower()
+		draw_string(font, room.plan_rect.position + Vector2(8, 34), clean_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11,
+			BAD if room.cleanliness == RoomState.Cleanliness.DIRTY else DIM_TEXT)
 		var line: int = 0
 		for obj: ObjectState in _sim.house.objects.values():
 			if obj.room_id == room.id:
-				var color: Color = BAD if obj.state in [&"broken", &"hidden"] else (OK if obj.state in [&"working", &"available", &"ready"] else DIM_TEXT)
-				draw_string(font, room.plan_rect.position + Vector2(10, 48 + line * 20), "%s: %s" % [obj.display_name, obj.state], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, color)
+				var color: Color = DIM_TEXT
+				if obj.state in [&"broken", &"hidden"]:
+					color = BAD
+				elif obj.state in [&"working", &"available", &"ready"]:
+					color = OK
+				draw_string(font, room.plan_rect.position + Vector2(8, 52 + line * 15), "%s: %s" % [obj.display_name, obj.state],
+					HORIZONTAL_ALIGNMENT_LEFT, room.plan_rect.size.x - 16, 11, color)
 				line += 1
-	_draw_token(font)
+	_draw_tokens(font)
 
 
-func _draw_token(font: Font) -> void:
-	var pos: Vector2 = _sim.house.rooms[_routine.room_id].plan_rect.get_center() + Vector2(0, 40)
-	var walk: Dictionary = _routine.get_walk_progress()
-	if not walk.is_empty():
-		var from: Vector2 = _sim.house.rooms[walk["from"]].plan_rect.get_center() + Vector2(0, 40)
-		var to: Vector2 = _sim.house.rooms[walk["to"]].plan_rect.get_center() + Vector2(0, 40)
-		pos = from.lerp(to, float(walk["t"]))
-	var body := PackedVector2Array([pos + Vector2(-12, 0), pos + Vector2(12, 0), pos + Vector2(7, -30), pos + Vector2(-7, -30)])
-	draw_colored_polygon(body, TOKEN)
-	draw_circle(pos + Vector2(0, -38), 9.0, TOKEN)
-	draw_string(font, pos + Vector2(-40, 20), _routine.schedule.display_name, HORIZONTAL_ALIGNMENT_CENTER, 80, 14, TOKEN)
+func _draw_tokens(font: Font) -> void:
+	var per_room: Dictionary[String, int] = {}
+	for i: int in _sim.routines.size():
+		var routine: NpcRoutine = _sim.routines[i]
+		var slot: int = per_room.get(routine.room_id, 0)
+		per_room[routine.room_id] = slot + 1
+		var pos: Vector2 = _slot_point(routine.room_id, slot)
+		var walk: Dictionary = routine.get_walk_progress()
+		if not walk.is_empty():
+			pos = _slot_point(walk["from"], slot).lerp(_slot_point(walk["to"], slot), float(walk["t"]))
+		var color: Color = NPC_COLORS[i % NPC_COLORS.size()]
+		draw_colored_polygon(PackedVector2Array([pos + Vector2(-8, 0), pos + Vector2(8, 0), pos + Vector2(5, -20), pos + Vector2(-5, -20)]), color)
+		draw_circle(pos + Vector2(0, -26), 6.0, color)
+		if routine.state == NpcRoutine.State.WAITING:
+			draw_string(font, pos + Vector2(-4, -36), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, BAD)
+		draw_string(font, pos + Vector2(-24, 12), routine.schedule.display_name, HORIZONTAL_ALIGNMENT_CENTER, 48, 10, color)
+
+
+func _slot_point(room_id: String, slot: int) -> Vector2:
+	var rect: Rect2 = _sim.house.rooms[room_id].plan_rect
+	return rect.position + Vector2(24 + (slot % 6) * 36, rect.size.y - 22)
 
 
 # --- Panel and log -----------------------------------------------------------------
@@ -119,30 +146,40 @@ func _build_panel() -> void:
 	add_child(layer)
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.05, 0.08, 0.92)
+	style.bg_color = Color(0.05, 0.05, 0.08, 0.95)
 	style.set_corner_radius_all(6)
-	style.set_content_margin_all(12)
+	style.set_content_margin_all(10)
 	panel.add_theme_stylebox_override(&"panel", style)
-	panel.position = Vector2(760, 20)
-	panel.custom_minimum_size = Vector2(500, 0)
+	panel.position = Vector2(20, 486)
+	panel.custom_minimum_size = Vector2(1240, 222)
 	layer.add_child(panel)
-	var box := VBoxContainer.new()
-	panel.add_child(box)
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override(&"separation", 16)
+	panel.add_child(columns)
+	var left := VBoxContainer.new()
+	left.custom_minimum_size = Vector2(760, 0)
+	columns.add_child(left)
 	_status = Label.new()
-	_status.add_theme_font_size_override(&"font_size", 15)
-	box.add_child(_status)
+	_status.add_theme_font_size_override(&"font_size", 13)
+	left.add_child(_status)
 	var buttons := HBoxContainer.new()
-	box.add_child(buttons)
-	_stove_button = Button.new()
-	_stove_button.pressed.connect(_toggle_object.bind("stove", &"working", &"broken"))
-	buttons.add_child(_stove_button)
+	left.add_child(buttons)
+	for object_id: String in REPAIRABLE:
+		var button := Button.new()
+		button.add_theme_font_size_override(&"font_size", 12)
+		button.pressed.connect(_toggle_object.bind(object_id, &"working", &"broken"))
+		buttons.add_child(button)
+		_object_buttons[object_id] = button
 	_basket_button = Button.new()
+	_basket_button.add_theme_font_size_override(&"font_size", 12)
 	_basket_button.pressed.connect(_toggle_object.bind("grocery_basket", &"available", &"hidden"))
 	buttons.add_child(_basket_button)
 	_log = Label.new()
-	_log.add_theme_font_size_override(&"font_size", 13)
+	_log.add_theme_font_size_override(&"font_size", 11)
 	_log.add_theme_color_override(&"font_color", DIM_TEXT)
-	box.add_child(_log)
+	_log.custom_minimum_size = Vector2(440, 0)
+	_log.clip_text = true
+	columns.add_child(_log)
 
 
 func _toggle_object(object_id: String, normal: StringName, sabotaged: StringName) -> void:
@@ -152,31 +189,44 @@ func _toggle_object(object_id: String, normal: StringName, sabotaged: StringName
 	_refresh()
 
 
+func _make_dirty(room_id: String) -> void:
+	_sim.house.set_room_cleanliness(room_id, RoomState.Cleanliness.DIRTY)
+	_add_log("[ghost stand-in] %s → dirty" % room_id)
+	_refresh()
+
+
 func _refresh() -> void:
 	var clock: GameClock = _sim.clock
-	var activity: Activity = _routine.current
 	var lines: PackedStringArray = []
-	lines.append("Day %d  %s  %s   ×%d%s%s" % [clock.day_number(), GameClock.format_time(clock.minute_of_day()),
-		"day" if clock.is_day() else "night", clock.get_speed(),
+	lines.append("Day %d  %s  %s   ×%d%s%s      Space pause · 1/2/3 speed · F debug ×30" % [clock.day_number(),
+		GameClock.format_time(clock.minute_of_day()), "day" if clock.is_day() else "night", clock.get_speed(),
 		"  [DEBUG ×30]" if _fast else "", "  PAUSED" if clock.paused else ""])
-	if activity != null:
-		lines.append("%s: %s  (%s–%s)" % [_routine.schedule.display_name, activity.display_name,
-			GameClock.format_time(activity.start_minute), GameClock.format_time(activity.end_minute)])
-		var detail: String = STATE_NAMES[_routine.state]
-		if activity.kind == Activity.Kind.WORK:
-			detail += "   work %d/%d min" % [_routine.work_done_minutes, activity.work_minutes]
-		lines.append("State: %s   room: %s" % [detail, _sim.house.rooms[_routine.room_id].display_name])
-	lines.append("Space pause · 1/2/3 speed · F debug ×30")
+	for routine: NpcRoutine in _sim.routines:
+		var activity: Activity = routine.current
+		var text: String = "%-8s %s" % [routine.schedule.display_name, activity.display_name if activity != null else "—"]
+		text += " · " + String(STATE_NAMES[routine.state])
+		if routine.current_task != null:
+			text += " · task %s %d/%d" % [routine.current_task.key, routine.work_done_minutes, routine.get_job_work_minutes()]
+		elif routine.is_idle():
+			text += " · pottering (no task)"
+		elif activity != null and activity.kind == Activity.Kind.WORK:
+			text += " · %d/%d min" % [routine.work_done_minutes, activity.work_minutes]
+		text += " · " + _sim.house.rooms[routine.room_id].display_name
+		lines.append(text)
 	_status.text = "\n".join(lines)
-	_stove_button.text = "Repair stove" if _sim.house.get_object_state("stove") == &"broken" else "Break stove"
+	for object_id: String in _object_buttons:
+		var broken: bool = _sim.house.get_object_state(object_id) == &"broken"
+		_object_buttons[object_id].text = ("Repair " if broken else "Break ") + _sim.house.objects[object_id].display_name
 	_basket_button.text = "Return groceries" if _sim.house.get_object_state("grocery_basket") == &"hidden" else "Hide groceries"
 
 
 func _connect_log() -> void:
-	_routine.activity_started.connect(func(a: Activity) -> void: _add_log("start  %s" % a.display_name))
-	_routine.activity_completed.connect(func(a: Activity) -> void: _add_log("done   %s" % a.display_name))
-	_routine.activity_skipped.connect(func(a: Activity, done: int) -> void: _add_log("SKIP   %s (work done %d min)" % [a.display_name, done]))
-	_routine.activity_waiting.connect(func(a: Activity, unmet: Array[Dictionary]) -> void: _add_log("wait   %s — needs %s" % [a.display_name, _describe(unmet)]))
+	for routine: NpcRoutine in _sim.routines:
+		var who: String = routine.schedule.display_name
+		routine.activity_skipped.connect(func(a: Activity, done: int) -> void: _add_log("%s SKIP %s (%d min done)" % [who, a.display_name, done]))
+		routine.activity_waiting.connect(func(a: Activity, unmet: Array[Dictionary]) -> void: _add_log("%s waits: %s — %s" % [who, a.display_name, _describe(unmet)]))
+		routine.task_started.connect(func(t: HouseTask) -> void: _add_log("%s starts %s (priority %d)" % [who, t.key, t.priority]))
+		routine.task_completed.connect(func(t: HouseTask) -> void: _add_log("%s done %s" % [who, t.key]))
 
 
 func _describe(unmet: Array[Dictionary]) -> String:
@@ -206,21 +256,19 @@ func _capture_dir() -> String:
 func _run_capture(dir: String) -> void:
 	set_process(false)
 	DirAccess.make_dir_recursive_absolute(dir)
-	await _run_until("06:20")
-	await _shot(dir, "01-cooking-breakfast")
-	await _run_until("09:30")
+	await _run_until("07:20")
+	await _shot(dir, "01-family-breakfast")
+	await _run_until("08:30")
+	_toggle_object("living_room_lamp", &"working", &"broken")
 	_toggle_object("stove", &"working", &"broken")
-	await _run_until("10:00")
-	await _shot(dir, "02-stove-broken-waiting")
-	await _run_until("11:30")
-	_toggle_object("stove", &"working", &"broken")
-	await _run_until("12:15")
-	await _shot(dir, "03-finishing-lunch-after-window")
-	await _run_until("12:45")
-	await _shot(dir, "04-late-lunch-ends-on-time")
-	_toggle_object("grocery_basket", &"available", &"hidden")
-	await _run_until("19:20")
-	await _shot(dir, "05-no-groceries-dinner-waits")
+	_make_dirty("kitchen")
+	_make_dirty("library")
+	await _run_until("09:20")
+	await _shot(dir, "02-father-repairs-stove-first")
+	await _run_until("10:30")
+	await _shot(dir, "03-lamp-next-grandma-cooking")
+	await _run_until("14:20")
+	await _shot(dir, "04-son-helps-cleaning")
 	get_tree().quit()
 
 

@@ -1,0 +1,158 @@
+{
+	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7).",
+	"npc_id": "mother",
+	"name": "Мати",
+	"start_room": "parents_bedroom",
+	"activities": [
+		{
+			"id": "mother_wake",
+			"name": "Прокидання",
+			"start": "06:00",
+			"end": "07:00",
+			"kind": "span",
+			"room": "parents_bedroom",
+			"animation": "wake"
+		},
+		{
+			"id": "mother_breakfast",
+			"name": "Сніданок",
+			"start": "07:00",
+			"end": "08:00",
+			"kind": "span",
+			"room": "dining_room",
+			"target": "meal_food",
+			"animation": "eat",
+			"requires": [
+				{
+					"object": "meal_food",
+					"state": "ready"
+				}
+			],
+			"on_end": [
+				{
+					"object": "meal_food",
+					"set": "none"
+				}
+			]
+		},
+		{
+			"id": "mother_clean_kitchen",
+			"name": "Прибирає кухню",
+			"start": "08:00",
+			"end": "09:00",
+			"kind": "tasks",
+			"role": "clean",
+			"idle_room": "kitchen",
+			"room_filter": [
+				"kitchen"
+			]
+		},
+		{
+			"id": "mother_clean_am",
+			"name": "Прибирання",
+			"start": "09:00",
+			"end": "12:00",
+			"kind": "tasks",
+			"role": "clean",
+			"idle_room": "kitchen"
+		},
+		{
+			"id": "mother_lunch",
+			"name": "Обід",
+			"start": "12:00",
+			"end": "13:00",
+			"kind": "span",
+			"room": "dining_room",
+			"target": "meal_food",
+			"animation": "eat",
+			"requires": [
+				{
+					"object": "meal_food",
+					"state": "ready"
+				}
+			],
+			"on_end": [
+				{
+					"object": "meal_food",
+					"set": "none"
+				}
+			]
+		},
+		{
+			"id": "mother_rest_noon",
+			"name": "Відпочинок",
+			"start": "13:00",
+			"end": "14:00",
+			"kind": "span",
+			"room": "living_room",
+			"animation": "rest"
+		},
+		{
+			"id": "mother_clean_pm",
+			"name": "Прибирання",
+			"start": "14:00",
+			"end": "17:00",
+			"kind": "tasks",
+			"role": "clean",
+			"idle_room": "kitchen"
+		},
+		{
+			"id": "mother_rest_evening",
+			"name": "Відпочинок",
+			"start": "17:00",
+			"end": "19:00",
+			"kind": "span",
+			"room": "living_room",
+			"animation": "rest"
+		},
+		{
+			"id": "mother_dinner",
+			"name": "Вечеря",
+			"start": "19:00",
+			"end": "20:00",
+			"kind": "span",
+			"room": "dining_room",
+			"target": "meal_food",
+			"animation": "eat",
+			"requires": [
+				{
+					"object": "meal_food",
+					"state": "ready"
+				}
+			],
+			"on_end": [
+				{
+					"object": "meal_food",
+					"set": "none"
+				}
+			]
+		},
+		{
+			"id": "mother_living_room",
+			"name": "Вечір у вітальні",
+			"start": "20:00",
+			"end": "21:00",
+			"kind": "span",
+			"room": "living_room",
+			"animation": "rest"
+		},
+		{
+			"id": "mother_rest_night",
+			"name": "Відпочинок",
+			"start": "21:00",
+			"end": "22:00",
+			"kind": "span",
+			"room": "living_room",
+			"animation": "rest"
+		},
+		{
+			"id": "mother_sleep",
+			"name": "Сон",
+			"start": "22:00",
+			"end": "06:00",
+			"kind": "span",
+			"room": "parents_bedroom",
+			"animation": "sleep"
+		}
+	]
+}
