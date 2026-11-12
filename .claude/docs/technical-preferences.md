@@ -75,7 +75,8 @@ GDScript with static typing is the primary and exclusive scripting language.
 ## Allowed Libraries / Addons
 
 <!-- Add approved third-party dependencies here -->
-- [None configured yet — add as dependencies are approved]
+- **gdUnit4 v6.2.2** (`addons/gdUnit4/`) — test framework only; from the official repo
+  `godot-gdunit-labs/gdUnit4`, tag `v6.2.2` (commit `0127a55f`). Approved 2026-11-12.
 
 ## Architecture Decisions Log
 
