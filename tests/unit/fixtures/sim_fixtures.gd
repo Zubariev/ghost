@@ -12,6 +12,10 @@ const CRITICAL_PRIORITY: int = 9
 const REPAIR_PRIORITY: int = 5
 const REPAIR_MINUTES: int = 45
 const CLEAN_MINUTES: int = 30
+const LAMP_MINUTES: int = 10
+const WINDOW_MINUTES: int = 5
+const SEARCH_MINUTES: int = 20
+const OBJECT_CLEAN_PRIORITY: int = 5
 
 
 ## bedroom — kitchen — dining, each door WALK minutes.
@@ -19,7 +23,7 @@ static func house_data() -> Dictionary:
 	return {
 		"rooms": [
 			{"id": "bedroom", "name": "Bedroom"},
-			{"id": "kitchen", "name": "Kitchen"},
+			{"id": "kitchen", "name": "Kitchen", "has_window": true},
 			{"id": "dining", "name": "Dining"},
 			{"id": "cellar", "name": "Cellar"},
 		],
@@ -32,7 +36,17 @@ static func house_data() -> Dictionary:
 				"repair": {"broken": "broken", "fixed": "working", "critical": false}},
 			{"id": "stove", "room": "kitchen", "states": ["working", "broken"], "state": "working",
 				"repair": {"broken": "broken", "fixed": "working", "critical": true}},
-			{"id": "basket", "room": "kitchen", "states": ["available", "hidden"], "state": "available"},
+			{"id": "basket", "room": "kitchen", "states": ["available", "hidden"], "state": "available",
+				"ghost": {"to": "hidden"}},
+			{"id": "kitchen_lamp", "kind": "lamp", "condition_state": "lit", "room": "kitchen",
+				"states": ["lit", "out"], "state": "lit", "ghost": {"to": "out"},
+				"repair": {"broken": "out", "fixed": "lit", "role": "repair", "work_minutes": LAMP_MINUTES}},
+			{"id": "bedroom_lamp", "kind": "lamp", "condition_state": "lit", "room": "bedroom",
+				"states": ["lit", "out"], "state": "lit", "ghost": {"to": "out"},
+				"repair": {"broken": "out", "fixed": "lit", "role": "repair", "work_minutes": LAMP_MINUTES}},
+			{"id": "kitchen_window", "kind": "window", "condition_state": "open", "room": "kitchen",
+				"states": ["closed", "open"], "state": "closed", "ghost": {"to": "open"},
+				"repair": {"broken": "open", "fixed": "closed", "role": "clean", "work_minutes": WINDOW_MINUTES}},
 			{"id": "food", "room": "dining", "states": ["none", "ready"], "state": "none"},
 		],
 	}
@@ -64,7 +78,7 @@ static func schedule_data() -> Dictionary:
 static func task_config() -> Dictionary:
 	return {
 		"repair": {"work_minutes": REPAIR_MINUTES, "critical_priority": CRITICAL_PRIORITY, "priority": REPAIR_PRIORITY},
-		"clean": {"work_minutes": CLEAN_MINUTES, "dirty_priority": 5, "normal_priority": 2},
+		"clean": {"work_minutes": CLEAN_MINUTES, "dirty_priority": 5, "normal_priority": 2, "object_priority": OBJECT_CLEAN_PRIORITY},
 	}
 
 

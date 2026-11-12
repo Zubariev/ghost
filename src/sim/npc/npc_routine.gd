@@ -13,6 +13,8 @@
 ##   for its role, then the next; with none it potters in its idle room and looks again
 ##   at each step boundary. Priorities choose the next task, never stop the current one.
 ##
+## [br]- An unmet need the NPC can put right alone (hidden groceries: search, approved for
+##   stage 5a) is fixed first as a timed job in place, then the activity starts.
 ## [br]- Broken (GDD §8.4) stops the schedule at once — the one thing that interrupts —
 ##   and releases any claimed task; on recovery the NPC joins the activity due now, and
 ##   missed activities are not made up.
@@ -32,6 +34,7 @@ signal activity_completed(activity: Activity)
 signal activity_skipped(activity: Activity, work_done_minutes: int)
 signal task_started(task: HouseTask)
 signal task_completed(task: HouseTask)
+signal self_fix_started(object_id: String)
 signal room_entered(room_id: String)
 
 var schedule: Schedule
@@ -57,6 +60,8 @@ var _job_on_start: Array[Dictionary] = []
 var _job_on_success: Array[Dictionary] = []
 var _started: bool = false
 var _finished: bool = false
+## Object being put right by the NPC itself before the activity (or "").
+var _self_fix_object: String = ""
 var _step_left: int = 0
 var _path: Array[String] = []
 var _next_room: String = ""
@@ -80,6 +85,7 @@ func begin(minute_of_day: int) -> void:
 
 ## Stops everything at once (GDD §8.4). No activity is completed or skipped by it.
 func enter_broken() -> void:
+	_self_fix_object = ""
 	if current_task != null:
 		_board.release(current_task.key, schedule.npc_id)
 		current_task = null
@@ -130,6 +136,11 @@ func is_idle() -> bool:
 	return _job_kind == JobKind.IDLE
 
 
+## The object being put right by the NPC itself (e.g. searching for groceries), or "".
+func get_self_fix_object() -> String:
+	return _self_fix_object
+
+
 ## While walking: the room being left, the room ahead and how far along (0..1).
 ## Returns an empty dictionary when not walking.
 func get_walk_progress() -> Dictionary:
@@ -177,6 +188,7 @@ func _close_current() -> void:
 
 
 func _switch_to(activity: Activity) -> void:
+	_self_fix_object = ""
 	current = activity
 	current_task = null
 	_activity_started = false
@@ -235,6 +247,8 @@ func _try_start() -> void:
 		return
 	var unmet: Array[Dictionary] = _house.unmet_requirements(_job_requirements)
 	if not unmet.is_empty():
+		if _start_self_fix(unmet):
+			return
 		_wait(unmet)
 		return
 	if not _activity_started:
@@ -251,6 +265,34 @@ func _try_start() -> void:
 		JobKind.IDLE:
 			_step_left = _step_minutes
 	_set_state(State.PERFORMING)
+
+
+## Starts fixing the first unmet need the NPC can put right alone, in this room.
+func _start_self_fix(unmet: Array[Dictionary]) -> bool:
+	for need: Dictionary in unmet:
+		var object_id: String = String(need.get("object", ""))
+		if not _house.objects.has(object_id):
+			continue
+		var obj: ObjectState = _house.objects[object_id]
+		if not obj.can_self_fix() or obj.room_id != room_id:
+			continue
+		var empty: Array[Dictionary] = []
+		var fix_effect: Array[Dictionary] = [{"object": object_id, "set": String(obj.self_fix.get("to", ""))}]
+		_set_job(JobKind.WORK, room_id, int(obj.self_fix.get("minutes", 1)), empty, empty, fix_effect)
+		_self_fix_object = object_id
+		_started = true
+		_step_left = mini(_step_minutes, get_work_left_minutes())
+		_set_state(State.PERFORMING)
+		self_fix_started.emit(object_id)
+		return true
+	return false
+
+
+func _restore_activity_job() -> void:
+	if current.kind == Activity.Kind.WORK:
+		_set_job(JobKind.WORK, current.room_id, current.work_minutes, current.requirements, current.on_start, current.on_success)
+	else:
+		_set_job(JobKind.SPAN, current.room_id, 0, current.requirements, current.on_start, current.on_success)
 
 
 func _wait(unmet: Array[Dictionary]) -> void:
@@ -306,6 +348,14 @@ func _advance_work(minute_of_day: int) -> void:
 func _finish_job(minute_of_day: int) -> void:
 	_finished = true
 	_house.apply_effects(_job_on_success)
+	if not _self_fix_object.is_empty():
+		_self_fix_object = ""
+		_restore_activity_job()
+		if current.contains(minute_of_day):
+			_try_start()
+		else:
+			_set_state(State.SCHEDULED)
+		return
 	if current_task == null:
 		activity_completed.emit(current)
 		_set_state(State.SCHEDULED)

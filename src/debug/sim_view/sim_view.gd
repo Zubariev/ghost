@@ -20,7 +20,12 @@ const STATE_NAMES: Dictionary = {
 const NPC_COLORS: Array[Color] = [
 	Color("6fa8dc"), Color("e06666"), Color("f0c36a"), Color("93c47d"), Color("b4a7d6"), Color("f6b26b"),
 ]
-const REPAIRABLE: Array[String] = ["stove", "computer", "living_room_lamp"]
+## object id -> [normal state, sabotaged state]
+const REPAIRABLE: Dictionary = {
+	"stove": [&"working", &"broken"],
+	"computer": [&"working", &"broken"],
+	"lamp_living_room": [&"lit", &"out"],
+}
 const BACKGROUND := Color("16141c")
 const ROOM_FILL := {
 	RoomState.Cleanliness.CLEAN: Color("2f3a33"),
@@ -122,9 +127,9 @@ func _draw() -> void:
 		for obj: ObjectState in _sim.house.objects.values():
 			if obj.room_id == room.id:
 				var color: Color = DIM_TEXT
-				if obj.state in [&"broken", &"hidden"]:
+				if obj.state in [&"broken", &"hidden", &"out", &"open"]:
 					color = BAD
-				elif obj.state in [&"working", &"available", &"ready"]:
+				elif obj.state in [&"working", &"available", &"ready", &"lit", &"closed"]:
 					color = OK
 				draw_string(font, room.plan_rect.position + Vector2(8, 52 + line * 15), "%s: %s" % [obj.display_name, obj.state],
 					HORIZONTAL_ALIGNMENT_LEFT, room.plan_rect.size.x - 16, 11, color)
@@ -202,7 +207,7 @@ func _build_panel() -> void:
 	for object_id: String in REPAIRABLE:
 		var button := Button.new()
 		button.add_theme_font_size_override(&"font_size", 12)
-		button.pressed.connect(_toggle_object.bind(object_id, &"working", &"broken"))
+		button.pressed.connect(_toggle_object.bind(object_id, REPAIRABLE[object_id][0], REPAIRABLE[object_id][1]))
 		buttons.add_child(button)
 		_object_buttons[object_id] = button
 	_basket_button = Button.new()
@@ -279,7 +284,7 @@ func _refresh() -> void:
 		lines.append(text)
 	_status.text = "\n".join(lines)
 	for object_id: String in _object_buttons:
-		var broken: bool = _sim.house.get_object_state(object_id) == &"broken"
+		var broken: bool = _sim.house.get_object_state(object_id) == REPAIRABLE[object_id][1]
 		_object_buttons[object_id].text = ("Repair " if broken else "Break ") + _sim.house.objects[object_id].display_name
 	_basket_button.text = "Return groceries" if _sim.house.get_object_state("grocery_basket") == &"hidden" else "Hide groceries"
 
@@ -339,7 +344,7 @@ func _run_capture(dir: String) -> void:
 	await _run_until("07:20")
 	await _shot(dir, "01-family-breakfast")
 	await _run_until("08:30")
-	_toggle_object("living_room_lamp", &"working", &"broken")
+	_toggle_object("lamp_living_room", &"lit", &"out")
 	_toggle_object("stove", &"working", &"broken")
 	_make_dirty("kitchen")
 	_make_dirty("library")

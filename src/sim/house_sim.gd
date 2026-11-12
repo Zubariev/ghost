@@ -38,6 +38,7 @@ func _init(game_clock: GameClock, house_state: HouseState, task_board: TaskBoard
 	board = task_board
 	routines = npc_routines
 	morale = MoraleSystem.new(morale_rules, house_state, npc_routines)
+	clock.phase_changed.connect(house.set_daylight)
 	clock.minute_advanced.connect(_on_minute_advanced)
 
 
@@ -55,8 +56,11 @@ static func from_data_files() -> HouseSim:
 
 ## Puts every NPC on the activity due at the clock's current time.
 func start() -> void:
+	house.set_daylight(clock.is_day())
+	morale.begin_scenario(clock.minute_of_day(), clock.total_minutes)
 	for routine: NpcRoutine in routines:
 		routine.begin(clock.minute_of_day())
+	morale.end_scenario_start()
 
 
 ## Advances real time; returns game minutes passed. Nothing passes once the scenario is over.

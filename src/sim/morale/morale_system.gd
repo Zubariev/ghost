@@ -46,6 +46,8 @@ var _dark_charged: Dictionary[String, bool] = {}
 var _started_at: Dictionary[String, int] = {}
 var _minute: int = 0
 var _total: int = 0
+## True while the scenario is starting: activities already running count as on time.
+var _starting: bool = false
 
 
 func _init(rules: Dictionary, house: HouseState, routines: Array[NpcRoutine]) -> void:
@@ -69,6 +71,11 @@ func get_morale(npc_id: String) -> int:
 	return _morale.get(npc_id, 0)
 
 
+## How many days the scenario lasts before it is lost.
+func scenario_days() -> int:
+	return int(_rules.get("scenario_days", 3))
+
+
 func is_broken(npc_id: String) -> bool:
 	return _broken.get(npc_id, false)
 
@@ -76,6 +83,18 @@ func is_broken(npc_id: String) -> bool:
 ## Sets morale directly (debug tools and tests); Broken and the win are checked as usual.
 func set_morale(npc_id: String, value: int) -> void:
 	_set_value(npc_id, value, "set")
+
+
+## Wraps the routines' [method NpcRoutine.begin] at the scenario's start, so an activity
+## already in progress then (sleep at 06:00) counts as started on time, not late.
+func begin_scenario(minute_of_day: int, total_minutes: int) -> void:
+	_minute = minute_of_day
+	_total = total_minutes
+	_starting = true
+
+
+func end_scenario_start() -> void:
+	_starting = false
 
 
 ## Call before the routines spend [param minute_of_day]; [param total_minutes] counts the
@@ -123,7 +142,7 @@ func end_minute() -> void:
 
 func _on_activity_started(activity: Activity, npc_id: String) -> void:
 	_reset_activity(npc_id)
-	_started_at[npc_id] = _minute
+	_started_at[npc_id] = activity.start_minute if _starting else _minute
 
 
 func _on_activity_completed(activity: Activity, npc_id: String) -> void:

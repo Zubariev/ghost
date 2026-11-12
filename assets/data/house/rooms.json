@@ -1,40 +1,729 @@
 {
-	"_source": "Demo Specification §4.2 / GDD §9.2; stage 3 rooms. walk_minutes are [TBD] tuning. plan_rect is for the debug view only.",
+	"_source": "Demo Specification §4.2 / GDD §9.2; stage 3 rooms. walk_minutes are [TBD] tuning. plan_rect is for the debug view only; stage 5a: per-floor grid (col, row; row 0 = back), windows, a lamp per room (Demo Specification §8.7).",
 	"rooms": [
-		{"id": "parents_bedroom", "name": "Спальня батьків", "floor": 1, "plan_rect": [20, 70, 240, 170]},
-		{"id": "grandparents_bedroom", "name": "Спальня бабусі й дідуся", "floor": 1, "plan_rect": [270, 70, 240, 170]},
-		{"id": "upper_corridor", "name": "Коридор (2 поверх)", "floor": 1, "plan_rect": [520, 70, 240, 170]},
-		{"id": "children_bedroom", "name": "Дитяча спальня", "floor": 1, "plan_rect": [770, 70, 240, 170]},
-		{"id": "upper_bathroom", "name": "Ванна (2 поверх)", "floor": 1, "plan_rect": [1020, 70, 240, 170]},
-		{"id": "workshop", "name": "Майстерня", "floor": 0, "plan_rect": [20, 290, 195, 180]},
-		{"id": "living_room", "name": "Вітальня", "floor": 0, "plan_rect": [225, 290, 195, 180]},
-		{"id": "hall", "name": "Хол", "floor": 0, "plan_rect": [430, 290, 195, 180]},
-		{"id": "dining_room", "name": "Їдальня", "floor": 0, "plan_rect": [635, 290, 195, 180]},
-		{"id": "kitchen", "name": "Кухня", "floor": 0, "plan_rect": [840, 290, 195, 180]},
-		{"id": "library", "name": "Бібліотека", "floor": 0, "plan_rect": [1045, 290, 215, 180]}
+		{
+			"id": "parents_bedroom",
+			"name": "Спальня батьків",
+			"floor": 1,
+			"plan_rect": [
+				20,
+				70,
+				240,
+				170
+			],
+			"grid": [
+				1,
+				1
+			],
+			"has_window": true
+		},
+		{
+			"id": "grandparents_bedroom",
+			"name": "Спальня бабусі й дідуся",
+			"floor": 1,
+			"plan_rect": [
+				270,
+				70,
+				240,
+				170
+			],
+			"grid": [
+				2,
+				0
+			],
+			"has_window": true
+		},
+		{
+			"id": "upper_corridor",
+			"name": "Коридор (2 поверх)",
+			"floor": 1,
+			"plan_rect": [
+				520,
+				70,
+				240,
+				170
+			],
+			"grid": [
+				2,
+				1
+			],
+			"has_window": false
+		},
+		{
+			"id": "children_bedroom",
+			"name": "Дитяча спальня",
+			"floor": 1,
+			"plan_rect": [
+				770,
+				70,
+				240,
+				170
+			],
+			"grid": [
+				3,
+				1
+			],
+			"has_window": true
+		},
+		{
+			"id": "upper_bathroom",
+			"name": "Ванна (2 поверх)",
+			"floor": 1,
+			"plan_rect": [
+				1020,
+				70,
+				240,
+				170
+			],
+			"grid": [
+				2,
+				2
+			],
+			"has_window": false
+		},
+		{
+			"id": "workshop",
+			"name": "Майстерня",
+			"floor": 0,
+			"plan_rect": [
+				20,
+				290,
+				195,
+				180
+			],
+			"grid": [
+				0,
+				1
+			],
+			"has_window": true
+		},
+		{
+			"id": "living_room",
+			"name": "Вітальня",
+			"floor": 0,
+			"plan_rect": [
+				225,
+				290,
+				195,
+				180
+			],
+			"grid": [
+				1,
+				1
+			],
+			"has_window": true
+		},
+		{
+			"id": "hall",
+			"name": "Хол",
+			"floor": 0,
+			"plan_rect": [
+				430,
+				290,
+				195,
+				180
+			],
+			"grid": [
+				2,
+				1
+			],
+			"has_window": false
+		},
+		{
+			"id": "dining_room",
+			"name": "Їдальня",
+			"floor": 0,
+			"plan_rect": [
+				635,
+				290,
+				195,
+				180
+			],
+			"grid": [
+				3,
+				1
+			],
+			"has_window": true
+		},
+		{
+			"id": "kitchen",
+			"name": "Кухня",
+			"floor": 0,
+			"plan_rect": [
+				840,
+				290,
+				195,
+				180
+			],
+			"grid": [
+				4,
+				1
+			],
+			"has_window": true
+		},
+		{
+			"id": "library",
+			"name": "Бібліотека",
+			"floor": 0,
+			"plan_rect": [
+				1045,
+				290,
+				215,
+				180
+			],
+			"grid": [
+				2,
+				0
+			],
+			"has_window": false
+		}
 	],
 	"doors": [
-		{"a": "parents_bedroom", "b": "upper_corridor", "walk_minutes": 1},
-		{"a": "grandparents_bedroom", "b": "upper_corridor", "walk_minutes": 1},
-		{"a": "children_bedroom", "b": "upper_corridor", "walk_minutes": 1},
-		{"a": "upper_bathroom", "b": "upper_corridor", "walk_minutes": 1},
-		{"a": "upper_corridor", "b": "hall", "walk_minutes": 3},
-		{"a": "hall", "b": "living_room", "walk_minutes": 1},
-		{"a": "living_room", "b": "workshop", "walk_minutes": 1},
-		{"a": "hall", "b": "dining_room", "walk_minutes": 1},
-		{"a": "dining_room", "b": "kitchen", "walk_minutes": 1},
-		{"a": "hall", "b": "library", "walk_minutes": 2}
+		{
+			"a": "parents_bedroom",
+			"b": "upper_corridor",
+			"walk_minutes": 1
+		},
+		{
+			"a": "grandparents_bedroom",
+			"b": "upper_corridor",
+			"walk_minutes": 1
+		},
+		{
+			"a": "children_bedroom",
+			"b": "upper_corridor",
+			"walk_minutes": 1
+		},
+		{
+			"a": "upper_bathroom",
+			"b": "upper_corridor",
+			"walk_minutes": 1
+		},
+		{
+			"a": "upper_corridor",
+			"b": "hall",
+			"walk_minutes": 3
+		},
+		{
+			"a": "hall",
+			"b": "living_room",
+			"walk_minutes": 1
+		},
+		{
+			"a": "living_room",
+			"b": "workshop",
+			"walk_minutes": 1
+		},
+		{
+			"a": "hall",
+			"b": "dining_room",
+			"walk_minutes": 1
+		},
+		{
+			"a": "dining_room",
+			"b": "kitchen",
+			"walk_minutes": 1
+		},
+		{
+			"a": "hall",
+			"b": "library",
+			"walk_minutes": 2
+		}
 	],
 	"objects": [
-		{"id": "stove", "name": "Плита", "room": "kitchen", "states": ["working", "broken"], "state": "working",
-			"repair": {"broken": "broken", "fixed": "working", "critical": true}},
-		{"id": "grocery_basket", "name": "Корзина продуктів", "room": "kitchen", "states": ["available", "hidden"], "state": "available"},
-		{"id": "meal_food", "name": "Готова їжа", "room": "dining_room", "states": ["none", "ready"], "state": "none"},
-		{"id": "computer", "name": "Комп'ютер сина", "room": "children_bedroom", "states": ["working", "broken"], "state": "working",
-			"repair": {"broken": "broken", "fixed": "working", "critical": true}},
-		{"id": "living_room_lamp", "name": "Лампа у вітальні", "room": "living_room", "states": ["working", "broken"], "state": "working",
-			"repair": {"broken": "broken", "fixed": "working", "critical": false}},
-		{"id": "grandma_armchair", "name": "Крісло бабусі", "room": "living_room", "states": ["free", "occupied"], "state": "free"},
-		{"id": "grandparents_bed", "name": "Ліжко бабусі й дідуся", "room": "grandparents_bedroom", "states": ["free", "occupied"], "state": "free"}
+		{
+			"id": "stove",
+			"name": "Плита",
+			"room": "kitchen",
+			"states": [
+				"working",
+				"broken"
+			],
+			"state": "working",
+			"repair": {
+				"broken": "broken",
+				"fixed": "working",
+				"critical": true
+			},
+			"ghost": {
+				"to": "broken",
+				"prompt": "GHOST_JAM_STOVE"
+			}
+		},
+		{
+			"id": "grocery_basket",
+			"name": "Корзина продуктів",
+			"room": "kitchen",
+			"states": [
+				"available",
+				"hidden"
+			],
+			"state": "available",
+			"ghost": {
+				"to": "hidden",
+				"prompt": "GHOST_HIDE_GROCERIES"
+			},
+			"self_fix": {
+				"from": "hidden",
+				"to": "available",
+				"minutes": 20
+			}
+		},
+		{
+			"id": "meal_food",
+			"name": "Готова їжа",
+			"room": "dining_room",
+			"states": [
+				"none",
+				"ready"
+			],
+			"state": "none"
+		},
+		{
+			"id": "computer",
+			"name": "Комп'ютер сина",
+			"room": "children_bedroom",
+			"states": [
+				"working",
+				"broken"
+			],
+			"state": "working",
+			"repair": {
+				"broken": "broken",
+				"fixed": "working",
+				"critical": true
+			},
+			"ghost": {
+				"to": "broken",
+				"prompt": "GHOST_BREAK_COMPUTER"
+			}
+		},
+		{
+			"id": "grandma_armchair",
+			"name": "Крісло бабусі",
+			"room": "living_room",
+			"states": [
+				"free",
+				"occupied"
+			],
+			"state": "free"
+		},
+		{
+			"id": "grandparents_bed",
+			"name": "Ліжко бабусі й дідуся",
+			"room": "grandparents_bedroom",
+			"states": [
+				"free",
+				"occupied"
+			],
+			"state": "free"
+		},
+		{
+			"id": "lamp_parents_bedroom",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "parents_bedroom",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "window_parents_bedroom",
+			"name": "Вікно",
+			"kind": "window",
+			"condition_state": "open",
+			"room": "parents_bedroom",
+			"states": [
+				"closed",
+				"open"
+			],
+			"state": "closed",
+			"ghost": {
+				"to": "open",
+				"prompt": "GHOST_OPEN_WINDOW"
+			},
+			"repair": {
+				"broken": "open",
+				"fixed": "closed",
+				"role": "clean",
+				"work_minutes": 5
+			}
+		},
+		{
+			"id": "lamp_grandparents_bedroom",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "grandparents_bedroom",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "window_grandparents_bedroom",
+			"name": "Вікно",
+			"kind": "window",
+			"condition_state": "open",
+			"room": "grandparents_bedroom",
+			"states": [
+				"closed",
+				"open"
+			],
+			"state": "closed",
+			"ghost": {
+				"to": "open",
+				"prompt": "GHOST_OPEN_WINDOW"
+			},
+			"repair": {
+				"broken": "open",
+				"fixed": "closed",
+				"role": "clean",
+				"work_minutes": 5
+			}
+		},
+		{
+			"id": "lamp_upper_corridor",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "upper_corridor",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "lamp_children_bedroom",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "children_bedroom",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "window_children_bedroom",
+			"name": "Вікно",
+			"kind": "window",
+			"condition_state": "open",
+			"room": "children_bedroom",
+			"states": [
+				"closed",
+				"open"
+			],
+			"state": "closed",
+			"ghost": {
+				"to": "open",
+				"prompt": "GHOST_OPEN_WINDOW"
+			},
+			"repair": {
+				"broken": "open",
+				"fixed": "closed",
+				"role": "clean",
+				"work_minutes": 5
+			}
+		},
+		{
+			"id": "lamp_upper_bathroom",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "upper_bathroom",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "lamp_workshop",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "workshop",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "window_workshop",
+			"name": "Вікно",
+			"kind": "window",
+			"condition_state": "open",
+			"room": "workshop",
+			"states": [
+				"closed",
+				"open"
+			],
+			"state": "closed",
+			"ghost": {
+				"to": "open",
+				"prompt": "GHOST_OPEN_WINDOW"
+			},
+			"repair": {
+				"broken": "open",
+				"fixed": "closed",
+				"role": "clean",
+				"work_minutes": 5
+			}
+		},
+		{
+			"id": "lamp_living_room",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "living_room",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "window_living_room",
+			"name": "Вікно",
+			"kind": "window",
+			"condition_state": "open",
+			"room": "living_room",
+			"states": [
+				"closed",
+				"open"
+			],
+			"state": "closed",
+			"ghost": {
+				"to": "open",
+				"prompt": "GHOST_OPEN_WINDOW"
+			},
+			"repair": {
+				"broken": "open",
+				"fixed": "closed",
+				"role": "clean",
+				"work_minutes": 5
+			}
+		},
+		{
+			"id": "lamp_hall",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "hall",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "lamp_dining_room",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "dining_room",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "window_dining_room",
+			"name": "Вікно",
+			"kind": "window",
+			"condition_state": "open",
+			"room": "dining_room",
+			"states": [
+				"closed",
+				"open"
+			],
+			"state": "closed",
+			"ghost": {
+				"to": "open",
+				"prompt": "GHOST_OPEN_WINDOW"
+			},
+			"repair": {
+				"broken": "open",
+				"fixed": "closed",
+				"role": "clean",
+				"work_minutes": 5
+			}
+		},
+		{
+			"id": "lamp_kitchen",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "kitchen",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		},
+		{
+			"id": "window_kitchen",
+			"name": "Вікно",
+			"kind": "window",
+			"condition_state": "open",
+			"room": "kitchen",
+			"states": [
+				"closed",
+				"open"
+			],
+			"state": "closed",
+			"ghost": {
+				"to": "open",
+				"prompt": "GHOST_OPEN_WINDOW"
+			},
+			"repair": {
+				"broken": "open",
+				"fixed": "closed",
+				"role": "clean",
+				"work_minutes": 5
+			}
+		},
+		{
+			"id": "lamp_library",
+			"name": "Лампа",
+			"kind": "lamp",
+			"condition_state": "lit",
+			"room": "library",
+			"states": [
+				"lit",
+				"out"
+			],
+			"state": "lit",
+			"ghost": {
+				"to": "out",
+				"prompt": "GHOST_SNUFF_LAMP"
+			},
+			"repair": {
+				"broken": "out",
+				"fixed": "lit",
+				"role": "repair",
+				"critical": false,
+				"work_minutes": 10
+			}
+		}
 	]
 }

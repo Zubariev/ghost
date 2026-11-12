@@ -1,0 +1,37 @@
+keys,uk
+GAME_TITLE,Привид проти людей
+PHASE_DAY,День
+PHASE_NIGHT,Ніч
+DAY_N,День %d
+SPEED_X,×%d
+PAUSED,ПАУЗА
+HELP_LINE,"WASD — рух крізь стіни · R / C — поверх вище / нижче · E — дія · Пробіл — пауза · 1/2/3 — швидкість"
+GHOST_SNUFF_LAMP,E — Загасити лампу
+GHOST_OPEN_WINDOW,E — Відчинити вікно
+GHOST_JAM_STOVE,E — Зіпсувати плиту
+GHOST_HIDE_GROCERIES,E — Сховати продукти
+GHOST_BREAK_COMPUTER,E — Зламати комп'ютер
+GHOST_ALREADY_DONE,%s — уже зроблено
+LOG_GHOST_ACTED,Привид: %s (%s).
+LOG_MORALE_DROP,%s: %d (%s) → %d
+LOG_BROKEN,%s зламався(-лась) — мораль ≤ 10.
+LOG_RECOVERED,%s отямився(-лась) — мораль 15.
+LOG_TASK_DONE,%s: виконано — %s.
+LOG_SEARCHING,%s шукає: %s.
+LOG_FLOOR_UP,Привид піднявся на поверх вище.
+LOG_FLOOR_DOWN,Привид опустився на поверх нижче.
+LOG_NO_FLOOR,Тут немає кімнати вище або нижче.
+REASON_missed_meal,голод
+REASON_sleep_skipped,без сну
+REASON_sleep_late,недосипання
+REASON_dark,темрява
+REASON_cold,холод
+REASON_dirty,бруд
+WIN_TITLE,Сім'я покинула будинок — привид переміг!
+LOSS_TITLE,Минув %d-й день — сім'я лишається. Поразка.
+KEY_EVENTS,Ключові події:
+ACT_lamp,лампу загашено
+ACT_window,вікно відчинено
+ACT_stove,плиту зіпсовано
+ACT_grocery_basket,продукти сховано
+ACT_computer,комп'ютер зламано

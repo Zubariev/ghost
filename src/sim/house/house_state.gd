@@ -14,6 +14,8 @@ signal room_cleanliness_changed(room_id: String, cleanliness: RoomState.Cleanlin
 signal room_temperature_changed(room_id: String, temperature: RoomState.Temperature)
 signal room_light_changed(room_id: String, light: RoomState.Light)
 
+## Daylight hours (06:00–22:00); set by the simulation when the phase changes.
+var is_day: bool = true
 var rooms: Dictionary[String, RoomState] = {}
 var objects: Dictionary[String, ObjectState] = {}
 
@@ -32,7 +34,42 @@ static func from_dict(data: Dictionary) -> HouseState:
 	for object_data: Variant in data.get("objects", []):
 		var obj: ObjectState = ObjectState.from_dict(object_data)
 		house.objects[obj.id] = obj
+	for room_id: String in house.rooms:
+		house._update_room_conditions(room_id)
 	return house
+
+
+## Day or night changes how dark a room with its lamps out is.
+func set_daylight(day: bool) -> void:
+	is_day = day
+	for room_id: String in rooms:
+		_update_room_conditions(room_id)
+
+
+## Lamps set the light (stage 5a): any lamp lit → bright; all out → dim by day in a room
+## with a window, otherwise dark. Windows set the temperature: any open → cold, else
+## comfortable. Rooms without lamps or windows keep what they have.
+func _update_room_conditions(room_id: String) -> void:
+	var lamps: int = 0
+	var lit: bool = false
+	var windows: int = 0
+	var open: bool = false
+	for obj: ObjectState in objects.values():
+		if obj.room_id != room_id:
+			continue
+		if obj.kind == "lamp":
+			lamps += 1
+			lit = lit or obj.state == obj.condition_state
+		elif obj.kind == "window":
+			windows += 1
+			open = open or obj.state == obj.condition_state
+	if lamps > 0:
+		var light: RoomState.Light = RoomState.Light.BRIGHT
+		if not lit:
+			light = RoomState.Light.DIM if is_day and rooms[room_id].has_window else RoomState.Light.DARK
+		set_room_light(room_id, light)
+	if windows > 0:
+		set_room_temperature(room_id, RoomState.Temperature.COLD if open else RoomState.Temperature.COMFORTABLE)
 
 
 ## Connects two rooms both ways; walking through takes [param walk_minutes].
@@ -62,6 +99,8 @@ func set_object_state(object_id: String, new_state: StringName) -> bool:
 	if obj.state != new_state:
 		obj.state = new_state
 		object_state_changed.emit(object_id, new_state)
+		if obj.kind == "lamp" or obj.kind == "window":
+			_update_room_conditions(obj.room_id)
 	return true
 
 

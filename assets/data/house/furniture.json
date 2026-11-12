@@ -1,0 +1,351 @@
+{
+	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). object = the sim object this piece shows.",
+	"rooms": {
+		"workshop": [
+			{
+				"kind": "window",
+				"u": 0.35,
+				"v": 0.0,
+				"object": "window_workshop"
+			},
+			{
+				"kind": "tool_rack",
+				"u": 0.75,
+				"v": 0.02
+			},
+			{
+				"kind": "workbench",
+				"u": 0.45,
+				"v": 0.3
+			},
+			{
+				"kind": "crate",
+				"u": 0.82,
+				"v": 0.62
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.12,
+				"v": 0.8,
+				"object": "lamp_workshop"
+			}
+		],
+		"living_room": [
+			{
+				"kind": "window",
+				"u": 0.45,
+				"v": 0.0,
+				"object": "window_living_room"
+			},
+			{
+				"kind": "rug",
+				"u": 0.5,
+				"v": 0.55
+			},
+			{
+				"kind": "sofa",
+				"u": 0.38,
+				"v": 0.32
+			},
+			{
+				"kind": "armchair",
+				"u": 0.78,
+				"v": 0.55,
+				"object": "grandma_armchair"
+			},
+			{
+				"kind": "side_table",
+				"u": 0.62,
+				"v": 0.3
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.12,
+				"v": 0.78,
+				"object": "lamp_living_room"
+			}
+		],
+		"hall": [
+			{
+				"kind": "stairs",
+				"u": 0.22,
+				"v": 0.02
+			},
+			{
+				"kind": "door_front",
+				"u": 0.5,
+				"v": 1.0
+			},
+			{
+				"kind": "coat_stand",
+				"u": 0.8,
+				"v": 0.25
+			},
+			{
+				"kind": "rug",
+				"u": 0.5,
+				"v": 0.6
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.88,
+				"v": 0.8,
+				"object": "lamp_hall"
+			}
+		],
+		"dining_room": [
+			{
+				"kind": "window",
+				"u": 0.5,
+				"v": 0.0,
+				"object": "window_dining_room"
+			},
+			{
+				"kind": "sideboard",
+				"u": 0.82,
+				"v": 0.08
+			},
+			{
+				"kind": "rug",
+				"u": 0.5,
+				"v": 0.6
+			},
+			{
+				"kind": "dining_table",
+				"u": 0.5,
+				"v": 0.58,
+				"object": "meal_food"
+			},
+			{
+				"kind": "chair",
+				"u": 0.24,
+				"v": 0.58
+			},
+			{
+				"kind": "chair",
+				"u": 0.76,
+				"v": 0.58
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.1,
+				"v": 0.82,
+				"object": "lamp_dining_room"
+			}
+		],
+		"kitchen": [
+			{
+				"kind": "window",
+				"u": 0.3,
+				"v": 0.0,
+				"object": "window_kitchen"
+			},
+			{
+				"kind": "counter",
+				"u": 0.62,
+				"v": 0.08
+			},
+			{
+				"kind": "stove",
+				"u": 0.82,
+				"v": 0.32,
+				"object": "stove"
+			},
+			{
+				"kind": "basket",
+				"u": 0.3,
+				"v": 0.48,
+				"object": "grocery_basket"
+			},
+			{
+				"kind": "kitchen_table",
+				"u": 0.52,
+				"v": 0.72
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.1,
+				"v": 0.82,
+				"object": "lamp_kitchen"
+			}
+		],
+		"library": [
+			{
+				"kind": "bookshelf",
+				"u": 0.22,
+				"v": 0.02
+			},
+			{
+				"kind": "bookshelf",
+				"u": 0.5,
+				"v": 0.02
+			},
+			{
+				"kind": "bookshelf",
+				"u": 0.78,
+				"v": 0.02
+			},
+			{
+				"kind": "reading_chair",
+				"u": 0.4,
+				"v": 0.55
+			},
+			{
+				"kind": "rug",
+				"u": 0.5,
+				"v": 0.65
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.62,
+				"v": 0.5,
+				"object": "lamp_library"
+			}
+		],
+		"parents_bedroom": [
+			{
+				"kind": "window",
+				"u": 0.7,
+				"v": 0.0,
+				"object": "window_parents_bedroom"
+			},
+			{
+				"kind": "double_bed",
+				"u": 0.38,
+				"v": 0.3
+			},
+			{
+				"kind": "wardrobe",
+				"u": 0.88,
+				"v": 0.05
+			},
+			{
+				"kind": "rug",
+				"u": 0.45,
+				"v": 0.75
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.12,
+				"v": 0.62,
+				"object": "lamp_parents_bedroom"
+			}
+		],
+		"grandparents_bedroom": [
+			{
+				"kind": "window",
+				"u": 0.25,
+				"v": 0.0,
+				"object": "window_grandparents_bedroom"
+			},
+			{
+				"kind": "double_bed",
+				"u": 0.55,
+				"v": 0.3,
+				"object": "grandparents_bed"
+			},
+			{
+				"kind": "wardrobe",
+				"u": 0.9,
+				"v": 0.05
+			},
+			{
+				"kind": "rocking_chair",
+				"u": 0.2,
+				"v": 0.7
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.82,
+				"v": 0.7,
+				"object": "lamp_grandparents_bedroom"
+			}
+		],
+		"upper_corridor": [
+			{
+				"kind": "stairs",
+				"u": 0.22,
+				"v": 0.02
+			},
+			{
+				"kind": "rug",
+				"u": 0.5,
+				"v": 0.55
+			},
+			{
+				"kind": "chest",
+				"u": 0.8,
+				"v": 0.2
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.88,
+				"v": 0.8,
+				"object": "lamp_upper_corridor"
+			}
+		],
+		"children_bedroom": [
+			{
+				"kind": "window",
+				"u": 0.5,
+				"v": 0.0,
+				"object": "window_children_bedroom"
+			},
+			{
+				"kind": "bed",
+				"u": 0.18,
+				"v": 0.3
+			},
+			{
+				"kind": "bed",
+				"u": 0.42,
+				"v": 0.3
+			},
+			{
+				"kind": "computer_desk",
+				"u": 0.8,
+				"v": 0.2,
+				"object": "computer"
+			},
+			{
+				"kind": "toy_box",
+				"u": 0.62,
+				"v": 0.72
+			},
+			{
+				"kind": "easel",
+				"u": 0.3,
+				"v": 0.78
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.92,
+				"v": 0.82,
+				"object": "lamp_children_bedroom"
+			}
+		],
+		"upper_bathroom": [
+			{
+				"kind": "bathtub",
+				"u": 0.35,
+				"v": 0.18
+			},
+			{
+				"kind": "sink",
+				"u": 0.78,
+				"v": 0.08
+			},
+			{
+				"kind": "rug",
+				"u": 0.55,
+				"v": 0.7
+			},
+			{
+				"kind": "floor_lamp",
+				"u": 0.88,
+				"v": 0.8,
+				"object": "lamp_upper_bathroom"
+			}
+		]
+	}
+}

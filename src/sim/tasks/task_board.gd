@@ -1,7 +1,8 @@
 ## The household's open tasks, read from the house's current state, and who has claimed them.
 ##
 ## Approved rules (stage 3, GDD §10.4):
-## [br]- every object in its broken state is a repair task (critical objects rank higher);
+## [br]- every object in its broken state is a task for the role its data names (lamps and
+##   the stove: repair; open windows: clean); critical objects rank higher;
 ## [br]- every room that is not clean is a clean task (dirty ranks above a cosmetic tidy);
 ## [br]- a worker gets the highest-priority unclaimed task for their role; ties go to the
 ##   shorter walk, then to data order; unreachable tasks are passed over;
@@ -33,22 +34,25 @@ func _init(house: HouseState, config: Dictionary) -> void:
 ## Every open task for [param role], unclaimed or not, in data order.
 func tasks_for_role(role: String) -> Array[HouseTask]:
 	var result: Array[HouseTask] = []
-	if role == ROLE_REPAIR:
-		var repair_cfg: Dictionary = _config.get("repair", {})
-		for obj: ObjectState in _house.objects.values():
-			if obj.needs_repair():
-				var task := HouseTask.new()
-				task.key = "repair:%s" % obj.id
-				task.type = HouseTask.Type.REPAIR
-				task.target_id = obj.id
-				task.room_id = obj.room_id
+	var repair_cfg: Dictionary = _config.get("repair", {})
+	var clean_cfg: Dictionary = _config.get("clean", {})
+	for obj: ObjectState in _house.objects.values():
+		if obj.needs_repair() and obj.repair_role() == role:
+			var task := HouseTask.new()
+			task.key = "repair:%s" % obj.id
+			task.type = HouseTask.Type.REPAIR
+			task.target_id = obj.id
+			task.room_id = obj.room_id
+			if role == ROLE_CLEAN:
+				task.priority = int(clean_cfg.get("object_priority", 5))
+				task.work_minutes = int(obj.repair.get("work_minutes", clean_cfg.get("work_minutes", 30)))
+			else:
 				task.priority = int(repair_cfg.get("critical_priority" if bool(obj.repair.get("critical", false)) else "priority", 5))
-				task.work_minutes = int(repair_cfg.get("work_minutes", 45))
-				task.on_success = [{"object": obj.id, "set": String(obj.repair.get("fixed", ""))}]
-				task.order = result.size()
-				result.append(task)
-	elif role == ROLE_CLEAN:
-		var clean_cfg: Dictionary = _config.get("clean", {})
+				task.work_minutes = int(obj.repair.get("work_minutes", repair_cfg.get("work_minutes", 45)))
+			task.on_success = [{"object": obj.id, "set": String(obj.repair.get("fixed", ""))}]
+			task.order = result.size()
+			result.append(task)
+	if role == ROLE_CLEAN:
 		for room: RoomState in _house.rooms.values():
 			if room.cleanliness == RoomState.Cleanliness.CLEAN:
 				continue
