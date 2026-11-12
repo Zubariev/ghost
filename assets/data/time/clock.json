@@ -1,0 +1,8 @@
+{
+	"_source": "Demo Specification §6 [УЗГОДЖЕНО]",
+	"minutes_per_real_second": 1.0,
+	"day_start": "06:00",
+	"night_start": "22:00",
+	"speeds": [1, 2, 4],
+	"start_time": "06:00"
+}

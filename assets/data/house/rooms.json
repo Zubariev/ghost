@@ -1,0 +1,25 @@
+{
+	"_source": "Demo Specification §4.2 / GDD §9.2. Stage 2: grandma's rooms only. walk_minutes are [TBD] tuning.",
+	"rooms": [
+		{"id": "grandparents_bedroom", "name": "Спальня бабусі й дідуся", "floor": 1, "plan_rect": [80, 90, 320, 200]},
+		{"id": "upper_corridor", "name": "Коридор (2 поверх)", "floor": 1, "plan_rect": [420, 90, 300, 200]},
+		{"id": "hall", "name": "Хол", "floor": 0, "plan_rect": [420, 400, 200, 230]},
+		{"id": "living_room", "name": "Вітальня", "floor": 0, "plan_rect": [80, 400, 320, 230]},
+		{"id": "dining_room", "name": "Їдальня", "floor": 0, "plan_rect": [640, 400, 260, 230]},
+		{"id": "kitchen", "name": "Кухня", "floor": 0, "plan_rect": [920, 400, 260, 230]}
+	],
+	"doors": [
+		{"a": "grandparents_bedroom", "b": "upper_corridor", "walk_minutes": 1},
+		{"a": "upper_corridor", "b": "hall", "walk_minutes": 3},
+		{"a": "hall", "b": "living_room", "walk_minutes": 1},
+		{"a": "hall", "b": "dining_room", "walk_minutes": 1},
+		{"a": "dining_room", "b": "kitchen", "walk_minutes": 1}
+	],
+	"objects": [
+		{"id": "stove", "name": "Плита", "room": "kitchen", "states": ["working", "broken"], "state": "working"},
+		{"id": "grocery_basket", "name": "Корзина продуктів", "room": "kitchen", "states": ["available", "hidden"], "state": "available"},
+		{"id": "meal_food", "name": "Готова їжа", "room": "dining_room", "states": ["none", "ready"], "state": "none"},
+		{"id": "grandma_armchair", "name": "Крісло бабусі", "room": "living_room", "states": ["free", "occupied"], "state": "free"},
+		{"id": "grandparents_bed", "name": "Ліжко бабусі й дідуся", "room": "grandparents_bedroom", "states": ["free", "occupied"], "state": "free"}
+	]
+}
