@@ -2,6 +2,12 @@
 ## where the family's doors are, furniture from `assets/data/house/furniture.json`, the
 ## family members who are in the room, and the ghost — all sorted by depth. A wall the ghost
 ## is inside fades. Presentation only: it reads the simulation and never changes it.
+##
+## Rooms listed in `assets/art/visual_style.json` are drawn in the Whimsical Gothic
+## Storybook style (art test, 2026-11-15): [StorybookArt] props and characters, a wallpapered
+## and panelled shell, firelight / lamplight / moonlight pools, the paper shader, and an eased
+## warm-to-haunted mood ([RoomMood]) that the game's colour grade reads. Any prop with a
+## painted sprite in that file is drawn from the image instead ([PropVisuals]).
 class_name RoomStage
 extends Node2D
 
@@ -32,15 +38,59 @@ var show_cones: bool = false
 var monocle_taken: bool = false
 ## Sight zone sizes from stealth.json (for drawing the cones).
 var sight_config: Dictionary = {}
+## Which rooms are storybook, and painted sprites replacing code-drawn props; may be null.
+var visuals: PropVisuals
+## Paper grain material used in storybook rooms; may be null.
+var paper_material: Material
+
+const PAPER_SHADER_PATH: String = "res://assets/shaders/canvas_art_storybook_paper.gdshader"
+## Shadows stretch this much more when a storybook room is fully haunted.
+const HAUNTED_SHADOW_STRETCH: float = 1.3
+## How quickly the night look comes and goes, per real second.
+const NIGHT_EASE_PER_SECOND: float = 0.8
 
 var _time: float = 0.0
 var _walk_phase: float = 0.0
 var _wall_alpha: Dictionary = {"left": 1.0, "right": 1.0, "back": 1.0}
+var _warmth: float = 1.0
+var _night: float = 0.0
+var _mood_room: String = ""
+
+
+## True when the room on screen is drawn in the storybook style.
+func is_storybook() -> bool:
+	return visuals != null and visuals.is_storybook(navigator.room_id)
+
+
+## The warm-to-haunted mood shown now, 1 cozy .. 0 haunted (eased).
+func shown_warmth() -> float:
+	return _warmth
+
+
+## How much of the night look is shown now, 0..1 (eased).
+func shown_night() -> float:
+	return _night
+
+
+## Jumps the mood straight to the room's state (on entering a room, and for captures).
+func settle_mood() -> void:
+	_mood_room = navigator.room_id
+	_warmth = RoomMood.warmth(sim.house.rooms[navigator.room_id])
+	_night = 0.0 if sim.house.is_day else 1.0
 
 
 func _process(delta: float) -> void:
 	_time += delta
 	_walk_phase += delta * 9.0
+	if _mood_room != navigator.room_id:
+		settle_mood()
+	_warmth = RoomMood.approach(_warmth, RoomMood.warmth(sim.house.rooms[navigator.room_id]), delta)
+	_night = move_toward(_night, 0.0 if sim.house.is_day else 1.0, NIGHT_EASE_PER_SECOND * delta)
+	if paper_material == null and ResourceLoader.exists(PAPER_SHADER_PATH):
+		var paper := ShaderMaterial.new()
+		paper.shader = load(PAPER_SHADER_PATH)
+		paper_material = paper
+	material = paper_material if is_storybook() else null
 	var inside: String = navigator.wall()
 	for wall: String in _wall_alpha:
 		var target: float = WALL_FADE_ALPHA if wall == inside else 1.0
@@ -51,29 +101,46 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var room_id: String = navigator.room_id
 	var room: RoomState = sim.house.rooms[room_id]
-	draw_rect(Rect2(-200, -200, 1680, 1120), Palette.BACKGROUND)
-	_draw_floor()
-	_draw_back_wall(float(_wall_alpha["back"]))
-	_draw_side_wall(true, float(_wall_alpha["left"]))
-	_draw_side_wall(false, float(_wall_alpha["right"]))
-	_draw_doors(room_id)
-	_draw_lamp_glow(room_id)
+	var storybook: bool = is_storybook()
+	FamilyArt.storybook = storybook
+	FamilyArt.shadow_stretch = 1.0 + (1.0 - _warmth) * HAUNTED_SHADOW_STRETCH
+	if storybook:
+		draw_rect(Rect2(-200, -200, 1680, 1120), Palette.SB_CHARCOAL.darkened(0.35))
+		StorybookShell.draw_floor(self)
+		StorybookShell.draw_back_wall(self, float(_wall_alpha["back"]))
+		StorybookShell.draw_side_wall(self, true, float(_wall_alpha["left"]))
+		StorybookShell.draw_side_wall(self, false, float(_wall_alpha["right"]))
+		StorybookShell.draw_doors(self, sim.house, room_id, _wall_alpha)
+		_draw_storybook_light(room_id)
+	else:
+		draw_rect(Rect2(-200, -200, 1680, 1120), Palette.BACKGROUND)
+		_draw_floor()
+		_draw_back_wall(float(_wall_alpha["back"]))
+		_draw_side_wall(true, float(_wall_alpha["left"]))
+		_draw_side_wall(false, float(_wall_alpha["right"]))
+		_draw_doors(room_id)
+		_draw_lamp_glow(room_id)
 	# Depth-sorted content: [screen y, callable]
 	var items: Array = []
 	for piece: Dictionary in layout.pieces(room_id):
 		var kind: String = String(piece["kind"])
+		if bool(piece.get("decor", false)) and not storybook:
+			continue   # decor exists only in the storybook look
 		var uv := Vector2(float(piece["u"]), float(piece["v"]))
 		var object_id: String = String(piece.get("object", ""))
 		var state: StringName = sim.house.get_object_state(object_id) if not object_id.is_empty() else &""
 		if piece.has("pickup") and monocle_taken:
 			state = &"taken"
+		if kind == "fireplace":
+			state = &"burning" if RoomMood.fire_burning(sim.house.rooms[room_id]) else &"out"
 		var y: float = RoomGeometry.to_screen(uv).y
 		if FurnitureArt.is_flat(kind):
 			y = -10000.0
-		elif FurnitureArt.is_wall(kind):
+		elif FurnitureArt.is_wall(kind) or (storybook and StorybookArt.is_wall(kind)):
 			y = -5000.0
 		var target_key: String = object_id if not object_id.is_empty() else String(piece.get("pickup", piece.get("hide_id", "")))
-		items.append([y, FurnitureArt.draw.bind(self, kind, uv, state, target_key == target_object and not target_key.is_empty(), sim.house.is_day)])
+		var highlighted: bool = target_key == target_object and not target_key.is_empty()
+		items.append([y, _draw_piece.bind(piece, uv, state, highlighted, not target_key.is_empty(), storybook)])
 	var markers: Array = []
 	for i: int in sim.routines.size():
 		var routine: NpcRoutine = sim.routines[i]
@@ -109,8 +176,58 @@ func _draw() -> void:
 	for marker: Array in markers:
 		draw_string(ThemeDB.fallback_font, marker[0], marker[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 30,
 			Color("e0735f") if marker[1] == "!" else Color("f0c36a"))
-	if room.temperature == RoomState.Temperature.COLD:
+	if room.temperature == RoomState.Temperature.COLD and not storybook:
 		draw_rect(Rect2(0, 0, 1280, 720), Palette.COLD_OVERLAY)
+	FamilyArt.storybook = false
+
+
+## One furniture piece: its painted sprite if it has one, else the code drawing for the
+## room's look.
+func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted: bool, interactive: bool, storybook: bool) -> void:
+	var kind: String = String(piece["kind"])
+	var variant: String = String(piece.get("variant", ""))
+	if visuals != null:
+		var wall: bool = StorybookArt.is_wall(kind)
+		var depth: float = 1.0 if wall else RoomGeometry.scale_at(uv.y)
+		if visuals.draw_sprite(self, kind, variant, state, RoomGeometry.to_screen(uv), depth, highlighted):
+			return
+	if storybook:
+		StorybookArt.draw(self, piece, uv, state, highlighted, sim.house.is_day, interactive, _time)
+	else:
+		FurnitureArt.draw(self, kind, uv, state, highlighted, sim.house.is_day)
+
+
+## Storybook light pools on the floor and walls: firelight in front of a burning fireplace,
+## lamplight under a lit lamp, moonlight (night) or daylight through the window. Warm pools
+## fade as the room turns haunted; moonlight grows.
+func _draw_storybook_light(room_id: String) -> void:
+	var room: RoomState = sim.house.rooms[room_id]
+	var flicker: float = 0.85 + 0.15 * sin(_time * 7.3) * sin(_time * 3.1)
+	for piece: Dictionary in layout.pieces(room_id):
+		var kind: String = String(piece["kind"])
+		var uv := Vector2(float(piece["u"]), float(piece["v"]))
+		if kind == "fireplace" and RoomMood.fire_burning(room):
+			var hearth: Vector2 = RoomGeometry.to_screen(uv)
+			_floor_glow(RoomGeometry.to_screen(uv + Vector2(0, 0.16)), Vector2(270, 80), Color(Palette.SB_CANDLELIGHT, 0.45 * flicker * maxf(_warmth, 0.4)))
+			Ink.glow(self, hearth + Vector2(0, -70), Vector2(150, 110), Color(Palette.SB_CANDLELIGHT, 0.22 * flicker), 6)
+		elif kind == "floor_lamp" and sim.house.get_object_state(String(piece.get("object", ""))) == &"lit":
+			var lamp_foot: Vector2 = RoomGeometry.to_screen(uv)
+			_floor_glow(lamp_foot, Vector2(260, 85), Color(Palette.SB_CANDLELIGHT, 0.5))
+			Ink.glow(self, lamp_foot + Vector2(0, -130 * RoomGeometry.scale_at(uv.y)), Vector2(120, 90), Color(Palette.SB_CANDLELIGHT, 0.28), 6)
+		elif kind == "window":
+			var sill: Vector2 = RoomGeometry.to_screen(uv)
+			var patch: Vector2 = RoomGeometry.to_screen(uv + Vector2(0.04, 0.3))
+			var light: Color = Color(Palette.SB_MOON, 0.10 + 0.12 * (1.0 - _warmth)) if not sim.house.is_day else Color(Palette.SB_CREAM, 0.12)
+			var beam := PackedVector2Array([sill + Vector2(-52, -60), sill + Vector2(52, -60), patch + Vector2(110, 0), patch + Vector2(-90, 0)])
+			draw_colored_polygon(beam, Color(light, light.a * 0.45))
+			_floor_glow(patch, Vector2(130, 34), light)
+
+
+func _floor_glow(centre: Vector2, radius: Vector2, color: Color) -> void:
+	for ring: int in 6:
+		var t: float = 1.0 - float(ring) / 6.0
+		for piece: PackedVector2Array in floor_pieces(Ink.ellipse(centre, radius.x * t, radius.y * t, 32)):
+			draw_colored_polygon(piece, Color(color, color.a / 6.0))
 
 
 ## Peripheral (wide, faint) and deep (narrow, strong) sight zones on the floor for everyone

@@ -36,13 +36,14 @@ func _init(layout: RoomLayout, config: Dictionary) -> void:
 
 
 ## Floor rectangles nobody walks through in [param room_id]: footprints grown by the clearance.
+## Decor pieces ("decor": true) are drawn only and never block.
 func blocked(room_id: String) -> Array[Rect2]:
 	if not _blocked.has(room_id):
 		var rects: Array[Rect2] = []
 		for piece: Dictionary in _layout.pieces(room_id):
 			var kind: String = String(piece["kind"])
-			if not _footprints.has(kind):
-				continue
+			if not _footprints.has(kind) or bool(piece.get("decor", false)):
+				continue   # decor (art test, 2026-11-15) is drawn only, never an obstacle
 			var half: Vector2 = _footprints[kind] + Vector2(_clearance, _clearance)
 			rects.append(Rect2(Vector2(float(piece["u"]), float(piece["v"])) - half, half * 2.0))
 		_blocked[room_id] = rects

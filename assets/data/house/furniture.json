@@ -1,5 +1,5 @@
 {
-	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take.",
+	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take. decor = drawn only (Whimsical Gothic Storybook art test, 2026-11-15): never an obstacle, hiding spot, sight blocker or object; variant picks a look (e.g. armchair olive, painting portrait/landscape).",
 	"rooms": {
 		"workshop": [
 			{
@@ -70,6 +70,51 @@
 				"u": 0.12,
 				"v": 0.78,
 				"object": "lamp_living_room"
+			},
+			{
+				"kind": "fireplace",
+				"u": 0.18,
+				"v": 0.0,
+				"decor": true
+			},
+			{
+				"kind": "wall_clock",
+				"u": 0.585,
+				"v": 0.0,
+				"decor": true
+			},
+			{
+				"kind": "painting",
+				"u": 0.69,
+				"v": 0.0,
+				"variant": "portrait",
+				"decor": true
+			},
+			{
+				"kind": "painting",
+				"u": 0.81,
+				"v": 0.0,
+				"variant": "landscape",
+				"decor": true
+			},
+			{
+				"kind": "bookshelf",
+				"u": 0.9,
+				"v": 0.06,
+				"decor": true
+			},
+			{
+				"kind": "armchair",
+				"u": 0.1,
+				"v": 0.15,
+				"variant": "olive",
+				"decor": true
+			},
+			{
+				"kind": "tea_table",
+				"u": 0.06,
+				"v": 0.24,
+				"decor": true
 			}
 		],
 		"hall": [

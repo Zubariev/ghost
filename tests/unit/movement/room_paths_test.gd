@@ -83,3 +83,16 @@ func test_nearest_free_point_is_outside_the_furniture() -> void:
 	# Assert: just past the box's right edge
 	assert_bool(_paths().is_free("room", free)).is_true()
 	assert_float(free.x).is_greater(0.6)
+
+
+# Art test (2026-11-15): decor is drawn only and never blocks walking.
+
+func test_decor_pieces_never_block_walking() -> void:
+	# Arrange: a decor box right across the straight walk
+	var layout := RoomLayout.new({"room": [{"kind": "box", "u": 0.5, "v": 0.5, "decor": true}]}, null)
+	var paths := RoomPaths.new(layout, {"grid_cells": [40, 24], "clearance": 0.0, "footprints": {"box": [0.1, 0.1]}})
+	# Act
+	var points: PackedVector2Array = paths.find("room", Vector2(0.5, 0.2), Vector2(0.5, 0.8))
+	# Assert
+	assert_array(paths.blocked("room")).is_empty()
+	assert_int(points.size()).is_equal(2)

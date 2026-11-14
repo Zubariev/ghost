@@ -1,5 +1,5 @@
 {
-	"_source": "Stage 5c family movement (roadmap step 1; decided 2026-11-13: walking inside a room is shown only and costs no simulation time). Floor units as in furniture.json (u left→right, v back→front). walk_speed: floor units per game minute. catch_up_minutes: when the route left is longer than walk_speed covers in this time, people walk faster so the view never trails the simulation by more. stagger_minutes: when several people set off on the same room-to-room route at once, each next one leaves this much later. door_inset: how far inside a door someone arriving stops. grid_cells: walking grid per room [u, v]. clearance: a person's half width, added around every footprint. footprints: [half u, half v] each furniture kind blocks; kinds not listed (rugs, windows, the front door) are walked over. All values are provisional tuning (roadmap step 4).",
+	"_source": "Stage 5c family movement (roadmap step 1; decided 2026-11-13: walking inside a room is shown only and costs no simulation time). Floor units as in furniture.json (u left→right, v back→front). walk_speed: floor units per game minute. catch_up_minutes: when the route left is longer than walk_speed covers in this time, people walk faster so the view never trails the simulation by more. stagger_minutes: when several people set off on the same room-to-room route at once, each next one leaves this much later. door_inset: how far inside a door someone arriving stops. grid_cells: walking grid per room [u, v]. clearance: a person's half width, added around every footprint. footprints: [half u, half v] each furniture kind blocks; kinds not listed (rugs, windows, the front door) are walked over; pieces marked decor in furniture.json never block (their size here is only used to check no route crosses them). All values are provisional tuning (roadmap step 4).",
 	"walk_speed": 0.45,
 	"catch_up_minutes": 1.0,
 	"stagger_minutes": 0.15,
@@ -35,6 +35,8 @@
 		"easel": [0.03, 0.03],
 		"bathtub": [0.13, 0.06],
 		"sink": [0.03, 0.03],
-		"dresser": [0.06, 0.04]
+		"dresser": [0.06, 0.04],
+		"tea_table": [0.035, 0.03],
+		"fireplace": [0.15, 0.03]
 	}
 }

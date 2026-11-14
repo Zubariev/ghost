@@ -10,7 +10,10 @@
 ## Stage 5d (Demo Specification §8.10): E starts harm that takes time and costs energy
 ## ([GhostCasting], [GhostEnergy]); floating off, hiding, changing floor or contact
 ## interrupts it at no cost. Energy refills by itself (faster hidden, in dark or cold rooms).
-## Run with `--capture=<dir>` for a scripted tour that saves screenshots and quits.
+## Art test (2026-11-15): storybook rooms (assets/art/visual_style.json) get a colour-grade
+## layer between the room and the HUD that follows the room's warm-to-haunted mood.
+## Run with `--capture=<dir>` for a scripted tour that saves screenshots and quits; add
+## `--art-test` to capture only the cozy and haunted living room.
 extends Node2D
 
 const STRINGS_PATH: String = "res://assets/i18n/strings.csv"
@@ -20,6 +23,10 @@ const GHOST_PATH: String = "res://assets/data/ghost/ghost.json"
 const STEALTH_PATH: String = "res://assets/data/ghost/stealth.json"
 const MOVEMENT_PATH: String = "res://assets/data/house/movement.json"
 const ENERGY_PATH: String = "res://assets/data/ghost/energy.json"
+const GRADE_SHADER_PATH: String = "res://assets/shaders/post_art_room_grade.gdshader"
+## Draw order: room (0), colour grade (1), HUD (2).
+const GRADE_LAYER: int = 1
+const HUD_LAYER: int = 2
 const KEYS: Dictionary = {
 	&"ghost_left": KEY_A, &"ghost_right": KEY_D, &"ghost_up": KEY_W, &"ghost_down": KEY_S,
 	&"interact": KEY_E, &"change_floor": KEY_SPACE, &"hide": KEY_F, &"sight_view": KEY_Q,
@@ -30,6 +37,9 @@ var _sim: HouseSim
 var _navigator: GhostNavigator
 var _stage: RoomStage
 var _tint: CanvasModulate
+## Colour grade for storybook rooms (full-screen, under the HUD).
+var _grade_layer: CanvasLayer
+var _grade: ColorRect
 var _hud: GameHud
 var _stealth: StealthSystem
 var _motion: FamilyMotion
@@ -79,12 +89,25 @@ func _ready() -> void:
 	_stage.motion = _motion
 	_stage.casting = _casting
 	_stage.sight_config = stealth_cfg
+	_stage.visuals = PropVisuals.new(JsonData.read(PropVisuals.STYLE_PATH))
 	_sim.clock.minute_advanced.connect(func(total: int) -> void:
 		if not _sim.is_over():
 			_stealth.on_minute(posmod(total - 1, GameClock.MINUTES_PER_DAY)))
 	_tint = CanvasModulate.new()
 	add_child(_tint)
+	_grade_layer = CanvasLayer.new()
+	_grade_layer.layer = GRADE_LAYER
+	add_child(_grade_layer)
+	_grade = ColorRect.new()
+	_grade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_grade.position = Vector2.ZERO
+	_grade.size = Vector2(1280, 720)
+	var grade_material := ShaderMaterial.new()
+	grade_material.shader = load(GRADE_SHADER_PATH)
+	_grade.material = grade_material
+	_grade_layer.add_child(_grade)
 	_hud = GameHud.new()
+	_hud.layer = HUD_LAYER
 	add_child(_hud)
 	_hud.setup(_sim, _navigator)
 	_hud.set_energy(_energy)
@@ -204,6 +227,20 @@ func _update_view() -> void:
 		else:
 			_hud.set_prompt(tr("GHOST_COST") % [action, cost], at_screen, true)
 	var room: RoomState = _sim.house.rooms[room_id]
+	_grade.visible = _stage.is_storybook()
+	if _grade.visible:
+		# The grade carries the light in storybook rooms; the old whole-room tint stays neutral.
+		_tint.color = Color.WHITE
+		var grade_material: ShaderMaterial = _grade.material
+		grade_material.set_shader_parameter(&"warmth", _stage.shown_warmth())
+		grade_material.set_shader_parameter(&"night", _stage.shown_night())
+	else:
+		_set_placeholder_tint(room)
+	_hud.refresh()
+
+
+## The original whole-room light tint (rooms not yet in the storybook style).
+func _set_placeholder_tint(room: RoomState) -> void:
 	match room.light:
 		RoomState.Light.DARK:
 			_tint.color = Palette.TINT_DARK
@@ -211,7 +248,6 @@ func _update_view() -> void:
 			_tint.color = Palette.TINT_DIM
 		_:
 			_tint.color = Palette.TINT_BRIGHT_DAY if _sim.house.is_day else Palette.TINT_BRIGHT_NIGHT
-	_hud.refresh()
 
 
 ## The hiding spot within reach of the ghost in its room, or "".
@@ -328,6 +364,10 @@ func _capture_dir() -> String:
 func _run_capture(dir: String) -> void:
 	set_process(false)
 	DirAccess.make_dir_recursive_absolute(dir)
+	if OS.get_cmdline_user_args().has("--art-test") or OS.get_cmdline_args().has("--art-test"):
+		await _run_art_test(dir)
+		get_tree().quit()
+		return
 	await _show(dir, "01-hall-start", "07:00", "hall", Vector2(0.5, 0.75))
 	await _show(dir, "02-family-breakfast", "07:30", "dining_room", Vector2(0.5, 0.85))
 	await _show(dir, "03-stove-targeted", "08:50", "kitchen", Vector2(0.80, 0.42))
@@ -381,6 +421,35 @@ func _run_capture(dir: String) -> void:
 	get_tree().quit()
 
 
+## Art test capture (2026-11-15): the living room at night, cozy (lamp lit, window shut,
+## fire burning), then haunted (lamp out, window open, fire out) — same moment, same people,
+## same camera; only the room's state differs. Changed through the same rules the ghost's
+## actions use, without advancing time.
+func _run_art_test(dir: String) -> void:
+	# 21:30 — the family's evening in the living room (still daytime in the game's clock).
+	await _show(dir, "01-cozy-evening-family", "21:30", "living_room", Vector2(0.5, 0.93))
+	_haunt_living_room()
+	await _show(dir, "02-haunted-evening-family", "21:30", "living_room", Vector2(0.5, 0.93))
+	# 22:10 — night, the room empty: cozy, then fully haunted.
+	_cozy_living_room()
+	await _show(dir, "03-cozy-night", "22:10", "living_room", Vector2(0.5, 0.93))
+	_haunt_living_room()
+	await _show(dir, "04-haunted-night", "22:10", "living_room", Vector2(0.5, 0.93))
+	await _show(dir, "05-haunted-night-ghost-at-lamp", "22:10", "living_room", Vector2(0.17, 0.8))
+
+
+## Art test only: lamp out and window open, through the ghost's own rules.
+func _haunt_living_room() -> void:
+	GhostActions.act(_sim.house, "lamp_living_room")
+	GhostActions.act(_sim.house, "window_living_room")
+
+
+## Art test only: lamp lit and window shut again (what the family's repairs would do).
+func _cozy_living_room() -> void:
+	_sim.house.set_object_state("lamp_living_room", &"lit")
+	_sim.house.set_object_state("window_living_room", &"closed")
+
+
 ## Capture only: starts the action on the highlighted object and lets it land at once.
 func _act_now() -> void:
 	_act()
@@ -414,6 +483,7 @@ func _show(dir: String, shot_name: String, time_text: String, room_id: String, a
 		if extra >= 0.0 or _sim.clock.minute_of_day() == target:
 			extra = maxf(extra, 0.0) + minutes
 	_navigator.place(room_id, at)
+	_stage.settle_mood()
 	_update_view()
 	for i: int in 12:
 		await get_tree().process_frame

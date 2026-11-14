@@ -1,0 +1,5 @@
+{
+	"_source": "Whimsical Gothic Storybook art direction (2026-11-15), living room art test. storybook_rooms: rooms drawn in the new style; others keep the placeholder look until approved. sprites: optional painted images replacing code-drawn props, keyed by furniture kind or kind:variant (variant = the piece's 'variant' in furniture.json). Each entry: sprite (res:// path to a PNG/WebP), states (visual state -> path; e.g. fireplace burning/out, lamp lit/out, window closed/open), anchor ([x, y] of the image, 0..1, that sits on the piece's floor position; default bottom centre [0.5, 1.0]), scale (size at the front of the room; depth scaling is applied on top). Empty or missing files fall back to the code drawing. Gameplay data (footprints, sight blockers, hiding spots, interaction range) never depends on these images. See assets/art/props/sprite_guide.md.",
+	"storybook_rooms": ["living_room"],
+	"sprites": {}
+}
