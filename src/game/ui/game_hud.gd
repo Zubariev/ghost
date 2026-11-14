@@ -1,10 +1,17 @@
 ## The in-game HUD (stage 5a): clock and speed, each family member's morale, the ghost's
 ## prompt, a short event log, a house overview map, and the end-of-scenario banner.
+## Stage 5d: the ghost's energy bar under the room name — the number shows while the mouse is
+## over it; it flashes red with the amount when energy is lost to being seen, flashes when an
+## action cannot be afforded, and pulses red while energy is low.
 ## All text goes through tr() (assets/i18n/strings.csv). Reads the simulation; never changes it.
 class_name GameHud
 extends CanvasLayer
 
 const LOG_LINES: int = 3
+const ENERGY_BAR_SIZE := Vector2(232, 16)
+const ENERGY_FLASH_SECONDS: float = 1.2
+const ENERGY_COLOR := Color(0.62, 0.86, 1.0)
+const ENERGY_LOW_COLOR := Color(0.95, 0.42, 0.36)
 const NPC_COLORS: Dictionary = {
 	"father": Color("6fa8dc"), "mother": Color("93c47d"), "grandma": Color("c27ba0"),
 	"grandpa": Color("d5a66a"), "son": Color("e06666"), "daughter": Color("f1c232"),
@@ -14,7 +21,15 @@ var _sim: HouseSim
 var _navigator: GhostNavigator
 var _clock: Label
 var _room: Label
-var _energy: Label
+var _energy_bar: Control
+var _energy: GhostEnergy
+var _energy_hover: bool = false
+## Seconds left of the red "energy lost" flash, and the amount shown with it.
+var _lost_flash: float = 0.0
+var _lost_amount: float = 0.0
+## Seconds left of the "cannot afford" flash.
+var _short_flash: float = 0.0
+var _time: float = 0.0
 var _paused: Label
 var _prompt: Label
 var _log: Label
@@ -31,8 +46,14 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	var top := _panel(Vector2(14, 10), Vector2(250, 0))
 	_clock = _label(top, 24, Color(1, 0.95, 0.85))
 	_room = _label(top, 16, Color(0.85, 0.85, 0.9))
-	_energy = _label(top, 12, Color(0.75, 0.9, 1.0, 0.8))
-	_energy.visible = false
+	_energy_bar = Control.new()
+	_energy_bar.custom_minimum_size = ENERGY_BAR_SIZE
+	_energy_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+	_energy_bar.mouse_entered.connect(func() -> void: _energy_hover = true)
+	_energy_bar.mouse_exited.connect(func() -> void: _energy_hover = false)
+	_energy_bar.draw.connect(_draw_energy)
+	_energy_bar.visible = false
+	top.get_child(0).add_child(_energy_bar)
 	var help := _label(self, 14, Color(1, 1, 1, 0.7))
 	help.text = tr("HELP_LINE")
 	help.position = Vector2(300, 14)
@@ -80,6 +101,7 @@ func refresh() -> void:
 		tr("PHASE_DAY") if clock.is_day() else tr("PHASE_NIGHT"), tr("SPEED_X") % clock.get_speed()]
 	_room.text = _sim.house.rooms[_navigator.room_id].display_name
 	_paused.visible = clock.paused
+	_energy_bar.queue_redraw()
 	for routine: NpcRoutine in _sim.routines:
 		var npc_id: String = routine.schedule.npc_id
 		var value: int = _sim.morale.get_morale(npc_id)
@@ -88,10 +110,54 @@ func refresh() -> void:
 	_map.queue_redraw()
 
 
-## Shows the ghost energy ledger total (energy itself is not built yet).
-func set_energy_spent(total: int) -> void:
-	_energy.visible = total > 0
-	_energy.text = tr("ENERGY_LINE") % total
+## Shows [param energy] as the bar (stage 5d).
+func set_energy(energy: GhostEnergy) -> void:
+	_energy = energy
+	_energy_bar.visible = true
+	energy.lost.connect(func(amount: float, reason: String) -> void:
+		if reason == "peripheral" or reason == "deep":
+			_lost_flash = ENERGY_FLASH_SECONDS
+			_lost_amount = amount)
+
+
+## Flashes the bar: an action could not be afforded.
+func flash_not_enough_energy() -> void:
+	_short_flash = ENERGY_FLASH_SECONDS
+
+
+## Animates the energy bar's flashes and pulse; call every frame with real seconds.
+func tick(delta: float) -> void:
+	_time += delta
+	_lost_flash = maxf(0.0, _lost_flash - delta)
+	_short_flash = maxf(0.0, _short_flash - delta)
+	_energy_bar.queue_redraw()
+
+
+func _draw_energy() -> void:
+	if _energy == null:
+		return
+	var font: Font = ThemeDB.fallback_font
+	var label_width: float = 70.0
+	var bar := Rect2(Vector2(label_width, 3), Vector2(ENERGY_BAR_SIZE.x - label_width, ENERGY_BAR_SIZE.y - 6))
+	var fill: float = clampf(_energy.value / _energy.max_value(), 0.0, 1.0)
+	var color: Color = ENERGY_COLOR
+	if _energy.is_low():
+		color = ENERGY_LOW_COLOR.lerp(Color(1, 0.75, 0.6), 0.5 + 0.5 * sin(_time * 6.0))
+	if _lost_flash > 0.0:
+		color = color.lerp(ENERGY_LOW_COLOR, _lost_flash / ENERGY_FLASH_SECONDS)
+	_energy_bar.draw_string(font, Vector2(0, 13), tr("ENERGY_LABEL"), HORIZONTAL_ALIGNMENT_LEFT, -1, 13,
+		ENERGY_LOW_COLOR if _energy.is_low() else Color(0.8, 0.9, 1.0, 0.9))
+	_energy_bar.draw_rect(bar, Color(0.15, 0.15, 0.2))
+	_energy_bar.draw_rect(Rect2(bar.position, Vector2(bar.size.x * fill, bar.size.y)), color)
+	var outline: Color = Color(1, 0.9, 0.5) if _short_flash > 0.0 and fmod(_short_flash, 0.3) > 0.15 else Color(0.6, 0.62, 0.72)
+	_energy_bar.draw_rect(bar, outline, false, 1.5 if _short_flash <= 0.0 else 2.5)
+	if _energy_hover:
+		_energy_bar.draw_string(font, bar.position + Vector2(6, 9), tr("ENERGY_VALUE") % [roundi(_energy.value), roundi(_energy.max_value())],
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.05, 0.05, 0.1))
+	if _lost_flash > 0.0:
+		var rise: float = (1.0 - _lost_flash / ENERGY_FLASH_SECONDS) * 10.0
+		_energy_bar.draw_string(font, Vector2(bar.end.x - 30, 12 - rise), "−%d" % roundi(_lost_amount),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(ENERGY_LOW_COLOR, _lost_flash / ENERGY_FLASH_SECONDS))
 
 
 ## Shows [param text] above [param screen_point]; empty hides it. Unavailable text is grey.

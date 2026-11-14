@@ -13,8 +13,9 @@
 ##   forgotten.
 ## [br]- Someone sitting in or using the spot the ghost hides in finds it: fright, contact.
 ## [br]- Asleep, Broken, held or already in an incident: no new detections.
-## [br]- Energy: the ghost energy system is not built yet; every penalty is still emitted
-##   ([signal ghost_energy_penalty]) and recorded in [member energy_ledger], with no effect.
+## [br]- Energy: every penalty is emitted ([signal ghost_energy_penalty]) and recorded in
+##   [member energy_ledger]; the game charges it to [GhostEnergy] (stage 5d). The amounts
+##   come in as config [code]energy_penalty[/code] (from energy.json).
 ##
 ## Call [method observe] every frame and [method on_minute] after each simulated minute.
 class_name StealthSystem
@@ -33,7 +34,7 @@ signal ghost_returned()
 ## The hiding spot the ghost is in, or "".
 var hidden_in: String = ""
 var hidden_room: String = ""
-## Every energy penalty so far: {zone, amount, minute}. Read by the energy system once built.
+## Every energy penalty so far: {zone, amount, minute}. Charged to [GhostEnergy] by the game (stage 5d).
 var energy_ledger: Array[Dictionary] = []
 var energy_spent: int = 0
 ## Where a person is and looks, for sight: [code]func(index: int, room_id: String) -> Dictionary[/code]

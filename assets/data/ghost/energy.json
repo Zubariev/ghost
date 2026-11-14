@@ -1,0 +1,19 @@
+{
+	"_source": "Stage 5d ghost energy (roadmap step 2; Demo Specification §8.10, design approved 2026-11-14). All numbers are provisional balancing values (roadmap step 4). Energy is in points, time in game minutes. max / start: the pool. regen_per_minute: passive refill when not acting. hidden_multiplier: refill while in a hiding spot. dark_multiplier / cold_multiplier: refill in the ghost's room when it is dark / cold (the harm the ghost has done feeds it); multipliers stack. pause_after_action_minutes: no refill for this long after a completed action (no refill while an action runs). low_warning: at or below this the warning shows. actions: per ghost action, keyed by object kind (lamp, window) or object id: cost (spent when the action completes) and minutes (how long it takes; longer for costlier harm). detection_penalty: lost when a family member notices the ghost (peripheral) or makes full contact (deep); never below 0.",
+	"max": 100,
+	"start": 100,
+	"regen_per_minute": 0.5,
+	"hidden_multiplier": 3.0,
+	"dark_multiplier": 1.5,
+	"cold_multiplier": 1.25,
+	"pause_after_action_minutes": 5,
+	"low_warning": 20,
+	"actions": {
+		"lamp": {"cost": 10, "minutes": 2},
+		"window": {"cost": 10, "minutes": 2},
+		"grocery_basket": {"cost": 15, "minutes": 3},
+		"stove": {"cost": 25, "minutes": 5},
+		"computer": {"cost": 25, "minutes": 5}
+	},
+	"detection_penalty": {"peripheral": 5, "deep": 15}
+}

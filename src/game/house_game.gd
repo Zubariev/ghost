@@ -6,6 +6,9 @@
 ## Controls (user decision 3; R/C approved for stage 5a, temporary): WASD move · R / C float
 ## up / down · E act on the highlighted object · F hide / leave a hiding spot · Q sight zones
 ## (after the monocle is found, stage 5b) · Space pause · 1/2/3 ×1/×2/×4.
+## Stage 5d (Demo Specification §8.10): E starts harm that takes time and costs energy
+## ([GhostCasting], [GhostEnergy]); floating off, hiding, changing floor or contact
+## interrupts it at no cost. Energy refills by itself (faster hidden, in dark or cold rooms).
 ## Run with `--capture=<dir>` for a scripted tour that saves screenshots and quits.
 extends Node2D
 
@@ -15,6 +18,7 @@ const FURNITURE_PATH: String = "res://assets/data/house/furniture.json"
 const GHOST_PATH: String = "res://assets/data/ghost/ghost.json"
 const STEALTH_PATH: String = "res://assets/data/ghost/stealth.json"
 const MOVEMENT_PATH: String = "res://assets/data/house/movement.json"
+const ENERGY_PATH: String = "res://assets/data/ghost/energy.json"
 const KEYS: Dictionary = {
 	&"ghost_left": KEY_A, &"ghost_right": KEY_D, &"ghost_up": KEY_W, &"ghost_down": KEY_S,
 	&"interact": KEY_E, &"floor_up": KEY_R, &"floor_down": KEY_C, &"hide": KEY_F, &"sight_view": KEY_Q,
@@ -28,6 +32,8 @@ var _tint: CanvasModulate
 var _hud: GameHud
 var _stealth: StealthSystem
 var _motion: FamilyMotion
+var _energy: GhostEnergy
+var _casting: GhostCasting
 var _hide_range: float = 0.16
 var _has_monocle: bool = false
 var _ghost_speed: float = 0.5
@@ -56,6 +62,11 @@ func _ready() -> void:
 	add_child(_stage)
 	var stealth_cfg: Dictionary = JsonData.read(STEALTH_PATH)
 	_hide_range = float(stealth_cfg.get("hide_range", 0.16))
+	# Stage 5d: detection penalties live with the rest of the energy numbers.
+	var energy_cfg: Dictionary = JsonData.read(ENERGY_PATH)
+	stealth_cfg["energy_penalty"] = energy_cfg.get("detection_penalty", {})
+	_energy = GhostEnergy.new(energy_cfg)
+	_casting = GhostCasting.new(_sim.house, _energy)
 	_stealth = StealthSystem.new(stealth_cfg, _sim.house, _sim.routines, _sim.morale, _stage.layout, _navigator,
 		String(ghost_cfg.get("start_room", "hall")), Vector2(float(start_uv[0]), float(start_uv[1])))
 	_stage.stealth = _stealth
@@ -65,6 +76,7 @@ func _ready() -> void:
 	_motion.stealth = _stealth
 	_stealth.person_source = _motion.person
 	_stage.motion = _motion
+	_stage.casting = _casting
 	_stage.sight_config = stealth_cfg
 	_sim.clock.minute_advanced.connect(func(total: int) -> void:
 		if not _sim.is_over():
@@ -74,6 +86,7 @@ func _ready() -> void:
 	_hud = GameHud.new()
 	add_child(_hud)
 	_hud.setup(_sim, _navigator)
+	_hud.set_energy(_energy)
 	_connect_events()
 	_update_view()
 	var capture_dir: String = _capture_dir()
@@ -86,11 +99,15 @@ func _process(delta: float) -> void:
 	if _sim.advance(delta) > 0:
 		_hud.refresh()
 	_motion.update(minutes)
+	_update_energy(minutes)
+	_hud.tick(delta)
 	if not _sim.clock.paused and not _sim.is_over():
 		var direction: Vector2 = Input.get_vector(&"ghost_left", &"ghost_right", &"ghost_up", &"ghost_down")
 		if direction != Vector2.ZERO and not _stealth.hidden_in.is_empty():
 			_stealth.unhide()   # floating off leaves the hiding spot
 			_hud.add_log(tr("LOG_UNHIDDEN"))
+		if direction != Vector2.ZERO:
+			_casting.cancel()   # floating off interrupts harm
 		_navigator.move(direction * _ghost_speed * delta)
 		_stealth.observe()
 	_update_view()
@@ -112,8 +129,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_hud.add_log(tr("LOG_NEED_MONOCLE"))
 	elif event.is_action_pressed(&"floor_up"):
+		_casting.cancel()
 		_hud.add_log(tr("LOG_FLOOR_UP") if _navigator.change_floor(1) else tr("LOG_NO_FLOOR"))
 	elif event.is_action_pressed(&"floor_down"):
+		_casting.cancel()
 		_hud.add_log(tr("LOG_FLOOR_DOWN") if _navigator.change_floor(-1) else tr("LOG_NO_FLOOR"))
 	else:
 		for i: int in 3:
@@ -168,10 +187,17 @@ func _update_view() -> void:
 	else:
 		var obj: ObjectState = _sim.house.objects[best]
 		var at_screen: Vector2 = RoomGeometry.to_screen(_stage.layout.object_uv(room_id, best)) - Vector2(0, 150)
-		if GhostActions.can_act(_sim.house, best):
-			_hud.set_prompt(tr(String(obj.ghost.get("prompt", ""))), at_screen, true)
-		else:
+		var action: String = tr(String(obj.ghost.get("prompt", "")))
+		var key: String = GhostEnergy.action_key(obj)
+		var cost: int = roundi(_energy.action_cost(key))
+		if _casting.object_id == best:
+			_hud.set_prompt(tr("GHOST_ACTING") % action, at_screen - Vector2(0, 40), true)
+		elif not GhostActions.can_act(_sim.house, best):
 			_hud.set_prompt(tr("GHOST_ALREADY_DONE") % obj.display_name, at_screen, false)
+		elif not _energy.can_afford(key):
+			_hud.set_prompt(tr("GHOST_NO_ENERGY") % [action, cost], at_screen, false)
+		else:
+			_hud.set_prompt(tr("GHOST_COST") % [action, cost], at_screen, true)
 	var room: RoomState = _sim.house.rooms[room_id]
 	match room.light:
 		RoomState.Light.DARK:
@@ -180,7 +206,6 @@ func _update_view() -> void:
 			_tint.color = Palette.TINT_DIM
 		_:
 			_tint.color = Palette.TINT_BRIGHT_DAY if _sim.house.is_day else Palette.TINT_BRIGHT_NIGHT
-	_hud.set_energy_spent(_stealth.energy_spent)
 	_hud.refresh()
 
 
@@ -204,7 +229,10 @@ func _toggle_hide() -> void:
 		_hud.add_log(tr("LOG_UNHIDDEN"))
 		return
 	var spot: String = _nearest_hiding_spot()
-	if not spot.is_empty() and _stealth.hide(spot):
+	if spot.is_empty():
+		return
+	_casting.cancel()   # hiding interrupts harm
+	if _stealth.hide(spot):
 		_hud.add_log(tr("LOG_HIDDEN"))
 
 
@@ -215,11 +243,24 @@ func _act() -> void:
 		_has_monocle = true
 		_hud.add_log(tr("LOG_MONOCLE"))
 		return
-	var obj: ObjectState = _sim.house.objects[_target]
-	var room_name: String = _sim.house.rooms[obj.room_id].display_name
-	if GhostActions.act(_sim.house, _target):
-		var what: String = tr("ACT_" + (obj.kind if not obj.kind.is_empty() else obj.id))
-		_hud.add_log(tr("LOG_GHOST_ACTED") % [what, room_name])
+	if _casting.object_id == _target:
+		return   # already at it
+	_casting.cancel()
+	var key: String = GhostEnergy.action_key(_sim.house.objects[_target])
+	if _casting.start(_target) == GhostCasting.NOT_ENOUGH_ENERGY:
+		_hud.flash_not_enough_energy()
+		_hud.add_log(tr("LOG_NO_ENERGY") % [roundi(_energy.action_cost(key)), floori(_energy.value)])
+
+
+## Energy refills (stage 5d): faster hidden, in a dark or cold room; not while acting. The
+## running action moves on by the same game minutes.
+func _update_energy(minutes: float) -> void:
+	if minutes <= 0.0:
+		return
+	var room: RoomState = _sim.house.rooms[_navigator.room_id]
+	_energy.regenerate(minutes, not _stealth.hidden_in.is_empty(), room.light == RoomState.Light.DARK,
+		room.temperature == RoomState.Temperature.COLD, _casting.is_casting())
+	_casting.update(minutes)
 
 
 func _connect_events() -> void:
@@ -240,6 +281,23 @@ func _connect_events() -> void:
 	_stealth.contact.connect(func(npc: String, how: String) -> void: _key_event(tr("LOG_CONTACT_" + how) % names[npc]))
 	_sim.morale.npc_broke.connect(func(npc: String) -> void: _key_event(tr("LOG_BROKEN") % names[npc]))
 	_sim.morale.npc_recovered.connect(func(npc: String) -> void: _key_event(tr("LOG_RECOVERED") % names[npc]))
+	# Stage 5d: energy
+	_stealth.ghost_energy_penalty.connect(func(zone: String, _amount: int) -> void:
+		var lost: float = _energy.penalize(zone)
+		if lost > 0.0:
+			_hud.add_log(tr("LOG_ENERGY_LOST") % roundi(lost)))
+	_stealth.contact.connect(func(_npc: String, _how: String) -> void: _casting.cancel())
+	_stealth.ghost_returned.connect(func() -> void: _casting.cancel())
+	_energy.low_warning.connect(func() -> void: _hud.add_log(tr("LOG_LOW_ENERGY")))
+	_casting.completed.connect(func(object_id: String) -> void:
+		var obj: ObjectState = _sim.house.objects[object_id]
+		var what: String = tr("ACT_" + GhostEnergy.action_key(obj))
+		_hud.add_log(tr("LOG_GHOST_ACTED") % [what, _sim.house.rooms[obj.room_id].display_name]))
+	_casting.cancelled.connect(func(_object_id: String) -> void: _hud.add_log(tr("LOG_ACT_CANCELLED")))
+	_casting.failed.connect(func(_object_id: String, why: String) -> void:
+		if why == GhostCasting.NOT_ENOUGH_ENERGY:
+			_hud.flash_not_enough_energy()
+			_hud.add_log(tr("LOG_ACT_FAILED_ENERGY")))
 
 
 func _describe_task(task: HouseTask) -> String:
@@ -268,18 +326,18 @@ func _run_capture(dir: String) -> void:
 	await _show(dir, "01-hall-start", "07:00", "hall", Vector2(0.5, 0.75))
 	await _show(dir, "02-family-breakfast", "07:30", "dining_room", Vector2(0.5, 0.85))
 	await _show(dir, "03-stove-targeted", "08:50", "kitchen", Vector2(0.80, 0.42))
-	_act()
+	_act_now()
 	await _show(dir, "04-father-repairs-stove", "09:40", "kitchen", Vector2(0.15, 0.9))
 	await _show(dir, "05-living-room-evening", "21:30", "living_room", Vector2(0.14, 0.86))
-	_act()
+	_act_now()
 	await _show(dir, "06-lamp-snuffed-dark", "22:30", "living_room", Vector2(0.4, 0.9))
 	await _show(dir, "07-children-window-targeted", "22:40", "children_bedroom", Vector2(0.5, 0.06))
-	_act()
+	_act_now()
 	await _show(dir, "08-window-open-cold", "23:30", "children_bedroom", Vector2(0.6, 0.9))
 	await _show(dir, "09-wall-fade-left", "23:31", "children_bedroom", Vector2(-0.12, 0.5))
 	# Stage 5b: the monocle, sight zones, being glimpsed, hiding and a search, contact
 	await _show(dir, "10-monocle-on-dresser", "09:00", "grandparents_bedroom", Vector2(0.12, 0.22))
-	_act()
+	_act_now()
 	_stage.show_cones = true
 	await _show(dir, "11-kitchen-sight-zones", "09:20", "kitchen", Vector2(0.15, 0.92))
 	var cook: Dictionary = _stage.layout.person(_sim.routines[2], 2, "kitchen", _sim.routines)
@@ -299,7 +357,38 @@ func _run_capture(dir: String) -> void:
 	await _show(dir, "17-family-to-the-table", "07:05", "dining_room", Vector2(0.95, 0.95), "07:04", 0.5)
 	await _show(dir, "18-mother-into-the-kitchen", "08:01", "kitchen", Vector2(0.05, 0.95), "07:58", 1.0)
 	await _show(dir, "19-children-round-the-beds", "08:05", "children_bedroom", Vector2(0.05, 0.95), "08:03", 0.5)
+	# Stage 5d: harm takes time (ring half full on the stove), energy lost to contact, and
+	# too little energy for the stove.
+	_stage.show_cones = false
+	_energy.value = _energy.max_value()   # earlier contacts in the tour drained it
+	_goto("08:40", "kitchen", Vector2(0.80, 0.42))
+	_act()
+	_casting.update(_casting.minutes_left() * 0.5)
+	await _show(dir, "20-stove-harm-half-done", "08:40", "kitchen", Vector2(0.80, 0.42))
+	_casting.cancel()
+	_energy.value = 60.0
+	_energy.penalize("deep")
+	await _show(dir, "21-energy-lost-to-contact", "08:41", "kitchen", Vector2(0.5, 0.95))
+	_energy.value = 12.0
+	_goto("08:42", "kitchen", Vector2(0.80, 0.42))
+	_act()
+	await _show(dir, "22-not-enough-energy-for-stove", "08:42", "kitchen", Vector2(0.80, 0.42))
 	get_tree().quit()
+
+
+## Capture only: starts the action on the highlighted object and lets it land at once.
+func _act_now() -> void:
+	_act()
+	_casting.update(_casting.minutes_left() + 1.0)
+
+
+## Capture only: runs the simulation to [param time_text], places the ghost and picks its target.
+func _goto(time_text: String, room_id: String, at: Vector2) -> void:
+	var target: int = GameClock.parse_time(time_text)
+	while _sim.clock.minute_of_day() != target and not _sim.is_over():
+		_sim.advance(1.0)
+	_navigator.place(room_id, at)
+	_update_view()
 
 
 ## Runs the simulation to [param time_text] (the next time it comes round), places the

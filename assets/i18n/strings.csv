@@ -48,5 +48,14 @@ LOG_CONTACT_deep,%s побачив(-ла) привида! Привид пове�
 LOG_CONTACT_found,%s знайшов(-ла) привида у схованці! Привид повертається на старт.
 LOG_CONTACT_used,%s натрапив(-ла) на привида у схованці! Привид повертається на старт.
 REASON_contact,зустріч із привидом
-ENERGY_LINE,Енергія привида: −%d (систему енергії ще не реалізовано)
 ACT_monocle,монокль
+ENERGY_LABEL,Енергія
+ENERGY_VALUE,%d / %d
+GHOST_COST,%s (%d енергії)
+GHOST_NO_ENERGY,%s — не вистачає енергії (%d)
+GHOST_ACTING,%s…
+LOG_NO_ENERGY,Не вистачає енергії: потрібно %d · є %d.
+LOG_LOW_ENERGY,Енергії мало — сховайтеся (F) щоб відновитися швидше.
+LOG_ACT_CANCELLED,Дію перервано — енергію не витрачено.
+LOG_ACT_FAILED_ENERGY,Енергії забракло — дія не вдалася.
+LOG_ENERGY_LOST,Привид втратив %d енергії.

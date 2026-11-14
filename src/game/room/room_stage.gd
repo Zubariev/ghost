@@ -7,6 +7,12 @@ extends Node2D
 
 const WALL_FADE_ALPHA: float = 0.45
 const WALL_FADE_SPEED: float = 6.0
+## Harm in progress (stage 5d): the ring over the object and the ghost's effort.
+const RING_RADIUS: float = 22.0
+const RING_WIDTH: float = 6.0
+const RING_HEIGHT: float = 150.0
+const RING_COLOR := Color(0.72, 0.9, 1.0)
+const WISP_COLOR := Color(0.75, 0.92, 1.0)
 
 var sim: HouseSim
 var navigator: GhostNavigator
@@ -18,6 +24,8 @@ var target_object: String = ""
 var stealth: StealthSystem
 ## Where the family is shown walking (stage 5c).
 var motion: FamilyMotion
+## The ghost action in progress (stage 5d); may be null.
+var casting: GhostCasting
 ## Sight zones are drawn on the floor (Q, after the monocle is found).
 var show_cones: bool = false
 ## The monocle has been taken from the dresser.
@@ -81,9 +89,13 @@ func _draw() -> void:
 	var ghost_uv: Vector2 = navigator.uv
 	var hidden: bool = stealth != null and not stealth.hidden_in.is_empty()
 	var over_floor: bool = ghost_uv.x >= 0.0 and ghost_uv.x <= 1.0 and ghost_uv.y >= 0.0 and ghost_uv.y <= 1.0
+	var harm_uv: Vector2 = _harm_uv(room_id)
+	var effort: float = casting.progress() if harm_uv.x > -1.0 else 0.0
 	if not hidden:
+		# Acting: the ghost trembles harder as the harm builds.
+		var shake := Vector2(sin(_time * 47.0), cos(_time * 39.0)) * (1.5 + 3.5 * effort) if harm_uv.x > -1.0 else Vector2.ZERO
 		items.append([RoomGeometry.to_screen(ghost_uv).y if over_floor else 100000.0, FamilyArt.draw_ghost.bind(self,
-			RoomGeometry.to_screen(ghost_uv), RoomGeometry.scale_at(ghost_uv.y), _time, over_floor)])
+			RoomGeometry.to_screen(ghost_uv) + shake, RoomGeometry.scale_at(ghost_uv.y), _time, over_floor)])
 	if show_cones:
 		_draw_cones(room_id)
 	items.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
@@ -91,6 +103,9 @@ func _draw() -> void:
 		(item[1] as Callable).call()
 	if hidden:
 		_draw_hidden_glint(ghost_uv)
+	if harm_uv.x > -1.0:
+		_draw_wisps(ghost_uv, harm_uv, effort)
+		_draw_ring(harm_uv, effort)
 	for marker: Array in markers:
 		draw_string(ThemeDB.fallback_font, marker[0], marker[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 30,
 			Color("e0735f") if marker[1] == "!" else Color("f0c36a"))
@@ -120,9 +135,52 @@ func _draw_fan(origin: Vector2, look: Vector2, angle_deg: float, reach: float, c
 	for step: int in 19:
 		var direction: Vector2 = look.normalized().rotated(-half + 2.0 * half * float(step) / 18.0)
 		points.append(RoomGeometry.to_screen(origin + direction * reach))
-	for piece: PackedVector2Array in Geometry2D.intersect_polygons(points, RoomGeometry.floor_polygon()):
+	for piece: PackedVector2Array in floor_pieces(points):
 		draw_colored_polygon(piece, color)
 		_outline(piece, Color(color, minf(color.a * 2.5, 0.8)), 2.0)
+
+
+## The parts of screen polygon [param polygon] that lie on the floor and can be filled.
+## Clipping a cone that starts on the floor's edge and looks outward leaves a zero-area
+## sliver; it is dropped (drawing it fails with "triangulation failed").
+static func floor_pieces(polygon: PackedVector2Array) -> Array[PackedVector2Array]:
+	var pieces: Array[PackedVector2Array] = []
+	for piece: PackedVector2Array in Geometry2D.intersect_polygons(polygon, RoomGeometry.floor_polygon()):
+		if not Geometry2D.triangulate_polygon(piece).is_empty():
+			pieces.append(piece)
+	return pieces
+
+
+## Floor position of the object the ghost is harming in this room, or (-1, -1).
+func _harm_uv(room_id: String) -> Vector2:
+	if casting == null or not casting.is_casting():
+		return Vector2(-1, -1)
+	return layout.object_uv(room_id, casting.object_id)
+
+
+## Wavy strands from the ghost to the object it is harming, stronger as the harm builds.
+func _draw_wisps(ghost_uv: Vector2, harm_uv: Vector2, effort: float) -> void:
+	var from: Vector2 = RoomGeometry.to_screen(ghost_uv) + Vector2(0, -70 * RoomGeometry.scale_at(ghost_uv.y))
+	var to: Vector2 = RoomGeometry.to_screen(harm_uv) + Vector2(0, -60 * RoomGeometry.scale_at(harm_uv.y))
+	var across: Vector2 = (to - from).orthogonal().normalized()
+	for strand: int in 3:
+		var points := PackedVector2Array()
+		for step: int in 17:
+			var t: float = float(step) / 16.0
+			var wave: float = sin(t * 9.0 - _time * 7.0 + float(strand) * 2.1) * 9.0 * sin(t * PI)
+			points.append(from.lerp(to, t) + across * wave)
+		draw_polyline(points, Color(WISP_COLOR, 0.15 + 0.45 * effort), 2.0 + float(strand == 1), true)
+
+
+## The ring over the object being harmed: fills clockwise from the top as the action runs.
+func _draw_ring(harm_uv: Vector2, progress: float) -> void:
+	var s: float = RoomGeometry.scale_at(harm_uv.y)
+	var centre: Vector2 = RoomGeometry.to_screen(harm_uv) - Vector2(0, RING_HEIGHT * s)
+	draw_circle(centre, (RING_RADIUS + RING_WIDTH) * s, Color(0.05, 0.05, 0.1, 0.65))
+	draw_arc(centre, RING_RADIUS * s, 0.0, TAU, 48, Color(RING_COLOR, 0.25), RING_WIDTH * s, true)
+	if progress > 0.0:
+		# Screen y points down, so a growing angle from -90° runs clockwise.
+		draw_arc(centre, RING_RADIUS * s, -PI * 0.5, -PI * 0.5 + TAU * progress, maxi(4, int(48 * progress)), RING_COLOR, RING_WIDTH * s, true)
 
 
 ## The hidden ghost: only a faint pair of eyes glinting at its hiding spot.
@@ -217,7 +275,7 @@ func _draw_lamp_glow(room_id: String) -> void:
 		for ring: int in 4:
 			var glow: PackedVector2Array = FurnitureArt._ellipse(at, 260.0 - ring * 55.0, 80.0 - ring * 17.0, 32)
 			# Light falls on the floor only, never past the room's edge.
-			for clipped: PackedVector2Array in Geometry2D.intersect_polygons(glow, RoomGeometry.floor_polygon()):
+			for clipped: PackedVector2Array in floor_pieces(glow):
 				draw_colored_polygon(clipped, Color(1.0, 0.85, 0.5, 0.05))
 
 
