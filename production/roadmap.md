@@ -2,7 +2,7 @@
 
 Planning document. Last updated 2026-11-14.
 Sources of truth: `ghost_house_game_design_document_uk.md` (GDD v0.8),
-`demo_specification_ghost_house_uk.md` (Demo Specification v0.8). Summary: `design/game-brief.md`.
+`demo_specification_ghost_house_uk.md` (Demo Specification v0.9). Summary: `design/game-brief.md`.
 Repository: https://github.com/Zubariev/ghost (branch `main`).
 
 ## Done
@@ -42,9 +42,15 @@ Today family members jump between spots inside a room and only half-walk to door
 - **Done when:** nobody teleports in any room during a full day; tests cover paths around
   furniture, door choice, and that simulation timings are unchanged.
 
-### 2. Ghost energy system
-GDD §12.2 is a proposal; Demo Spec P0 item 7 is open. The ledger already records every
-detection penalty (`StealthSystem.energy_ledger`).
+### 2. Ghost energy system — *built 2026-11-14, awaiting play*
+Built (Demo Spec §8.10): `GhostEnergy` (refill: passive, ×3 hidden, ×1.5 dark, ×1.25 cold;
+none while acting or 5 min after; costs; detection penalties; low warning), `GhostCasting`
+(harm takes 2–5 game minutes by cost, clockwise ring, cancelled by moving/hiding/floor
+change/contact at no cost), energy bar in the HUD, `assets/data/ghost/energy.json`.
+Tests: 167. Left: the user plays, captures `bash tools/play.sh capture`
+(production/qa/evidence/stage5d-energy; shots 20–22 are the energy ones), then commit.
+
+Original scope:
 - Decide: maximum, regeneration, cost per action, exhaustion and its consequence
   (GDD §12.1: dissipate and return to a point of power).
 - **Done when:** actions and detection spend energy by the agreed rules; tests.
@@ -70,7 +76,7 @@ scenarios.
 | Item | Where | Status |
 |---|---|---|
 | In-room walking costs simulation time? | step 1 | decided: no (visual only) |
-| Energy rules | GDD §12.2, Demo Spec P0 #7 | open |
+| Energy rules | GDD §12.2, Demo Spec P0 #7 | decided 2026-11-14 (§8.10); values provisional |
 | Floor-change controls | Demo Spec §8.7 | open (R/C temporary) |
 | Natural decay (rooms getting dirty without the ghost) | GDD §9.5 | not decided; not built |
 | Food cooked after its meal window | Demo Spec §5.6–5.7 | not decided (stays ready) |
