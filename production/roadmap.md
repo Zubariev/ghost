@@ -1,8 +1,8 @@
 # Roadmap — Ghost vs. Humans: House Takeover
 
-Planning document. Last updated 2026-11-13.
+Planning document. Last updated 2026-11-14.
 Sources of truth: `ghost_house_game_design_document_uk.md` (GDD v0.8),
-`demo_specification_ghost_house_uk.md` (Demo Specification v0.6). Summary: `design/game-brief.md`.
+`demo_specification_ghost_house_uk.md` (Demo Specification v0.8). Summary: `design/game-brief.md`.
 Repository: https://github.com/Zubariev/ghost (branch `main`).
 
 ## Done
@@ -22,7 +22,14 @@ ghost 18, stealth 20; integration: data 16). Run: see `tests/README.md`.
 
 ## Next steps (in order)
 
-### 1. Family movement inside and between rooms — *next*
+### 1. Family movement inside and between rooms — *built 2026-11-14, awaiting play*
+Built (Demo Spec §8.9): `RoomPaths` (grid A* round furniture footprints), `FamilyMotion`
+(routes through doors and stairs, catch-up, staggered departures, stealth incidents),
+sight from walking positions, `assets/data/house/movement.json`. Tests: 142 (movement unit
+18, integration 4). Left: the user plays `bash tools/play.sh`, captures
+`bash tools/play.sh capture` (production/qa/evidence/stage5c-movement), then commit.
+
+Original scope:
 Today family members jump between spots inside a room and only half-walk to doors.
 - Every family member walks continuously along a path **around furniture** inside a room:
   from the door they enter by to their activity spot, from spot to spot (task to task,
