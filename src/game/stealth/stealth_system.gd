@@ -36,6 +36,10 @@ var hidden_room: String = ""
 ## Every energy penalty so far: {zone, amount, minute}. Read by the energy system once built.
 var energy_ledger: Array[Dictionary] = []
 var energy_spent: int = 0
+## Where a person is and looks, for sight: [code]func(index: int, room_id: String) -> Dictionary[/code]
+## returning {uv, facing, ...} or {}. Unset: their resting spot from the room layout. The game
+## points it at [method FamilyMotion.person] so sight follows walking (stage 5c).
+var person_source: Callable
 
 var _cfg: Dictionary
 var _house: HouseState
@@ -134,7 +138,7 @@ func observe() -> void:
 		var routine: NpcRoutine = _routines[i]
 		if not can_notice(routine):
 			continue
-		var where: Dictionary = _layout.person(routine, i, room_id, _routines)
+		var where: Dictionary = _person(routine, i, room_id)
 		if where.is_empty():
 			continue
 		match RoomLayout.sight_zone(where["uv"], where["facing"], _nav.uv, _cfg, _layout.occluders(room_id)):
@@ -216,7 +220,7 @@ func _decide(routine: NpcRoutine) -> void:
 	var room_id: String = String(incident["room"])
 	if hidden_in.is_empty() and _nav.room_id == room_id:
 		var index: int = _routines.find(routine)
-		var where: Dictionary = _layout.person(routine, index, room_id, _routines)
+		var where: Dictionary = _person(routine, index, room_id)
 		if not where.is_empty():
 			var look: Vector2 = Vector2(incident["last_seen"]) - Vector2(where["uv"])
 			if look.length() < 0.0001:
@@ -314,6 +318,12 @@ func _routine(npc_id: String) -> NpcRoutine:
 		if routine.schedule.npc_id == npc_id:
 			return routine
 	return null
+
+
+func _person(routine: NpcRoutine, index: int, room_id: String) -> Dictionary:
+	if person_source.is_valid():
+		return person_source.call(index, room_id)
+	return _layout.person(routine, index, room_id, _routines)
 
 
 static func _empty() -> Dictionary:

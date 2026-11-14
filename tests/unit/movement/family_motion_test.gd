@@ -1,0 +1,203 @@
+## The family walks (stage 5c, roadmap step 1; decided 2026-11-13: walking is shown only and
+## costs no simulation time). Fixture timeline (sim fixtures): "tester" sleeps in the bedroom
+## upstairs until 09:00, walks down the stairs to the kitchen (2 min), cooks at the stove
+## until 10:00, then walks through the side door to the dining room (2 min).
+extends GdUnitTestSuite
+
+const Fx := preload("res://tests/unit/fixtures/sim_fixtures.gd")
+const Mx := preload("res://tests/unit/fixtures/movement_fixtures.gd")
+const FRAMES_PER_MINUTE: int = 20
+
+var _house: HouseState
+var _routine: NpcRoutine
+var _routines: Array[NpcRoutine] = []
+var _layout: RoomLayout
+var _paths: RoomPaths
+var _motion: FamilyMotion
+## Every frame: [room, uv]
+var _trace: Array = []
+## Every door crossing: [from_room, to_room, exit_uv, entry_uv]
+var _crossings: Array = []
+
+
+func before_test() -> void:
+	_house = Mx.house()
+	_routine = Fx.routine(_house)
+	_routines = [_routine]
+	_layout = RoomLayout.new(Mx.furniture(), _house)
+	_paths = RoomPaths.new(_layout, Mx.config())
+	_routine.begin(Fx.COOK_START - 1)
+	_motion = FamilyMotion.new(_routines, _house, _layout, _paths, Mx.config())
+	_trace = []
+	_crossings = []
+	_motion.door_crossed.connect(func(_i: int, from_room: String, to_room: String, exit_uv: Vector2, entry_uv: Vector2) -> void:
+		_crossings.append([from_room, to_room, exit_uv, entry_uv]))
+
+
+## Spends minutes like the game: the simulation's minute, then frames of walking.
+func _run(from_minute: int, to_minute: int) -> void:
+	for minute: int in range(from_minute, to_minute):
+		_routine.step(minute)
+		for frame: int in FRAMES_PER_MINUTE:
+			_motion.update(Mx.FRAME_MINUTES)
+			var placed: Dictionary = _motion.person(0, _motion.room_of(0))
+			_trace.append([_motion.room_of(0), placed["uv"]])
+
+
+## The exit and entry points of the first crossing from [param room] into [param next].
+func _crossing(room: String, next: String) -> Array:
+	for crossing: Array in _crossings:
+		if crossing[0] == room and crossing[1] == next:
+			return [crossing[2], crossing[3]]
+	return []
+
+
+func test_start_shows_the_person_at_their_spot_without_walking() -> void:
+	# Assert: settled at their bedroom slot
+	var placed: Dictionary = _motion.person(0, "bedroom")
+	assert_dict(placed).is_not_empty()
+	assert_vector(Vector2(placed["uv"])).is_equal(_layout.spot(_routine, 0, "bedroom"))
+	assert_bool(_motion.is_walking(0)).is_false()
+
+
+func test_between_floors_they_leave_and_arrive_by_the_stairs() -> void:
+	# Act
+	_run(Fx.COOK_START - 1, Fx.COOK_START + Fx.WALK + 2)
+	# Assert
+	var crossing: Array = _crossing("bedroom", "kitchen")
+	assert_array(crossing).is_not_empty()
+	assert_vector(Vector2(crossing[0])).is_equal(_layout.door_uv("bedroom", "kitchen"))
+	assert_vector(Vector2(crossing[1])).is_equal(_layout.door_uv("kitchen", "bedroom"))
+	assert_vector(Vector2(crossing[1])).is_equal(_layout.kind_uv("kitchen", "stairs"))
+
+
+func test_between_rooms_on_a_floor_they_use_the_matching_doors() -> void:
+	# Act: cooking ends at 10:00, then the walk to the dining room
+	_run(Fx.COOK_START - 1, Fx.MEAL_START + Fx.WALK + 2)
+	# Assert: out by the kitchen's right door, in by the dining room's left door
+	var crossing: Array = _crossing("kitchen", "dining")
+	assert_array(crossing).is_not_empty()
+	assert_vector(Vector2(crossing[0])).is_equal(Vector2(1.0, 0.5))
+	assert_vector(Vector2(crossing[1])).is_equal(Vector2(0.0, 0.5))
+
+
+func test_nobody_jumps_inside_a_room() -> void:
+	# Act
+	_run(Fx.COOK_START - 1, Fx.MEAL_START + Fx.WALK + 5)
+	# Assert
+	for i: int in range(1, _trace.size()):
+		if _trace[i - 1][0] != _trace[i][0]:
+			continue
+		var step: float = Vector2(_trace[i - 1][1]).distance_to(_trace[i][1])
+		assert_float(step).override_failure_message("frame %d jumped %.3f in %s" % [i, step, _trace[i][0]]).is_less_equal(Mx.MAX_FRAME_STEP)
+
+
+func test_the_walk_to_the_stove_goes_round_the_counter() -> void:
+	# Act
+	_run(Fx.COOK_START - 1, Fx.COOK_START + Fx.WALK + 4)
+	# Assert: the straight way is blocked, and the walk is never inside the counter
+	var counter: Rect2 = _paths.blocked("kitchen")[2]
+	var entry_point: Vector2 = _motion.entry_uv("kitchen", "bedroom")
+	assert_bool(_paths.is_clear("kitchen", entry_point, _layout.spot(_routine, 0, "kitchen"))).is_false()
+	var kitchen_frames: int = 0
+	for entry: Array in _trace:
+		if entry[0] == "kitchen":
+			kitchen_frames += 1
+			assert_bool(counter.has_point(entry[1])).override_failure_message("inside the counter at %s" % entry[1]).is_false()
+	assert_int(kitchen_frames).is_greater(0)
+
+
+func test_after_arriving_they_stand_at_the_stove_and_face_it() -> void:
+	# Act: well into cooking
+	_run(Fx.COOK_START - 1, Fx.COOK_START + Fx.WALK + 5)
+	# Assert
+	var placed: Dictionary = _motion.person(0, "kitchen")
+	var spot: Vector2 = _layout.spot(_routine, 0, "kitchen")
+	assert_vector(Vector2(placed["uv"])).is_equal_approx(spot, Vector2(0.001, 0.001))
+	assert_str(String(placed["pose"])).is_not_equal("walk")
+	assert_float(Vector2(placed["facing"]).dot((_layout.object_uv("kitchen", "stove") - spot).normalized())).is_greater(0.99)
+
+
+func test_while_walking_they_face_the_way_they_go() -> void:
+	# Act: half a minute into the walk down
+	_run(Fx.COOK_START - 1, Fx.COOK_START)
+	_routine.step(Fx.COOK_START)
+	var before: Vector2 = _motion.person(0, _motion.room_of(0))["uv"]
+	_motion.update(Mx.FRAME_MINUTES)
+	var placed: Dictionary = _motion.person(0, _motion.room_of(0))
+	# Assert
+	assert_str(String(placed["pose"])).is_equal("walk")
+	assert_float(Vector2(placed["facing"]).dot((Vector2(placed["uv"]) - before).normalized())).is_greater(0.99)
+
+
+func test_long_routes_speed_up_to_catch_up_with_the_simulation() -> void:
+	# Act: the simulation has them in the kitchen by 09:02; the view follows within a minute
+	_run(Fx.COOK_START - 1, Fx.COOK_START + Fx.WALK + 1)
+	# Assert
+	assert_str(_motion.room_of(0)).is_equal("kitchen")
+
+
+func test_walking_never_changes_simulation_timings() -> void:
+	# Arrange: a second, identical house and routine that nobody draws
+	var bare_house: HouseState = Mx.house()
+	var bare: NpcRoutine = Fx.routine(bare_house)
+	bare.begin(Fx.COOK_START - 1)
+	var with_view: Array[String] = []
+	var without_view: Array[String] = []
+	_routine.activity_started.connect(func(a: Activity) -> void: with_view.append(a.id))
+	bare.activity_started.connect(func(a: Activity) -> void: without_view.append(a.id))
+	var rooms_with: Array[String] = []
+	var rooms_without: Array[String] = []
+	# Act
+	for minute: int in range(Fx.COOK_START - 1, Fx.MEAL_END + 5):
+		_routine.step(minute)
+		bare.step(minute)
+		for frame: int in FRAMES_PER_MINUTE:
+			_motion.update(Mx.FRAME_MINUTES)
+		rooms_with.append("%d:%s:%d" % [minute, _routine.room_id, _routine.state])
+		rooms_without.append("%d:%s:%d" % [minute, bare.room_id, bare.state])
+	# Assert
+	assert_array(rooms_with).is_equal(rooms_without)
+	assert_array(with_view).is_equal(without_view)
+	assert_int(_routine.work_done_minutes).is_equal(bare.work_done_minutes)
+
+
+func test_sight_looks_from_the_walking_position() -> void:
+	# Arrange: the cook is shown mid-walk; the ghost stands right in front of that point
+	var morale := MoraleSystem.new(Fx.morale_rules(), _house, _routines)
+	var nav := GhostNavigator.new(_house)
+	var stealth := StealthSystem.new(Fx.stealth_config(), _house, _routines, morale, _layout, nav, "cellar", Vector2(0.5, 0.5))
+	stealth.person_source = _motion.person
+	_motion.stealth = stealth
+	_run(Fx.COOK_START - 1, Fx.COOK_START + Fx.WALK)
+	var placed: Dictionary = _motion.person(0, "kitchen")
+	assert_bool(_motion.is_walking(0)).is_true()
+	var contacts: Array[String] = []
+	stealth.contact.connect(func(npc: String, _how: String) -> void: contacts.append(npc))
+	nav.place("kitchen", Vector2(placed["uv"]) + Vector2(placed["facing"]) * 0.1)
+	# Act
+	stealth.observe()
+	# Assert: seen up close from where they are walking, not from the stove
+	assert_array(contacts).contains_exactly(["tester"])
+
+
+func test_people_leaving_together_walk_one_after_another_not_stacked() -> void:
+	# Arrange: a second tester with the same schedule; both leave the bedroom at 09:00
+	var second: NpcRoutine = Fx.routine(_house)
+	second.begin(Fx.COOK_START - 1)
+	_routines.append(second)
+	_motion = FamilyMotion.new(_routines, _house, _layout, _paths, Mx.config())
+	var closest: float = INF
+	var both_walking: int = 0
+	# Act
+	for minute: int in range(Fx.COOK_START - 1, Fx.COOK_START + Fx.WALK + 2):
+		_routine.step(minute)
+		second.step(minute)
+		for frame: int in FRAMES_PER_MINUTE:
+			_motion.update(Mx.FRAME_MINUTES)
+			if _motion.is_walking(0) and _motion.is_walking(1) and _motion.room_of(0) == _motion.room_of(1):
+				both_walking += 1
+				closest = minf(closest, Vector2(_motion.person(0, _motion.room_of(0))["uv"]).distance_to(_motion.person(1, _motion.room_of(1))["uv"]))
+	# Assert: whenever both are on their way in the same room, they are apart
+	assert_int(both_walking).is_greater(0)
+	assert_float(closest).is_greater(0.03)

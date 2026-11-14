@@ -98,6 +98,14 @@ func advance(real_seconds: float) -> int:
 	return whole
 
 
+## Game minutes (fractional) that [param real_seconds] of real time stand for at the current
+## speed; 0 while paused. Read-only: it does not advance the clock (stage 5c view walking).
+func minutes_for(real_seconds: float) -> float:
+	if paused or real_seconds <= 0.0:
+		return 0.0
+	return real_seconds * _minutes_per_second * float(get_speed())
+
+
 func get_speed() -> int:
 	return _speeds[_speed_index]
 

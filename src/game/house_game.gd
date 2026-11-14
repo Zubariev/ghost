@@ -14,6 +14,7 @@ const LOCALE: String = "uk"
 const FURNITURE_PATH: String = "res://assets/data/house/furniture.json"
 const GHOST_PATH: String = "res://assets/data/ghost/ghost.json"
 const STEALTH_PATH: String = "res://assets/data/ghost/stealth.json"
+const MOVEMENT_PATH: String = "res://assets/data/house/movement.json"
 const KEYS: Dictionary = {
 	&"ghost_left": KEY_A, &"ghost_right": KEY_D, &"ghost_up": KEY_W, &"ghost_down": KEY_S,
 	&"interact": KEY_E, &"floor_up": KEY_R, &"floor_down": KEY_C, &"hide": KEY_F, &"sight_view": KEY_Q,
@@ -26,6 +27,7 @@ var _stage: RoomStage
 var _tint: CanvasModulate
 var _hud: GameHud
 var _stealth: StealthSystem
+var _motion: FamilyMotion
 var _hide_range: float = 0.16
 var _has_monocle: bool = false
 var _ghost_speed: float = 0.5
@@ -57,6 +59,12 @@ func _ready() -> void:
 	_stealth = StealthSystem.new(stealth_cfg, _sim.house, _sim.routines, _sim.morale, _stage.layout, _navigator,
 		String(ghost_cfg.get("start_room", "hall")), Vector2(float(start_uv[0]), float(start_uv[1])))
 	_stage.stealth = _stealth
+	# Stage 5c: the family walks around furniture and through doors; sight follows them.
+	var movement_cfg: Dictionary = JsonData.read(MOVEMENT_PATH)
+	_motion = FamilyMotion.new(_sim.routines, _sim.house, _stage.layout, RoomPaths.new(_stage.layout, movement_cfg), movement_cfg)
+	_motion.stealth = _stealth
+	_stealth.person_source = _motion.person
+	_stage.motion = _motion
 	_stage.sight_config = stealth_cfg
 	_sim.clock.minute_advanced.connect(func(total: int) -> void:
 		if not _sim.is_over():
@@ -74,8 +82,10 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	var minutes: float = _sim.clock.minutes_for(delta) if not _sim.is_over() else 0.0
 	if _sim.advance(delta) > 0:
 		_hud.refresh()
+	_motion.update(minutes)
 	if not _sim.clock.paused and not _sim.is_over():
 		var direction: Vector2 = Input.get_vector(&"ghost_left", &"ghost_right", &"ghost_up", &"ghost_down")
 		if direction != Vector2.ZERO and not _stealth.hidden_in.is_empty():
@@ -283,15 +293,32 @@ func _run_capture(dir: String) -> void:
 	await _show(dir, "14-deep-contact", "09:40", "kitchen", Vector2(cook["uv"]) + Vector2(cook["facing"]) * 0.12)
 	_stealth.observe()
 	await _show(dir, "15-ghost-back-in-hall", "09:41", _navigator.room_id, _navigator.uv)
+	# Stage 5c: the family walking (next morning), half a game minute after each room change;
+	# sight zones on, so they show sight following the walk.
+	await _show(dir, "16-family-down-the-stairs", "07:04", "hall", Vector2(0.95, 0.95), "06:58", 0.5)
+	await _show(dir, "17-family-to-the-table", "07:05", "dining_room", Vector2(0.95, 0.95), "07:04", 0.5)
+	await _show(dir, "18-mother-into-the-kitchen", "08:01", "kitchen", Vector2(0.05, 0.95), "07:58", 1.0)
+	await _show(dir, "19-children-round-the-beds", "08:05", "children_bedroom", Vector2(0.05, 0.95), "08:03", 0.5)
 	get_tree().quit()
 
 
 ## Runs the simulation to [param time_text] (the next time it comes round), places the
-## ghost and saves a screenshot.
-func _show(dir: String, shot_name: String, time_text: String, room_id: String, at: Vector2) -> void:
+## ghost and saves a screenshot. Everyone is settled at their spot, unless
+## [param walk_from] is a time: then the run settles there and the family walks on, frame
+## by frame, until [param time_text] and [param extra_minutes] past it (stage 5c walking shots).
+func _show(dir: String, shot_name: String, time_text: String, room_id: String, at: Vector2, walk_from: String = "", extra_minutes: float = 0.0) -> void:
 	var target: int = GameClock.parse_time(time_text)
-	while _sim.clock.minute_of_day() != target and not _sim.is_over():
+	var settle_at: int = target if walk_from.is_empty() else GameClock.parse_time(walk_from)
+	while _sim.clock.minute_of_day() != settle_at and not _sim.is_over():
 		_sim.advance(1.0)
+	_motion.settle()
+	var extra: float = -1.0 if not walk_from.is_empty() else extra_minutes
+	while extra < extra_minutes and not _sim.is_over():
+		var minutes: float = _sim.clock.minutes_for(0.05)
+		_sim.advance(0.05)
+		_motion.update(minutes)
+		if extra >= 0.0 or _sim.clock.minute_of_day() == target:
+			extra = maxf(extra, 0.0) + minutes
 	_navigator.place(room_id, at)
 	_update_view()
 	for i: int in 12:

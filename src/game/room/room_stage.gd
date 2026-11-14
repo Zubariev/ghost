@@ -16,6 +16,8 @@ var layout: RoomLayout
 var target_object: String = ""
 ## Detection and hiding (stage 5b); may be null before it is set up.
 var stealth: StealthSystem
+## Where the family is shown walking (stage 5c).
+var motion: FamilyMotion
 ## Sight zones are drawn on the floor (Q, after the monocle is found).
 var show_cones: bool = false
 ## The monocle has been taken from the dresser.
@@ -67,7 +69,7 @@ func _draw() -> void:
 	var markers: Array = []
 	for i: int in sim.routines.size():
 		var routine: NpcRoutine = sim.routines[i]
-		var placed: Dictionary = _placed(routine, i, room_id)
+		var placed: Dictionary = motion.person(i, room_id)
 		if placed.is_empty():
 			continue
 		var uv: Vector2 = placed["uv"]
@@ -96,27 +98,6 @@ func _draw() -> void:
 		draw_rect(Rect2(0, 0, 1280, 720), Palette.COLD_OVERLAY)
 
 
-## Where a person is drawn, with stealth incidents applied: inspecting people look at the
-## sighting ("?"), searchers stand at the spot they search ("?"), a fright shows "!".
-func _placed(routine: NpcRoutine, index: int, room_id: String) -> Dictionary:
-	var placed: Dictionary = layout.person(routine, index, room_id, sim.routines, _time)
-	if placed.is_empty() or stealth == null:
-		return placed
-	var npc_id: String = routine.schedule.npc_id
-	var phase: StealthSystem.Phase = stealth.phase_of(npc_id)
-	if phase == StealthSystem.Phase.NONE:
-		return placed
-	var focus: Vector2 = stealth.incident_focus(npc_id)
-	if phase == StealthSystem.Phase.SEARCH_WALK or phase == StealthSystem.Phase.SEARCH_CHECK:
-		placed["uv"] = Vector2(clampf(focus.x, 0.05, 0.95), clampf(focus.y + 0.10, 0.05, 0.95))
-	placed["pose"] = "stand"
-	var look: Vector2 = focus - Vector2(placed["uv"])
-	if look.length() > 0.0001:
-		placed["facing"] = look.normalized()
-	placed["marker"] = "!" if phase == StealthSystem.Phase.FRIGHT else "?"
-	return placed
-
-
 ## Peripheral (wide, faint) and deep (narrow, strong) sight zones on the floor for everyone
 ## in the room who could notice the ghost; clipped to the floor.
 func _draw_cones(room_id: String) -> void:
@@ -124,7 +105,7 @@ func _draw_cones(room_id: String) -> void:
 		var routine: NpcRoutine = sim.routines[i]
 		if stealth != null and not stealth.can_notice(routine):
 			continue
-		var placed: Dictionary = layout.person(routine, i, room_id, sim.routines, _time)
+		var placed: Dictionary = motion.person(i, room_id)
 		if placed.is_empty():
 			continue
 		_draw_fan(placed["uv"], placed["facing"], float(sight_config.get("peripheral_angle_deg", 120)),
