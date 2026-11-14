@@ -1,6 +1,6 @@
 # Roadmap — Ghost vs. Humans: House Takeover
 
-Planning document. Last updated 2026-11-14.
+Planning document. Last updated 2026-11-15.
 Sources of truth: `ghost_house_game_design_document_uk.md` (GDD v0.8),
 `demo_specification_ghost_house_uk.md` (Demo Specification v0.10). Summary: `design/game-brief.md`.
 Repository: https://github.com/Zubariev/ghost (branch `main`).
@@ -16,13 +16,16 @@ Repository: https://github.com/Zubariev/ghost (branch `main`).
 | 4. Morale | Penalties, bonuses, Broken, win and loss | `1d6da0c`, `7831a71` | Demo Spec §7.6; tests |
 | 5a. Ghost in play | Hamlet-style rooms, ghost through walls/floors, five actions, Ukrainian HUD | `6b15e00`, `d3265db` | Demo Spec §8.7; tests |
 | 5b. Stealth | Sight zones, detection, hiding, search, contact, energy ledger, monocle + Q | `7494d1d`, `ea3cc4c` | Demo Spec §8.8; tests |
+| 5c. Family movement | Walks round furniture, through matching doors and stairs; sight from walking position | `43a2718`, `2fe1ba3` | Demo Spec §8.9; `stage5c-movement` |
+| 5d. Ghost energy | Refill (hidden/dark/cold), action costs, timed harm with ring, detection penalties, HUD bar | `35907b8`, `9f14c1e`, `66818a7` | Demo Spec §8.10; `stage5d-energy` |
+| 5e. Floor keys | W/S + Space; pause on Esc | `a4a9c6c` | Demo Spec §8.7 |
+| Art test | Whimsical Gothic Storybook living room (cozy / haunted), painted-sprite path | `6bfc25b`, `5f1a966`, `d7e26aa` | `design/art-direction.md`; `art-test-living-room` |
 
-Automated tests: **120** (unit: time 8, schedule 5, house 6, tasks 9, npc 24, morale 14,
-ghost 18, stealth 20; integration: data 16). Run: see `tests/README.md`.
+Automated tests: **189**. Run: see `tests/README.md`.
 
 ## Next steps (in order)
 
-### 1. Family movement inside and between rooms — *built 2026-11-14, awaiting play*
+### 1. Family movement inside and between rooms — *done 2026-11-14*
 Built (Demo Spec §8.9): `RoomPaths` (grid A* round furniture footprints), `FamilyMotion`
 (routes through doors and stairs, catch-up, staggered departures, stealth incidents),
 sight from walking positions, `assets/data/house/movement.json`. Tests: 142 (movement unit
@@ -42,7 +45,7 @@ Today family members jump between spots inside a room and only half-walk to door
 - **Done when:** nobody teleports in any room during a full day; tests cover paths around
   furniture, door choice, and that simulation timings are unchanged.
 
-### 2. Ghost energy system — *built 2026-11-14, awaiting play*
+### 2. Ghost energy system — *done 2026-11-15*
 Built (Demo Spec §8.10): `GhostEnergy` (refill: passive, ×3 hidden, ×1.5 dark, ×1.25 cold;
 none while acting or 5 min after; costs; detection penalties; low warning), `GhostCasting`
 (harm takes 2–5 game minutes by cost, clockwise ring, cancelled by moving/hiding/floor
@@ -61,7 +64,11 @@ Decided: W + Space up, S + Space down; pause moved from Space to Esc (Demo Spec 
 Original note:
 Recorded as open in Demo Spec §8.7. Options noted: stairs only, mouse wheel, Shift + W/S.
 
-### 4. Tuning after play
+### 4. Tuning after play — *next*
+Art: the living room style is approved (2026-11-15). Paused by choice for gameplay; later art
+steps: redraw the six family members (still recoloured placeholder figures), then roll the style
+out to the other ten rooms (`design/art-direction.md`).
+
 Provisional values to revisit with playtests: morale penalties and bonuses (Demo Spec §7.6 —
 an undisturbed day ends with everyone at 100), sight zone sizes, search time, anxiety values,
 energy amounts (§8.8), cooking and repair durations, ghost speed.
