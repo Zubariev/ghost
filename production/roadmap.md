@@ -30,10 +30,10 @@ Today family members jump between spots inside a room and only half-walk to door
 - Between rooms: leave through the door that leads to the next room, enter through the
   matching door; take the stairs between floors.
 - Sight follows the actual walking position and direction.
-- **Open question:** does walking inside a room cost simulation time, or is it shown within
-  the minutes the schedule already allows?
+- **Decided 2026-11-13:** walking inside a room is shown only, within the minutes the schedule
+  already allows; it costs no simulation time (the simulation and its tests stay as they are).
 - **Done when:** nobody teleports in any room during a full day; tests cover paths around
-  furniture, door choice and the timing rule chosen.
+  furniture, door choice, and that simulation timings are unchanged.
 
 ### 2. Ghost energy system
 GDD §12.2 is a proposal; Demo Spec P0 item 7 is open. The ledger already records every
@@ -62,7 +62,7 @@ scenarios.
 
 | Item | Where | Status |
 |---|---|---|
-| In-room walking costs simulation time? | step 1 | open |
+| In-room walking costs simulation time? | step 1 | decided: no (visual only) |
 | Energy rules | GDD §12.2, Demo Spec P0 #7 | open |
 | Floor-change controls | Demo Spec §8.7 | open (R/C temporary) |
 | Natural decay (rooms getting dirty without the ghost) | GDD §9.5 | not decided; not built |
