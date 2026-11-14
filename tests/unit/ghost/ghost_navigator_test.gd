@@ -77,3 +77,18 @@ func test_inside_wall_reports_which_wall() -> void:
 	assert_str(_nav("b", Vector2(1.1, 0.5)).wall()).is_equal("right")
 	assert_str(_nav("b", Vector2(0.5, -0.2)).wall()).is_equal("back")
 	assert_str(_nav("b", Vector2(0.5, 0.5)).wall()).is_equal("")
+
+
+# Stage 5e: Space changes floor with W (up) or S (down) held (user decision 2026-11-15).
+
+func test_space_with_w_held_floats_up_a_floor() -> void:
+	assert_int(GhostNavigator.floor_direction(true, false)).is_equal(1)
+
+
+func test_space_with_s_held_floats_down_a_floor() -> void:
+	assert_int(GhostNavigator.floor_direction(false, true)).is_equal(-1)
+
+
+func test_space_alone_or_with_both_held_does_not_change_floor() -> void:
+	assert_int(GhostNavigator.floor_direction(false, false)).is_equal(0)
+	assert_int(GhostNavigator.floor_direction(true, true)).is_equal(0)

@@ -2,7 +2,7 @@
 
 Planning document. Last updated 2026-11-14.
 Sources of truth: `ghost_house_game_design_document_uk.md` (GDD v0.8),
-`demo_specification_ghost_house_uk.md` (Demo Specification v0.9). Summary: `design/game-brief.md`.
+`demo_specification_ghost_house_uk.md` (Demo Specification v0.10). Summary: `design/game-brief.md`.
 Repository: https://github.com/Zubariev/ghost (branch `main`).
 
 ## Done
@@ -55,7 +55,10 @@ Original scope:
   (GDD §12.1: dissipate and return to a point of power).
 - **Done when:** actions and detection spend energy by the agreed rules; tests.
 
-### 3. Replace R/C for changing floors
+### 3. Replace R/C for changing floors — *done 2026-11-15*
+Decided: W + Space up, S + Space down; pause moved from Space to Esc (Demo Spec §8.7).
+
+Original note:
 Recorded as open in Demo Spec §8.7. Options noted: stairs only, mouse wheel, Shift + W/S.
 
 ### 4. Tuning after play
@@ -77,7 +80,7 @@ scenarios.
 |---|---|---|
 | In-room walking costs simulation time? | step 1 | decided: no (visual only) |
 | Energy rules | GDD §12.2, Demo Spec P0 #7 | decided 2026-11-14 (§8.10); values provisional |
-| Floor-change controls | Demo Spec §8.7 | open (R/C temporary) |
+| Floor-change controls | Demo Spec §8.7 | decided 2026-11-15: W/S + Space; pause Esc |
 | Natural decay (rooms getting dirty without the ghost) | GDD §9.5 | not decided; not built |
 | Food cooked after its meal window | Demo Spec §5.6–5.7 | not decided (stays ready) |
 | Win/loss presentation beyond the banner | GDD §1.4 | open |

@@ -3,9 +3,10 @@
 ## and the HUD. Ghost actions go through [GhostActions]; the family reacts only through the
 ## simulation's own rules.
 ##
-## Controls (user decision 3; R/C approved for stage 5a, temporary): WASD move · R / C float
-## up / down · E act on the highlighted object · F hide / leave a hiding spot · Q sight zones
-## (after the monocle is found, stage 5b) · Space pause · 1/2/3 ×1/×2/×4.
+## Controls (user decision 3; floor keys and pause changed in stage 5e, 2026-11-15): WASD move ·
+## W + Space / S + Space float up / down a floor · E act on the highlighted object · F hide /
+## leave a hiding spot · Q sight zones (after the monocle is found, stage 5b) · Esc pause ·
+## 1/2/3 ×1/×2/×4.
 ## Stage 5d (Demo Specification §8.10): E starts harm that takes time and costs energy
 ## ([GhostCasting], [GhostEnergy]); floating off, hiding, changing floor or contact
 ## interrupts it at no cost. Energy refills by itself (faster hidden, in dark or cold rooms).
@@ -21,8 +22,8 @@ const MOVEMENT_PATH: String = "res://assets/data/house/movement.json"
 const ENERGY_PATH: String = "res://assets/data/ghost/energy.json"
 const KEYS: Dictionary = {
 	&"ghost_left": KEY_A, &"ghost_right": KEY_D, &"ghost_up": KEY_W, &"ghost_down": KEY_S,
-	&"interact": KEY_E, &"floor_up": KEY_R, &"floor_down": KEY_C, &"hide": KEY_F, &"sight_view": KEY_Q,
-	&"pause": KEY_SPACE, &"speed_1": KEY_1, &"speed_2": KEY_2, &"speed_3": KEY_3,
+	&"interact": KEY_E, &"change_floor": KEY_SPACE, &"hide": KEY_F, &"sight_view": KEY_Q,
+	&"pause": KEY_ESCAPE, &"speed_1": KEY_1, &"speed_2": KEY_2, &"speed_3": KEY_3,
 }
 
 var _sim: HouseSim
@@ -128,12 +129,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			_stage.show_cones = not _stage.show_cones
 		else:
 			_hud.add_log(tr("LOG_NEED_MONOCLE"))
-	elif event.is_action_pressed(&"floor_up"):
-		_casting.cancel()
-		_hud.add_log(tr("LOG_FLOOR_UP") if _navigator.change_floor(1) else tr("LOG_NO_FLOOR"))
-	elif event.is_action_pressed(&"floor_down"):
-		_casting.cancel()
-		_hud.add_log(tr("LOG_FLOOR_DOWN") if _navigator.change_floor(-1) else tr("LOG_NO_FLOOR"))
+	elif event.is_action_pressed(&"change_floor"):
+		var direction: int = GhostNavigator.floor_direction(Input.is_action_pressed(&"ghost_up"), Input.is_action_pressed(&"ghost_down"))
+		if direction == 0:
+			_hud.add_log(tr("LOG_FLOOR_HOW"))
+		else:
+			_casting.cancel()
+			if _navigator.change_floor(direction):
+				_hud.add_log(tr("LOG_FLOOR_UP") if direction > 0 else tr("LOG_FLOOR_DOWN"))
+			else:
+				_hud.add_log(tr("LOG_NO_FLOOR"))
 	else:
 		for i: int in 3:
 			if event.is_action_pressed(StringName("speed_%d" % (i + 1))):

@@ -16,7 +16,7 @@ and `demo_specification_ghost_house_uk.md`.
 
 **Genre:** schedule-driven house simulation with stealth (colony-sim moods and priorities + stealth routines).
 
-**Controls:** WASD float (through walls) · R / C float up / down a floor *(temporary — to be replaced)* · E act on the highlighted object · F hide / leave a hiding spot · Q sight zones (after finding the monocle) · Space pause · 1/2/3 ×1/×2/×4.
+**Controls:** WASD float (through walls) · W + Space / S + Space float up / down a floor · E act on the highlighted object · F hide / leave a hiding spot · Q sight zones (after finding the monocle) · Esc pause · 1/2/3 ×1/×2/×4.
 
 **Question:** Do watching routines, timing sabotage and avoiding being seen make a readable, interesting loop over a 3-day scenario?
 
@@ -90,7 +90,7 @@ Day 1 is for learning: an undisturbed day leaves everyone at full morale, and th
 1. Integrated simulation and play (done: Demo Spec roadmap stages 1–5) — the goal and the way to lose are already playable.
 2. Family movement inside and between rooms.
 3. Ghost energy system.
-4. Replace R/C floor controls.
+4. ~~Replace R/C floor controls.~~ Done 2026-11-15: W/S + Space; pause on Esc.
 5. Tuning after play.
 6. Vertical slice: the full 3-day scenario, start to end summary and restart.
 

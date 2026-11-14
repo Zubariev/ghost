@@ -7,7 +7,7 @@
 ## var nav := GhostNavigator.new(house)
 ## nav.place("hall", Vector2(0.5, 0.6))
 ## nav.move(input_direction * speed * delta)   # may change nav.room_id
-## nav.change_floor(1)                          # R: up through the ceiling
+## nav.change_floor(GhostNavigator.floor_direction(w_held, s_held))   # Space: up / down
 ## [/codeblock]
 class_name GhostNavigator
 extends RefCounted
@@ -51,6 +51,14 @@ func move(delta: Vector2) -> void:
 
 
 ## Floats one floor up (+1) or down (−1) into the room at the same grid cell.
+## Which way Space takes the ghost (stage 5e, user decision 2026-11-15): up a floor with W
+## held (1), down with S held (-1); neither or both: no change (0).
+static func floor_direction(up_held: bool, down_held: bool) -> int:
+	if up_held == down_held:
+		return 0
+	return 1 if up_held else -1
+
+
 func change_floor(direction: int) -> bool:
 	var here: RoomState = _house.rooms[room_id]
 	var target: String = room_at(here.floor_level + direction, here.grid)
