@@ -75,6 +75,51 @@ static func schedule_data() -> Dictionary:
 	}
 
 
+## Late-food timeline: cook 09:00–10:00 ([param cook_minutes] of work; once running it
+## finishes even after its window), breakfast 10:00–11:00, optionally a second cook
+## 11:00–12:00 (30 min), lunch 12:00–13:00, rest after.
+static func late_food_schedule_data(cook_minutes: int, second_cook: bool) -> Dictionary:
+	var cook := func(id: String, start: String, end: String, minutes: int) -> Dictionary:
+		return {"id": id, "start": start, "end": end, "kind": "work", "work_minutes": minutes,
+			"room": "kitchen", "target": "stove", "affected_by": ["temperature"],
+			"requires": [{"object": "basket", "state": "available"}, {"object": "stove", "state": "working"}],
+			"on_success": [{"object": "food", "set": "ready"}]}
+	var meal := func(id: String, start: String, end: String) -> Dictionary:
+		return {"id": id, "start": start, "end": end, "kind": "span", "room": "dining",
+			"category": "meal", "affected_by": ["temperature"],
+			"requires": [{"object": "food", "state": "ready"}],
+			"on_end": [{"object": "food", "set": "none"}]}
+	var acts: Array = [
+		{"id": "sleep", "start": "00:00", "end": "09:00", "kind": "span", "room": "bedroom", "category": "sleep"},
+		cook.call("cook", "09:00", "10:00", cook_minutes),
+		meal.call("breakfast", "10:00", "11:00"),
+	]
+	if second_cook:
+		acts.append(cook.call("cook_lunch", "11:00", "12:00", COOK_MINUTES))
+	else:
+		acts.append({"id": "wait", "start": "11:00", "end": "12:00", "kind": "span", "room": "bedroom"})
+	acts.append(meal.call("lunch", "12:00", "13:00"))
+	acts.append({"id": "rest", "start": "13:00", "end": "00:00", "kind": "span", "room": "bedroom"})
+	return {"npc_id": "tester", "name": "Tester", "start_room": "bedroom", "activities": acts}
+
+
+## A diner for the late-food timeline: breakfast 10:00–11:00 and lunch 12:00–13:00 in the
+## dining room, in the bedroom otherwise.
+static func diner_schedule_data() -> Dictionary:
+	var meal := func(id: String, start: String, end: String) -> Dictionary:
+		return {"id": id, "start": start, "end": end, "kind": "span", "room": "dining",
+			"category": "meal", "affected_by": ["temperature"],
+			"requires": [{"object": "food", "state": "ready"}],
+			"on_end": [{"object": "food", "set": "none"}]}
+	return {"npc_id": "diner", "name": "Diner", "start_room": "dining", "activities": [
+		{"id": "d_rest_am", "start": "00:00", "end": "10:00", "kind": "span", "room": "dining"},
+		meal.call("d_breakfast", "10:00", "11:00"),
+		{"id": "d_wait", "start": "11:00", "end": "12:00", "kind": "span", "room": "dining"},
+		meal.call("d_lunch", "12:00", "13:00"),
+		{"id": "d_rest_pm", "start": "13:00", "end": "00:00", "kind": "span", "room": "dining"},
+	]}
+
+
 static func task_config() -> Dictionary:
 	return {
 		"repair": {"work_minutes": REPAIR_MINUTES, "critical_priority": CRITICAL_PRIORITY, "priority": REPAIR_PRIORITY},
@@ -111,6 +156,8 @@ static func morale_rules(scenario_days: int = 3) -> Dictionary:
 			"dark": 4, "cold": 3, "dirty": 2, "periodic_every_minutes": 30, "cap_per_activity": 10},
 		"bonuses": {"meal_good": 10, "meal_poor": 3, "activity_good": 3, "activity_poor": 0, "task_done": 3},
 		"scenario_days": scenario_days,
+		"family_leaves_at_average": 20,
+		"late_food": {"object": "food", "ready_state": "ready"},
 	}
 
 

@@ -298,7 +298,7 @@ func _connect_log() -> void:
 			_add_log("%s %d (%s) → %d" % [names[npc], delta, reason, value]))
 	_sim.morale.npc_broke.connect(func(npc: String) -> void: _key_event("%s is BROKEN" % names[npc]))
 	_sim.morale.npc_recovered.connect(func(npc: String) -> void: _key_event("%s recovered (15)" % names[npc]))
-	_sim.morale.family_left.connect(func(_t: int) -> void: _key_event("All six at ≤10 at once — the family leaves"))
+	_sim.morale.family_left.connect(func(_t: int) -> void: _key_event("Family average morale at the leaving threshold — the family leaves"))
 	_sim.morale.scenario_lost.connect(func(_t: int) -> void: _key_event("Last day ended without breaking the family"))
 	for routine: NpcRoutine in _sim.routines:
 		var who: String = routine.schedule.display_name

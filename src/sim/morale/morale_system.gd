@@ -9,10 +9,13 @@
 ## [br]- condition penalties within one activity stack up to a cap;
 ## [br]- at ≤ [code]broken_at[/code] the NPC is Broken at once: no schedule, no penalties;
 ##   morale recovers gradually to [code]recover_to[/code], then the NPC rejoins its schedule;
-## [br]- the family leaves (win) when every NPC is at or below the threshold at the same
-##   moment, checked immediately on each change; the scenario is lost when its last day ends.
-## Bonuses (approved 2026-11-12): a meal +10 in good conditions, +3 in poor ones; any other
-## completed activity +3 in good conditions; a finished task +3 to the worker.
+## [br]- the family leaves (win) when the family's average morale is at or below
+##   [code]family_leaves_at_average[/code] (decision 2026-11-15; before it, all had to be
+##   at [code]broken_at[/code] at once, which the probe showed was out of reach), checked
+##   immediately on each change; the scenario is lost when its last day ends;
+## [br]- late food (decision 2026-11-15): food that becomes ready after a meal window has
+##   ended since its cooking started makes a poor meal (reason [code]meal_cold[/code]).
+## Bonuses: values in morale.json (halved 2026-11-15 so an undisturbed family heals slower).
 ##
 ## Call [method begin_minute] before the routines step and [method end_minute] after.
 class_name MoraleSystem
@@ -48,6 +51,15 @@ var _minute: int = 0
 var _total: int = 0
 ## True while the scenario is starting: activities already running count as on time.
 var _starting: bool = false
+## Late food: the food object and its ready state ("" = rule off).
+var _food_id: String = ""
+var _food_ready: StringName = &""
+## A meal window ended since the current cooking started.
+var _meal_missed_while_cooking: bool = false
+## The food now on the table was cooked late.
+var _food_late: bool = false
+## Per NPC: the meal being eaten is late food.
+var _eating_late: Dictionary[String, bool] = {}
 
 
 func _init(rules: Dictionary, house: HouseState, routines: Array[NpcRoutine]) -> void:
@@ -55,6 +67,11 @@ func _init(rules: Dictionary, house: HouseState, routines: Array[NpcRoutine]) ->
 	_penalties = rules.get("penalties", {})
 	_bonuses = rules.get("bonuses", {})
 	_house = house
+	var late_food: Dictionary = rules.get("late_food", {})
+	_food_id = String(late_food.get("object", ""))
+	_food_ready = StringName(late_food.get("ready_state", "ready"))
+	if not _food_id.is_empty():
+		house.object_state_changed.connect(_on_object_state_changed)
 	for routine: NpcRoutine in routines:
 		var npc_id: String = routine.schedule.npc_id
 		_routines[npc_id] = routine
@@ -74,6 +91,16 @@ func get_morale(npc_id: String) -> int:
 ## How many days the scenario lasts before it is lost.
 func scenario_days() -> int:
 	return int(_rules.get("scenario_days", 3))
+
+
+## The family's average morale; the family leaves at [code]family_leaves_at_average[/code].
+func family_average() -> float:
+	if _morale.is_empty():
+		return 0.0
+	var total: int = 0
+	for npc_id: String in _morale:
+		total += _morale[npc_id]
+	return float(total) / _morale.size()
 
 
 func is_broken(npc_id: String) -> bool:
@@ -149,6 +176,10 @@ func end_minute() -> void:
 func _on_activity_started(activity: Activity, npc_id: String) -> void:
 	_reset_activity(npc_id)
 	_started_at[npc_id] = activity.start_minute if _starting else _minute
+	if _cooks_food(activity):
+		_meal_missed_while_cooking = false
+	if activity.category == "meal":
+		_eating_late[npc_id] = _food_late
 
 
 func _on_activity_completed(activity: Activity, npc_id: String) -> void:
@@ -160,7 +191,10 @@ func _on_activity_completed(activity: Activity, npc_id: String) -> void:
 			_change(npc_id, -int(_penalties.get("sleep_late", 0)), "sleep_late")
 	var good: bool = not _bad[npc_id]
 	if activity.category == "meal":
-		_change(npc_id, int(_bonuses.get("meal_good" if good else "meal_poor", 0)), "meal_good" if good else "meal_poor")
+		if _eating_late.get(npc_id, false):
+			_change(npc_id, int(_bonuses.get("meal_poor", 0)), "meal_cold")
+		else:
+			_change(npc_id, int(_bonuses.get("meal_good" if good else "meal_poor", 0)), "meal_good" if good else "meal_poor")
 	else:
 		_change(npc_id, int(_bonuses.get("activity_good" if good else "activity_poor", 0)), "activity_good" if good else "activity_poor")
 
@@ -168,6 +202,7 @@ func _on_activity_completed(activity: Activity, npc_id: String) -> void:
 func _on_activity_skipped(activity: Activity, _work_done: int, npc_id: String) -> void:
 	match activity.category:
 		"meal":
+			_meal_missed_while_cooking = true
 			_change(npc_id, -int(_penalties.get("missed_meal", 0)), "missed_meal")
 		"sleep":
 			_change(npc_id, -int(_penalties.get("sleep_skipped", 0)), "sleep_skipped")
@@ -222,10 +257,10 @@ func _set_value(npc_id: String, value: int, reason: String) -> void:
 
 
 func _check_win() -> void:
-	var threshold: int = int(_rules.get("broken_at", 10))
-	for npc_id: String in _morale:
-		if _morale[npc_id] > threshold:
-			return
+	if not outcome.is_empty() or _morale.is_empty():
+		return
+	if family_average() > float(_rules.get("family_leaves_at_average", _rules.get("broken_at", 10))):
+		return
 	outcome = OUTCOME_WON
 	family_left.emit(_total)
 
@@ -235,3 +270,19 @@ func _reset_activity(npc_id: String) -> void:
 	_bad[npc_id] = false
 	_dark_charged[npc_id] = false
 	_started_at[npc_id] = _minute
+
+
+## True for cooking: an activity whose success puts the food on the table.
+func _cooks_food(activity: Activity) -> bool:
+	if _food_id.is_empty():
+		return false
+	for effect: Dictionary in activity.on_success:
+		if String(effect.get("object", "")) == _food_id and StringName(effect.get("set", "")) == _food_ready:
+			return true
+	return false
+
+
+func _on_object_state_changed(object_id: String, new_state: StringName) -> void:
+	if object_id != _food_id:
+		return
+	_food_late = new_state == _food_ready and _meal_missed_while_cooking

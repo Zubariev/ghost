@@ -153,30 +153,68 @@ func test_no_penalties_while_broken() -> void:
 	assert_int(_morale.get_morale("tester")).is_equal(12)
 
 
-func test_family_leaves_only_when_all_are_at_threshold_at_once() -> void:
-	# Arrange
+func test_family_leaves_when_the_average_reaches_the_threshold() -> void:
+	# Arrange: two members; the family leaves at an average of 20 (decision 2026-11-15)
 	var routines: Array[NpcRoutine] = _two()
 	_start(routines, Fx.COOK_START)
 	var left: Array[bool] = []
 	_morale.family_left.connect(func(_total: int) -> void: left.append(true))
-	# Act / Assert: one at the threshold is not enough
-	_morale.set_morale("tester", 10)
+	# Act / Assert: average 20.5 is not enough
+	_morale.set_morale("tester", 30)
 	_morale.set_morale("other", 11)
 	assert_array(left).is_empty()
-	# Act: the last one reaches it while the first is still at 10
+	# Act: average 20
 	_morale.set_morale("other", 10)
 	# Assert
 	assert_array(left).has_size(1)
 	assert_str(_morale.outcome).is_equal("won")
+	assert_float(_morale.family_average()).is_equal(20.0)
 
 
-func test_recovered_member_prevents_the_win() -> void:
+func test_one_broken_member_alone_does_not_make_them_leave() -> void:
+	# Arrange
 	var routines: Array[NpcRoutine] = _two()
 	_start(routines, Fx.COOK_START)
-	_morale.set_morale("tester", 10)
-	Fx.run_with_morale(_morale, routines, Fx.COOK_START, Fx.COOK_START + 50)   # tester back at 15
-	_morale.set_morale("other", 10)
+	# Act
+	_morale.set_morale("tester", 0)
+	# Assert: average 40
+	assert_bool(_morale.is_broken("tester")).is_true()
 	assert_str(_morale.outcome).is_equal("")
+
+
+## The cook (tester) and a diner who only eats.
+func _late_food_routines(cook_minutes: int, second_cook: bool) -> Array[NpcRoutine]:
+	_routine = NpcRoutine.new(Schedule.from_dict(Fx.late_food_schedule_data(cook_minutes, second_cook)), _house, Fx.STEP)
+	var diner := NpcRoutine.new(Schedule.from_dict(Fx.diner_schedule_data()), _house, Fx.STEP)
+	return [_routine, diner]
+
+
+func test_food_cooked_after_its_meal_window_makes_a_poor_meal() -> void:
+	# Arrange: 150 minutes of cooking from 09:00 finish after breakfast (10:00–11:00) ended
+	var routines: Array[NpcRoutine] = _late_food_routines(150, false)
+	_start(routines, Fx.COOK_START)
+	# Act
+	Fx.run_with_morale(_morale, routines, Fx.COOK_START, 13 * 60 + 1)
+	# Assert: the diner missed breakfast; both eat the late food at lunch as a poor meal
+	assert_int(int(_deltas.get("missed_meal", 0))).is_equal(-8)
+	assert_int(int(_counts.get("meal_cold", 0))).is_equal(2)
+	assert_int(int(_deltas.get("meal_cold", 0))).is_equal(6)
+	assert_bool(_deltas.has("meal_good")).is_false()
+
+
+func test_food_cooked_fresh_after_a_missed_meal_is_a_good_meal() -> void:
+	# Arrange: the stove is broken for breakfast's cooking, fixed before lunch's
+	var routines: Array[NpcRoutine] = _late_food_routines(Fx.COOK_MINUTES, true)
+	_house.set_object_state("stove", &"broken")
+	_start(routines, Fx.COOK_START)
+	Fx.run_with_morale(_morale, routines, Fx.COOK_START, 11 * 60)
+	_house.set_object_state("stove", &"working")
+	# Act
+	Fx.run_with_morale(_morale, routines, 11 * 60, 13 * 60 + 1)
+	# Assert: both missed breakfast; lunch is freshly cooked
+	assert_int(int(_deltas.get("missed_meal", 0))).is_equal(-16)
+	assert_int(int(_counts.get("meal_good", 0))).is_equal(2)
+	assert_bool(_deltas.has("meal_cold")).is_false()
 
 
 func test_scenario_is_lost_when_the_last_day_ends() -> void:

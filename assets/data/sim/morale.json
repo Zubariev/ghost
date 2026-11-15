@@ -1,5 +1,5 @@
 {
-	"_source": "GDD §8 / Demo Specification §7 [УЗГОДЖЕНО] rules; all numbers provisional (approved 2026-11-12 for tuning).",
+	"_source": "GDD §8 / Demo Specification §7 [УЗГОДЖЕНО] rules; all numbers provisional (approved 2026-11-12 for tuning). Bonuses halved 2026-11-15 (user decision: an undisturbed family healed to 100 by day 2).",
 	"start": 80,
 	"min": 0,
 	"max": 100,
@@ -7,6 +7,10 @@
 	"recover_to": 15,
 	"recover_step": 1,
 	"recover_every_minutes": 10,
+	"_family_leaves_at_average": "User decision 2026-11-15: the family leaves when its average morale is at or below this (was: all six at broken_at at once).",
+	"family_leaves_at_average": 20,
+	"_late_food": "User decision 2026-11-15: food ready after a meal window ended since its cooking started makes a poor meal (meal_poor, reason meal_cold).",
+	"late_food": {"object": "meal_food", "ready_state": "ready"},
 	"penalties": {
 		"missed_meal": 8,
 		"sleep_skipped": 12,
@@ -19,11 +23,11 @@
 		"cap_per_activity": 10
 	},
 	"bonuses": {
-		"meal_good": 10,
+		"meal_good": 5,
 		"meal_poor": 3,
-		"activity_good": 3,
+		"activity_good": 1,
 		"activity_poor": 0,
-		"task_done": 3
+		"task_done": 2
 	},
 	"scenario_days": 3
 }
