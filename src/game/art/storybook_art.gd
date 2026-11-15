@@ -3,9 +3,12 @@
 ## and woven fabric, the storybook palette. These are placeholders: any prop can be replaced
 ## by a painted sprite through [PropVisuals] without touching gameplay.
 ##
-## The living room art-test props have their own designs: fireplace (burning / out), wingback
-## armchairs, camelback sofa, tea tables, fringed floor lamp, curtained window, patterned
-## rug, bookshelf, paintings, pendulum clock. Other kinds reuse [FurnitureArt]'s shapes,
+## The living room art-test props have their own designs: fieldstone fireplace (burning / out),
+## wingback armchairs, dusty-rose camelback sofa, tea tables, fringed floor lamp, arched window
+## with green curtains, rectangular patterned rug laid in floor perspective, bookshelf,
+## paintings, pendulum clock. Art Phase 1 (2026-11-15) moved them toward the approved concept
+## `art/concepts/environments/living_room/living_room_cozy.jpeg`
+## (docs/art/environments/LIVING_ROOM.md); positions and sizes in data did not change. Other kinds reuse [FurnitureArt]'s shapes,
 ## re-rendered with storybook ink, shading and texture.
 ##
 ## A piece is drawn with its foot at the floor position (wall pieces at the back wall's base)
@@ -15,6 +18,8 @@ class_name StorybookArt
 extends RefCounted
 
 const HIGHLIGHT_WIDTH: float = 9.0
+## The rug's half size in floor units (u, v): drawing only, rugs block nothing.
+const RUG_HALF := Vector2(0.2, 0.12)
 
 ## Kinds drawn on the back wall (sorted behind everything on the floor).
 const WALL_KINDS: Array[String] = ["window", "fireplace", "painting", "wall_clock"]
@@ -36,7 +41,7 @@ static func draw(canvas: CanvasItem, piece: Dictionary, uv: Vector2, state: Stri
 	var s: float = 1.0 if wall else RoomGeometry.scale_at(uv.y)
 	var seed: float = Ink.seed_at(foot) + float(kind.length())
 	var tier: Ink.Tier = Ink.Tier.INTERACTIVE if interactive else (Ink.Tier.BACKGROUND if wall and kind != "window" else Ink.Tier.FURNITURE)
-	var parts: Array = _parts(kind, variant, state, is_day, time, tier)
+	var parts: Array = _parts(kind, variant, state, is_day, time, tier, uv)
 	if parts.is_empty():
 		return
 	if highlighted:
@@ -78,7 +83,10 @@ static func _place(poly: PackedVector2Array, foot: Vector2, s: float) -> PackedV
 	return out
 
 
-static func _parts(kind: String, variant: String, state: StringName, is_day: bool, time: float, tier: Ink.Tier) -> Array:
+## The drawing of one piece as parts. [param uv] is its floor position (the rug is laid in
+## the floor's perspective from it).
+static func _parts(kind: String, variant: String, state: StringName, is_day: bool, time: float, tier: Ink.Tier,
+		uv: Vector2 = Vector2(0.5, 0.5)) -> Array:
 	match kind:
 		"fireplace":
 			return _fireplace(state)
@@ -93,7 +101,7 @@ static func _parts(kind: String, variant: String, state: StringName, is_day: boo
 		"window":
 			return _window(state, is_day, time)
 		"rug":
-			return _rug()
+			return _rug(uv)
 		"bookshelf":
 			return _bookshelf()
 		"painting":
@@ -148,34 +156,98 @@ static func _arch(x0: float, x1: float, y_bottom: float, y_shoulder: float, y_to
 
 # --- Living room art-test props ----------------------------------------------------
 
-## Stone fireplace on the back wall: chimney breast, surround, arched firebox, mantel with a
-## candle, a vase and a small framed photo; hearth slab on the floor.
+## Fieldstone fireplace on the back wall (concept: a stone chimney breast rising to the
+## ceiling): irregular stones narrowing upward, a stone-arched firebox with andirons, a heavy
+## walnut mantel on corbels carrying a candle, framed family photos and a vase; stone hearth.
 static func _fireplace(state: StringName) -> Array:
 	var burning: bool = state == &"burning"
-	var parts: Array = [
-		[_rect(-88, -168, 88, 0), Palette.SB_WALL.darkened(0.08), "plain", Ink.Tier.BACKGROUND],
-		[_arch(-74, 74, 0, -96, -112, 14), Palette.SB_BROWN_GREY.lightened(0.18), "plain", Ink.Tier.FURNITURE],
-		[_rough(-96, -124, 96, -110, 2.0), Palette.SB_WALNUT, "wood", Ink.Tier.FURNITURE],
-		[_rect(-90, -110, 90, -104), Palette.SB_WALNUT_DARK, "bare"],
-		[_arch(-46, 46, 0, -54, -72, 12), Palette.SB_CHARCOAL if burning else Palette.SB_CHARCOAL.darkened(0.25), "plain", Ink.Tier.FURNITURE],
-		[PackedVector2Array([Vector2(-100, 0), Vector2(100, 0), Vector2(110, 12), Vector2(-112, 13)]), Palette.SB_BROWN_GREY, "plain", Ink.Tier.FURNITURE],
-		# Logs
+	var breast := PackedVector2Array([Vector2(-88, 0), Vector2(88, 0), Vector2(84, -124), Vector2(66, -140),
+		Vector2(62, -170), Vector2(-62, -170), Vector2(-66, -140), Vector2(-84, -124)])
+	var parts: Array = [[breast, Palette.SB_STONE_DARK, "plain", Ink.Tier.BACKGROUND]]
+	parts.append_array(_stones())
+	parts.append_array([
+		# Stone arch round the firebox, the dark opening, andirons and logs
+		[_arch(-56, 56, 0, -62, -88, 14), Palette.SB_STONE_LIGHT, "plain", Ink.Tier.FURNITURE],
+		[_arch(-44, 44, 0, -54, -74, 12), Palette.SB_CHARCOAL if burning else Palette.SB_CHARCOAL.darkened(0.25), "plain", Ink.Tier.FURNITURE],
+		[_rect(-38, -24, -33, 0), Palette.SB_CHARCOAL.darkened(0.2), "bare"],
+		[_rect(33, -24, 38, 0), Palette.SB_CHARCOAL.darkened(0.2), "bare"],
+		[Ink.ellipse(Vector2(-35.5, -26), 4, 4, 10), Palette.SB_GOLD.darkened(0.25), "bare"],
+		[Ink.ellipse(Vector2(35.5, -26), 4, 4, 10), Palette.SB_GOLD.darkened(0.25), "bare"],
 		[Ink.ellipse(Vector2(-12, -9), 26, 6, 14), Palette.SB_WALNUT_DARK, "wood", Ink.Tier.FURNITURE],
 		[Ink.ellipse(Vector2(14, -13), 22, 5, 14), Palette.SB_WALNUT, "wood", Ink.Tier.FURNITURE],
-		# Mantel things: candlestick + candle, a vase with a sprig, a small framed photo
-		[_rect(-74, -134, -66, -124), Palette.SB_GOLD, "plain", Ink.Tier.FURNITURE],
-		[_rect(-73, -152, -67, -134), Palette.SB_CREAM, "plain", Ink.Tier.FURNITURE],
-		[PackedVector2Array([Vector2(52, -124), Vector2(64, -124), Vector2(67, -138), Vector2(61, -150), Vector2(55, -150), Vector2(49, -138)]), Palette.SB_ROSE, "plain", Ink.Tier.FURNITURE],
-		[PackedVector2Array([Vector2(58, -150), Vector2(52, -164), Vector2(56, -165), Vector2(60, -152), Vector2(66, -166), Vector2(69, -164), Vector2(61, -150)]), Palette.SB_OLIVE, "bare"],
-		[_rough(-20, -146, 2, -124, 1.0), Palette.SB_GOLD, "plain", Ink.Tier.FURNITURE],
-		[_rect(-16, -142, -2, -128), Palette.SB_DUSK_BLUE.lightened(0.15), "bare"],
-	]
+		# Hearth slab on the floor
+		[PackedVector2Array([Vector2(-102, 0), Vector2(102, 0), Vector2(112, 12), Vector2(-114, 13)]), Palette.SB_STONE_LIGHT, "plain", Ink.Tier.FURNITURE],
+		# Heavy walnut mantel on two corbels
+		[PackedVector2Array([Vector2(-80, -110), Vector2(-64, -110), Vector2(-64, -104), Vector2(-72, -92), Vector2(-78, -94)]), Palette.SB_WALNUT_DARK, "wood", Ink.Tier.FURNITURE],
+		[PackedVector2Array([Vector2(80, -110), Vector2(64, -110), Vector2(64, -104), Vector2(72, -92), Vector2(78, -94)]), Palette.SB_WALNUT_DARK, "wood", Ink.Tier.FURNITURE],
+		[_rough(-100, -128, 100, -110, 2.0), Palette.SB_WALNUT, "wood", Ink.Tier.FURNITURE],
+		[_rect(-98, -112, 98, -109), Palette.SB_WALNUT_DARK, "bare"],
+		# On the mantel: a candlestick, three framed family photos, a vase with a sprig
+		[_rect(-88, -136, -78, -128), Palette.SB_GOLD, "plain", Ink.Tier.FURNITURE],
+		[_rect(-86, -154, -80, -136), Palette.SB_CREAM, "plain", Ink.Tier.FURNITURE],
+		[_rough(-62, -150, -40, -128, 1.0), Palette.SB_GOLD, "plain", Ink.Tier.FURNITURE],
+		[_rect(-58, -146, -44, -131), Palette.SB_PARCHMENT.lightened(0.2), "bare"],
+		[Ink.ellipse(Vector2(-54, -141), 2.6, 3.2, 10), Palette.SB_BROWN_GREY.darkened(0.2), "bare"],
+		[Ink.ellipse(Vector2(-48, -140), 2.4, 3.0, 10), Palette.SB_BROWN_GREY.darkened(0.2), "bare"],
+		[_rough(-32, -144, -14, -128, 1.0), Palette.SB_WALNUT_LIGHT, "plain", Ink.Tier.FURNITURE],
+		[_rect(-29, -141, -17, -131), Palette.SB_PARCHMENT.lightened(0.15), "bare"],
+		[Ink.ellipse(Vector2(-23, -137), 2.6, 3.2, 10), Palette.SB_BROWN_GREY.darkened(0.2), "bare"],
+		[_rough(16, -158, 38, -128, 1.0), Palette.SB_GOLD, "plain", Ink.Tier.FURNITURE],
+		[_rect(20, -154, 34, -132), Palette.SB_PARCHMENT.lightened(0.2), "bare"],
+		[Ink.ellipse(Vector2(27, -147), 3.4, 4.2, 10), Palette.SB_BROWN_GREY.darkened(0.2), "bare"],
+		[PackedVector2Array([Vector2(27, -143), Vector2(33, -134), Vector2(21, -134)]), Palette.SB_BROWN_GREY.darkened(0.2), "bare"],
+		[PackedVector2Array([Vector2(56, -128), Vector2(70, -128), Vector2(73, -142), Vector2(67, -154), Vector2(61, -154), Vector2(55, -142)]), Palette.SB_ROSE, "plain", Ink.Tier.FURNITURE],
+		[PackedVector2Array([Vector2(64, -154), Vector2(58, -166), Vector2(61, -167), Vector2(65, -156), Vector2(71, -167), Vector2(74, -165), Vector2(66, -154)]), Palette.SB_OLIVE, "bare"],
+	])
 	if burning:
-		parts.append([Ink.ellipse(Vector2(-70, -156), 2.5, 4.5, 8), Palette.SB_CANDLELIGHT, "bare"])
+		parts.append([Ink.ellipse(Vector2(-83, -158), 2.5, 4.5, 8), Palette.SB_CANDLELIGHT, "bare"])
 	else:
 		# Cold ash on the hearth floor
 		parts.append([Ink.ellipse(Vector2(0, -5), 36, 4, 14), Palette.SB_ASH, "bare"])
 	return parts
+
+
+## Half-width of the chimney breast at height [param y] (it narrows above the mantel).
+static func _breast_half(y: float) -> float:
+	if y > -124.0:
+		return 86.0
+	if y > -140.0:
+		return lerpf(84.0, 66.0, (-124.0 - y) / 16.0)
+	return lerpf(66.0, 62.0, (-140.0 - y) / 30.0)
+
+
+## Irregular fieldstones in staggered rows over the chimney breast, mortar gaps between them;
+## deterministic, so they never shimmer.
+static func _stones() -> Array:
+	var tones: Array[Color] = [Palette.SB_STONE, Palette.SB_STONE_LIGHT, Palette.SB_STONE.darkened(0.1), Palette.SB_BROWN_GREY.lightened(0.12)]
+	var stones: Array = []
+	var y: float = 0.0
+	var row: int = 0
+	while y > -168.0:
+		var h: float = 14.0 + 6.0 * Ink.noise1(float(row) * 3.1 + 0.5)
+		var top: float = maxf(y - h, -170.0)
+		var half: float = _breast_half((y + top) * 0.5) - 1.5
+		var x: float = -half
+		var k: int = 0
+		while x < half - 6.0:
+			var w: float = 18.0 + 14.0 * Ink.noise1(float(row) * 7.3 + float(k) * 1.9)
+			if row % 2 == 1 and k == 0:
+				w *= 0.55
+			var x1: float = minf(x + w, half)
+			if half - x1 < 9.0:
+				x1 = half
+			var gap: float = 1.6
+			var c: float = minf(3.5, (x1 - x) * 0.25)
+			stones.append([PackedVector2Array([
+				Vector2(x + gap + c, top + gap), Vector2(x1 - gap - c, top + gap), Vector2(x1 - gap, top + gap + c),
+				Vector2(x1 - gap, y - gap - c), Vector2(x1 - gap - c, y - gap), Vector2(x + gap + c, y - gap),
+				Vector2(x + gap, y - gap - c), Vector2(x + gap, top + gap + c)]),
+				tones[(row * 3 + k) % tones.size()], "plain", Ink.Tier.BACKGROUND])
+			x = x1
+			k += 1
+		y = top
+		row += 1
+	return stones
 
 
 ## Wingback armchair; variant "olive" for the second chair, otherwise terracotta.
@@ -195,22 +267,25 @@ static func _armchair(variant: String) -> Array:
 	]
 
 
-## Camelback sofa in faded green with three cushions and turned legs.
+## Camelback sofa in dusty rose (concept target) with a walnut base rail, rolled arms, three
+## seat cushions, an olive and a cream throw pillow, and turned legs.
 static func _sofa() -> Array:
-	var cloth: Color = Palette.SB_GREEN
+	var cloth: Color = Palette.SB_ROSE
 	var back := PackedVector2Array([Vector2(-112, -50), Vector2(-112, -84), Vector2(-70, -92), Vector2(-30, -104), Vector2(0, -108),
 		Vector2(30, -104), Vector2(70, -92), Vector2(112, -84), Vector2(112, -50)])
 	return [
 		[_rect(-108, -10, -100, 0), Palette.SB_WALNUT_DARK, "wood"],
 		[_rect(100, -10, 108, 0), Palette.SB_WALNUT_DARK, "wood"],
-		[back, cloth.darkened(0.12), "fabric"],
-		[_rough(-118, -56, 118, -10, 3.0), cloth, "fabric"],
-		[_rough(-104, -66, -38, -50, 2.0), cloth.lightened(0.08), "fabric"],
-		[_rough(-34, -68, 34, -50, 2.0), cloth.lightened(0.1), "fabric"],
-		[_rough(38, -66, 104, -50, 2.0), cloth.lightened(0.08), "fabric"],
-		[Ink.ellipse(Vector2(-118, -56), 12, 16, 12), cloth.darkened(0.06), "fabric"],
-		[Ink.ellipse(Vector2(118, -56), 12, 16, 12), cloth.darkened(0.06), "fabric"],
-		[_rough(-80, -86, -52, -64, 2.0), Palette.SB_ROSE, "fabric"],
+		[back, cloth.darkened(0.14), "fabric"],
+		[_rough(-118, -56, 118, -14, 3.0), cloth, "fabric"],
+		[_rough(-114, -16, 114, -9, 1.5), Palette.SB_WALNUT, "wood"],
+		[_rough(-104, -66, -38, -50, 2.0), cloth.lightened(0.07), "fabric"],
+		[_rough(-34, -68, 34, -50, 2.0), cloth.lightened(0.09), "fabric"],
+		[_rough(38, -66, 104, -50, 2.0), cloth.lightened(0.07), "fabric"],
+		[Ink.ellipse(Vector2(-118, -56), 12, 16, 12), cloth.darkened(0.08), "fabric"],
+		[Ink.ellipse(Vector2(118, -56), 12, 16, 12), cloth.darkened(0.08), "fabric"],
+		[_rough(-84, -86, -56, -64, 2.0), Palette.SB_OLIVE, "fabric"],
+		[_rough(52, -84, 80, -63, 2.0), Palette.SB_CREAM.darkened(0.12), "fabric"],
 	]
 
 
@@ -248,53 +323,98 @@ static func _floor_lamp(state: StringName) -> Array:
 	return parts
 
 
-## The window with heavy curtains, tiebacks and a valance; panes show day sky or a moonlit
-## night; open swings the sash and lets the curtains billow.
+## The tall arched window (concept target): walnut frame, small panes with a fanlight, heavy
+## green velvet curtains on a rod, gathered by gold tiebacks and falling to the floor; panes
+## show day sky or a moonlit night; open swings the lower sash and lets the curtains billow.
 static func _window(state: StringName, is_day: bool, time: float) -> Array:
 	var open: bool = state == &"open"
 	var glass: Color = Palette.SB_GLASS_DAY if is_day else Palette.SB_GLASS_NIGHT
-	var w: float = 52.0
-	var top: float = -150.0
-	var bottom: float = -50.0
+	var w: float = 48.0
+	var top: float = -152.0
+	var shoulder: float = -118.0
+	var bottom: float = -46.0
 	var sway: float = sin(time * 2.3) * 5.0 if open else 0.0
 	var parts: Array = [
-		[_rect(-w - 6, top - 6, w + 6, bottom + 6), Palette.SB_WALNUT, "wood", Ink.Tier.INTERACTIVE],
-		[_rect(-w, top, w, bottom), Palette.SB_CHARCOAL if open else glass, "plain", Ink.Tier.INTERACTIVE],
+		[_arch(-w - 6, w + 6, bottom + 6, shoulder, top - 6, 16), Palette.SB_WALNUT, "wood", Ink.Tier.INTERACTIVE],
+		[_arch(-w, w, bottom, shoulder, top, 16), Palette.SB_CHARCOAL if open else glass, "plain", Ink.Tier.INTERACTIVE],
 	]
-	if not is_day and not open:
-		parts.append([Ink.ellipse(Vector2(w * 0.45, top + 22), 9, 9, 14), Palette.SB_MOON, "bare"])
 	if open:
-		parts.append([PackedVector2Array([Vector2(-w, top), Vector2(-6, top + 12), Vector2(-6, bottom - 12), Vector2(-w, bottom)]), glass.darkened(0.2), "plain", Ink.Tier.INTERACTIVE])
+		# The fanlight stays; the lower sash swings into the room.
+		parts.append([_arch(-w, w, shoulder, shoulder, top, 16), glass, "plain", Ink.Tier.INTERACTIVE])
+		parts.append([PackedVector2Array([Vector2(-w, shoulder), Vector2(-6, shoulder + 12), Vector2(-6, bottom - 12), Vector2(-w, bottom)]), glass.darkened(0.2), "plain", Ink.Tier.INTERACTIVE])
 	else:
-		parts.append([_rect(-2, top, 2, bottom), Palette.SB_WALNUT, "bare"])
-		parts.append([_rect(-w, (top + bottom) * 0.5 - 2, w, (top + bottom) * 0.5 + 2), Palette.SB_WALNUT, "bare"])
+		if not is_day:
+			parts.append([Ink.ellipse(Vector2(w * 0.42, shoulder + 16), 8, 8, 14), Palette.SB_MOON, "bare"])
+		# Glazing bars: a centre bar to the top, two side bars, three cross bars
+		parts.append([_rect(-1.5, top, 1.5, bottom), Palette.SB_WALNUT, "bare"])
+		for x: float in [-w * 0.5, w * 0.5]:
+			parts.append([_rect(x - 1.2, shoulder, x + 1.2, bottom), Palette.SB_WALNUT, "bare"])
+		for y: float in [shoulder, lerpf(shoulder, bottom, 0.38), lerpf(shoulder, bottom, 0.7)]:
+			parts.append([_rect(-w, y - 1.2, w, y + 1.2), Palette.SB_WALNUT, "bare"])
+		# Fanlight bars
+		for a: float in [PI * 0.25, PI * 0.75]:
+			var tip := Vector2(cos(a) * w, shoulder - sin(a) * (shoulder - top))
+			var n := Vector2(-(tip.y - shoulder), tip.x).normalized() * 1.2
+			parts.append([PackedVector2Array([Vector2(0, shoulder) + n, tip + n, tip - n, Vector2(0, shoulder) - n]), Palette.SB_WALNUT, "bare"])
 	parts.append([_rough(-w - 12, bottom + 4, w + 12, bottom + 11, 1.0), Palette.SB_WALNUT_LIGHT, "wood", Ink.Tier.INTERACTIVE])
-	# Heavy curtains, gathered by gold tiebacks; billowing when the window is open
+	# Curtain rod with finials
+	parts.append([_rect(-w - 30, top - 17, w + 30, top - 12), Palette.SB_WALNUT_DARK, "plain", Ink.Tier.FURNITURE])
 	for side: float in [-1.0, 1.0]:
-		var inner: float = side * (w - 10.0)
+		parts.append([Ink.ellipse(Vector2(side * (w + 33), top - 14.5), 4.5, 4.5, 10), Palette.SB_GOLD, "plain", Ink.Tier.FURNITURE])
+	# Heavy green curtains to the floor, gathered by gold tiebacks; billowing when open
+	for side: float in [-1.0, 1.0]:
+		var inner: float = side * (w - 8.0)
 		var outer: float = side * (w + 26.0)
-		var curtain := PackedVector2Array([Vector2(outer, top - 12), Vector2(inner, top - 12), Vector2(inner + side * 14.0 + sway * side, -96),
-			Vector2(inner + side * 6.0 + sway * side * 1.5, bottom + 18), Vector2(outer + sway * side * 0.5, bottom + 22)])
-		parts.append([curtain, Palette.SB_TERRACOTTA.darkened(0.06), "fabric", Ink.Tier.FURNITURE])
-		parts.append([Ink.ellipse(Vector2((inner + outer) * 0.5 + side * 8.0, -94), 6, 3, 10), Palette.SB_GOLD, "plain", Ink.Tier.FURNITURE])
-	parts.append([_rough(-w - 32, top - 22, w + 32, top - 8, 2.0), Palette.SB_ROSE.darkened(0.1), "fabric", Ink.Tier.FURNITURE])
+		var curtain := PackedVector2Array([Vector2(outer, top - 12), Vector2(inner, top - 12), Vector2(inner + side * 16.0 + sway * side, -80),
+			Vector2(inner + side * 8.0 + sway * side * 1.5, -3), Vector2(outer + sway * side * 0.5, -2)])
+		parts.append([curtain, Palette.SB_GREEN.darkened(0.04), "fabric", Ink.Tier.FURNITURE])
+		var tie := Vector2((inner + outer) * 0.5 + side * 10.0, -80)
+		parts.append([Ink.ellipse(tie, 6, 3, 10), Palette.SB_GOLD, "plain", Ink.Tier.FURNITURE])
+		parts.append([PackedVector2Array([tie + Vector2(-2, 2), tie + Vector2(2, 2), tie + Vector2(3, 14), tie + Vector2(-3, 14)]), Palette.SB_GOLD.darkened(0.1), "bare"])
 	return parts
 
 
-## Patterned oval rug: rose border, terracotta field, gold medallion and diamond motifs.
-static func _rug() -> Array:
+## Rectangular patterned rug laid flat in the floor's perspective (concept target), kept muted
+## so it stays below people and interactive props (readability review, 2026-11-15): terracotta
+## border with gold beads, dusk-blue field, a parchment medallion and corner motifs, cream
+## fringe at the two short ends. [param uv] is its centre; it covers u ±RUG_HALF.x, v ±RUG_HALF.y
+## of floor (drawing only: rugs are walked over and block nothing).
+static func _rug(uv: Vector2) -> Array:
+	var s: float = RoomGeometry.scale_at(uv.y)
+	var hu: float = RUG_HALF.x
+	var hv: float = RUG_HALF.y
+	var q := func(du: float, dv: float) -> Vector2:
+		return _floor_point(uv, s, du, dv)
+	var quad := func(u0: float, v0: float, u1: float, v1: float) -> PackedVector2Array:
+		return PackedVector2Array([q.call(u0, v0), q.call(u1, v0), q.call(u1, v1), q.call(u0, v1)])
+	var diamond := func(cu: float, cv: float, ru: float, rv: float) -> PackedVector2Array:
+		return PackedVector2Array([q.call(cu, cv - rv), q.call(cu + ru, cv), q.call(cu, cv + rv), q.call(cu - ru, cv)])
 	var parts: Array = [
-		[Ink.ellipse(Vector2.ZERO, 196, 56, 40), Palette.SB_ROSE.darkened(0.12), "plain", Ink.Tier.BACKGROUND],
-		[Ink.ellipse(Vector2.ZERO, 176, 47, 40), Palette.SB_TERRACOTTA.darkened(0.1), "fabric", Ink.Tier.BACKGROUND],
-		[Ink.ellipse(Vector2.ZERO, 70, 19, 28), Palette.SB_GOLD.darkened(0.08), "plain", Ink.Tier.BACKGROUND],
-		[Ink.ellipse(Vector2.ZERO, 46, 12, 24), Palette.SB_DUSK_BLUE.darkened(0.1), "bare"],
-		[Ink.ellipse(Vector2.ZERO, 18, 5, 16), Palette.SB_CREAM.darkened(0.1), "bare"],
+		[quad.call(-hu, -hv, hu, hv), Palette.SB_TERRACOTTA.darkened(0.3), "plain", Ink.Tier.BACKGROUND],
+		[quad.call(-hu + 0.024, -hv + 0.032, hu - 0.024, hv - 0.032), Palette.SB_DUSK_BLUE.darkened(0.22), "fabric", Ink.Tier.BACKGROUND],
+		[diamond.call(0.0, 0.0, 0.07, 0.056), Palette.SB_PARCHMENT.darkened(0.28), "plain", Ink.Tier.BACKGROUND],
+		[diamond.call(0.0, 0.0, 0.04, 0.032), Palette.SB_TERRACOTTA.darkened(0.28), "bare"],
+		[diamond.call(0.0, 0.0, 0.015, 0.012), Palette.SB_CREAM.darkened(0.3), "bare"],
 	]
-	for i: int in 10:
-		var a: float = TAU * float(i) / 10.0
-		var at := Vector2(cos(a) * 128.0, sin(a) * 33.0)
-		parts.append([PackedVector2Array([at + Vector2(0, -5), at + Vector2(7, 0), at + Vector2(0, 5), at + Vector2(-7, 0)]), Palette.SB_GOLD, "bare"])
+	for cu: float in [-1.0, 1.0]:
+		for cv: float in [-1.0, 1.0]:
+			parts.append([diamond.call(cu * (hu - 0.07), cv * (hv - 0.065), 0.022, 0.018), Palette.SB_PARCHMENT.darkened(0.32), "bare"])
+	for i: int in 11:
+		var bu: float = lerpf(-hu + 0.03, hu - 0.03, float(i) / 10.0)
+		for cv: float in [-1.0, 1.0]:
+			parts.append([diamond.call(bu, cv * (hv - 0.016), 0.006, 0.006), Palette.SB_GOLD.darkened(0.25), "bare"])
+	for i: int in 9:
+		var fv: float = lerpf(-hv + 0.012, hv - 0.012, float(i) / 8.0)
+		for side: float in [-1.0, 1.0]:
+			var u0: float = side * hu
+			parts.append([quad.call(minf(u0, u0 + side * 0.013), fv - 0.0035, maxf(u0, u0 + side * 0.013), fv + 0.0035), Palette.SB_CREAM.darkened(0.2), "bare"])
 	return parts
+
+
+## A floor point [param du], [param dv] away from [param uv], in the local, unscaled
+## coordinates parts use (screen offset from the piece's foot divided by its depth scale).
+static func _floor_point(uv: Vector2, s: float, du: float, dv: float) -> Vector2:
+	return (RoomGeometry.to_screen(uv + Vector2(du, dv)) - RoomGeometry.to_screen(uv)) / s
 
 
 ## Tall walnut bookshelf, slightly leaning, books of uneven heights, a plant on top.

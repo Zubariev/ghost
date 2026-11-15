@@ -585,6 +585,14 @@ func _run_art_test(dir: String) -> void:
 	_haunt_living_room()
 	await _show(dir, "04-haunted-night", "22:10", "living_room", Vector2(0.5, 0.93))
 	await _show(dir, "05-haunted-night-ghost-at-lamp", "22:10", "living_room", Vector2(0.17, 0.8))
+	# Art Phase 1 review: the ghost is depth-sorted with the furniture (behind the sofa, then
+	# in front of it) and its glint when hidden in the sofa; cozy light.
+	_cozy_living_room()
+	await _show(dir, "06-cozy-night-ghost-behind-sofa", "22:10", "living_room", Vector2(0.38, 0.25))
+	await _show(dir, "07-cozy-night-ghost-before-sofa", "22:10", "living_room", Vector2(0.38, 0.42))
+	_navigator.place("living_room", Vector2(0.38, 0.36))
+	_toggle_hide()
+	await _show(dir, "08-cozy-night-ghost-hidden-in-sofa", "22:10", "living_room", _navigator.uv)
 
 
 ## Art test only: lamp out and window open, through the ghost's own rules.

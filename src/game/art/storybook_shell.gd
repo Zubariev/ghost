@@ -8,6 +8,8 @@ extends RefCounted
 
 const PLANKS: int = 14
 const WAINSCOT_HEIGHT: float = 0.36
+## Wainscot panels along each side wall.
+const SIDE_PANELS: int = 6
 ## Damask motif spacing on the back wall, px.
 const MOTIF_STEP := Vector2(34, 30)
 
@@ -72,6 +74,14 @@ static func draw_side_wall(canvas: CanvasItem, left: bool, alpha: float) -> void
 	canvas.draw_colored_polygon(band, _a(Palette.SB_WALNUT.darkened(0.12), alpha))
 	Ink.wood_grain(canvas, band, Palette.SB_WALNUT, 21.0 if left else 23.0, 3)
 	Ink.line(canvas, PackedVector2Array([band[0], band[1]]), Ink.Tier.FURNITURE, 5.0, _a(Palette.SB_GOLD.darkened(0.2), alpha), 1.4)
+	# Panel mouldings in the band, as on the back wall (art Phase 1: wainscot panels on all walls).
+	for i: int in SIDE_PANELS:
+		var v0: float = 0.04 + 0.92 * float(i) / float(SIDE_PANELS) + 0.014
+		var v1: float = 0.04 + 0.92 * float(i + 1) / float(SIDE_PANELS) - 0.014
+		var panel := PackedVector2Array([
+			RoomGeometry.side_wall_point(left, v0, WAINSCOT_HEIGHT - 0.07), RoomGeometry.side_wall_point(left, v1, WAINSCOT_HEIGHT - 0.07),
+			RoomGeometry.side_wall_point(left, v1, 0.07), RoomGeometry.side_wall_point(left, v0, 0.07)])
+		Ink.outline(canvas, panel, Ink.Tier.BACKGROUND, (81.0 if left else 101.0) + float(i), _a(Palette.SB_CONTOUR, alpha))
 	Ink.outline(canvas, poly, Ink.Tier.FURNITURE, 4.0 if left else 6.0, _a(Palette.SB_CONTOUR, alpha))
 	Ink.line(canvas, PackedVector2Array([poly[0], poly[1]]), Ink.Tier.FURNITURE, 7.0, _a(Palette.SB_WALNUT_DARK, alpha), 3.0)
 

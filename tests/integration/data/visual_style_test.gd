@@ -139,6 +139,32 @@ func test_every_placeholder_shape_can_be_filled_in_every_state() -> void:
 							"%s %s (%s) part %d cannot be filled" % [room_id, kind, state, i]).is_false()
 
 
+func test_every_storybook_shape_can_be_filled_in_every_state() -> void:
+	# Guard for the storybook drawings (art Phase 1, 2026-11-15): stones, arches and the
+	# perspective rug must stay valid polygons in every state, day and night.
+	var house: HouseState = _house()
+	var style: Dictionary = JsonData.read(PropVisuals.STYLE_PATH)
+	var rooms: Dictionary = JsonData.read(FURNITURE_PATH)["rooms"]
+	for room_id: String in style.get("storybook_rooms", []):
+		for piece: Dictionary in rooms[room_id]:
+			var kind: String = String(piece["kind"])
+			var uv := Vector2(float(piece["u"]), float(piece["v"]))
+			var states: Array = [""]
+			var object_id: String = String(piece.get("object", ""))
+			if not object_id.is_empty():
+				states = Array(house.objects[object_id].allowed_states)
+			if kind == "fireplace":
+				states = ["burning", "out"]
+			for state: Variant in states:
+				for day: bool in [true, false]:
+					var parts: Array = StorybookArt._parts(kind, String(piece.get("variant", "")), StringName(state), day, 0.0, Ink.Tier.FURNITURE, uv)
+					assert_bool(parts.is_empty()).override_failure_message("%s %s has no drawing" % [room_id, kind]).is_false()
+					for i: int in parts.size():
+						var poly: PackedVector2Array = StorybookArt._place(parts[i][0], Vector2(600, 400), 0.9)
+						assert_bool(Geometry2D.triangulate_polygon(poly).is_empty()).override_failure_message(
+							"%s %s (%s, day %s) part %d cannot be filled" % [room_id, kind, state, day, i]).is_false()
+
+
 func test_every_room_has_at_least_two_hiding_spots() -> void:
 	# User decision 2026-11-15: with one spot, a searcher checks it first and a glimpsed
 	# ghost that hid there was always caught.
