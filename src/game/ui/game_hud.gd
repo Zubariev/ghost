@@ -357,6 +357,12 @@ func is_map_shown() -> bool:
 	return _map.visible
 
 
+## The controls help does not show by itself at the start (player setting); H and pause still
+## show it.
+func skip_help_at_start() -> void:
+	_time = maxf(_time, HELP_FIRST_SECONDS)
+
+
 ## While [param held] (H), the controls help shows.
 func set_help_held(held: bool) -> void:
 	_help_held = held

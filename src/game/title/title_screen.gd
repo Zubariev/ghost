@@ -6,6 +6,7 @@ class_name TitleScreen
 extends Control
 
 const GAME_SCENE: String = "res://src/game/house_game.tscn"
+const MENU_SCENE: String = "res://src/game/menu/main_menu.tscn"
 const STRINGS_PATH: String = "res://assets/i18n/strings.csv"
 const LOCALE: String = "uk"
 
@@ -67,6 +68,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key != null and key.pressed and (key.keycode == KEY_ENTER or key.keycode == KEY_KP_ENTER):
 		_start()
+	elif event.is_action_pressed(&"ui_cancel"):
+		get_tree().change_scene_to_file(MENU_SCENE)   # Esc: back to the main menu (2026-11-15)
 
 
 func _start() -> void:

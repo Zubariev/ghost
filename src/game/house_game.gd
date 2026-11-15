@@ -26,7 +26,7 @@ const GHOST_PATH: String = "res://assets/data/ghost/ghost.json"
 const STEALTH_PATH: String = "res://assets/data/ghost/stealth.json"
 const MOVEMENT_PATH: String = "res://assets/data/house/movement.json"
 const ENERGY_PATH: String = "res://assets/data/ghost/energy.json"
-const TITLE_SCENE: String = "res://src/game/title/title_screen.tscn"
+const TITLE_SCENE: String = "res://src/game/menu/main_menu.tscn"   ## the main menu (2026-11-15)
 const GRADE_SHADER_PATH: String = "res://assets/shaders/post_art_room_grade.gdshader"
 ## Draw order: room (0), colour grade (1), HUD (2).
 const GRADE_LAYER: int = 1
@@ -425,7 +425,13 @@ func _connect_events() -> void:
 		names[routine.schedule.npc_id] = who
 	# HUD decision 2026-11-15: no event log; a person's morale change floats above them for a
 	# moment (their "!" / "?" markers already show noticing and searching).
-	_hud.set_float_source(_stage.visible_floats)
+	# Player settings (main menu): the floating morale texts and the controls help at the start.
+	# Captures always use the defaults.
+	var settings: GameSettings = GameSettings.load_saved() if _capture_dir().is_empty() else GameSettings.defaults()
+	if settings.show_morale_floats:
+		_hud.set_float_source(_stage.visible_floats)
+	if not settings.show_help_at_start:
+		_hud.skip_help_at_start()
 	_sim.morale.morale_changed.connect(func(npc: String, _value: int, delta: int, reason: String) -> void:
 		if delta != 0 and reason != "set":
 			_stage.float_text(npc, _morale_float(delta, reason), MORALE_DROP_COLOR if delta < 0 else MORALE_GAIN_COLOR))

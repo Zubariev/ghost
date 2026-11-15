@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Ghost vs. Humans: House Takeover"
-run/main_scene="res://src/game/title/title_screen.tscn"
+run/main_scene="res://src/game/menu/main_menu.tscn"
 
 config/features=PackedStringArray("4.7")
 

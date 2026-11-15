@@ -6,10 +6,12 @@
 ## colour so filtering never bleeds a white fringe. Verification output: the size and the
 ## mapping from source to sprite pixels, to set the anchor.
 ##
-## Run: godot --headless --path . -s res://tools/sprite_cutout.gd -- <in> <out.png> [crop_top] [resize]
+## Run: godot --headless --path . -s res://tools/sprite_cutout.gd -- <in> <out.png> [crop_top] [resize] [bg_min]
+## [bg_min] (default 0.86): how light a background pixel is at least; lower it for a painted
+## grey-and-white checkerboard (menu sheet, 2026-11-15: 0.80).
 extends SceneTree
 
-const BG_MIN: float = 0.86        # a background pixel: every channel at least this light…
+var BG_MIN: float = 0.86          # a background pixel: every channel at least this light…
 const BG_SPREAD: float = 0.06     # …and nearly grey
 const ISLAND_MIN: float = 0.96   # enclosed pockets (a handle loop, gaps between leaves) this
 const ISLAND_SPREAD: float = 0.03 # white and grey are background too, though the fill can't reach them
@@ -25,6 +27,8 @@ func _initialize() -> void:
 		return
 	var crop_top: int = int(args[2]) if args.size() > 2 else 0
 	var resize: float = float(args[3]) if args.size() > 3 else 1.0
+	if args.size() > 4:
+		BG_MIN = float(args[4])
 	var img := Image.load_from_file(args[0])
 	if img == null:
 		quit(1)

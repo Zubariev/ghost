@@ -128,3 +128,38 @@ REASON_meal_poor,так собі їжа
 REASON_activity_good,гарний відпочинок
 REASON_activity_poor,відпочинок
 REASON_task_done,справу зроблено
+MENU_TITLE_1,Привид
+MENU_TITLE_2,проти
+MENU_TITLE_3,людей
+MENU_NEW_GAME,Нова гра
+MENU_LOAD,Завантажити гру
+MENU_SETTINGS,Налаштування
+MENU_CREDITS,Автори
+MENU_EXIT,Вихід
+MENU_BACK,Назад
+LOAD_TITLE,Завантаження
+LOAD_EMPTY,Збережених ігор поки немає.
+LOAD_EMPTY_NOTE,Збереження гри з'явиться в наступних версіях.
+SETTINGS_TITLE,Налаштування
+SET_DISPLAY_MODE,Режим екрана
+SET_WINDOWED,У вікні
+SET_FULLSCREEN,На весь екран
+SET_WINDOW_SIZE,Розмір вікна
+SET_HELP_AT_START,Показувати підказку з керуванням на початку гри
+SET_MORALE_FLOATS,Показувати зміни моралі над людьми
+SET_AUDIO_LATER,"Гучність з'явиться разом зі звуком і музикою гри."
+SET_APPLY,Застосувати
+SET_DEFAULTS,За замовчуванням
+CREDITS_TITLE,Автори
+CREDITS_DEVELOPMENT,"Ідея, дизайн і розробка — [ім'я автора]"
+CREDITS_ART,"Графіка — [автори уточнюються]; концепти й ілюстрації створено за допомогою генерації зображень"
+CREDITS_AUDIO,Музика і звук — [ще немає]
+CREDITS_FONTS,"Шрифти: Yeseva One — Jovanny Lemonad; PT Sans — ParaType; Alegreya — Huerta Tipográfica (SIL Open Font License 1.1)"
+CREDITS_ENGINE,Створено на Godot Engine (godotengine.org/license)
+EXIT_CONFIRM,Вийти з гри?
+EXIT_YES,Так
+EXIT_NO,Ні
+PAUSE_TITLE,Пауза
+PAUSE_RESUME,Продовжити
+PAUSE_MAIN_MENU,Головне меню
+PAUSE_QUIT_CONFIRM,"Вийти в головне меню? Цю гру не збережено — її буде втрачено."
