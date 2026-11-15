@@ -184,6 +184,22 @@ func test_wall_portraits_hang_clear_of_doors_and_above_the_wainscot() -> void:
 				assert_bool(Geometry2D.triangulate_polygon(part).is_empty()).override_failure_message("%s portrait part cannot be filled" % room_id).is_false()
 
 
+func test_room_wear_config_is_complete_and_names_real_furniture() -> void:
+	# Art Phase 2 (2026-11-15): every wear number is configured; cobwebs sit only on furniture
+	# kinds the house has.
+	var wear: Dictionary = JsonData.read(PropVisuals.STYLE_PATH).get("wear", {})
+	for key: String in ["fade_per_second", "dull_alpha", "dust_patches", "dust_alpha", "door_clear", "floor_margin",
+			"web_alpha", "web_radius", "web_tops", "motes", "mote_alpha", "polish_alpha", "breath_period", "breath_alpha",
+			"cold_corner_alpha", "ember_seconds"]:
+		assert_bool(wear.has(key)).override_failure_message("wear." + key + " missing").is_true()
+	var kinds: Dictionary = {}
+	for pieces: Array in (JsonData.read(FURNITURE_PATH)["rooms"] as Dictionary).values():
+		for piece: Dictionary in pieces:
+			kinds[String(piece["kind"])] = true
+	for kind: String in wear.get("web_tops", {}):
+		assert_bool(kinds.has(kind)).override_failure_message("web_tops: no furniture kind " + kind).is_true()
+
+
 func test_every_room_has_at_least_two_hiding_spots() -> void:
 	# User decision 2026-11-15: with one spot, a searcher checks it first and a glimpsed
 	# ghost that hid there was always caught.

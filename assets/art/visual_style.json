@@ -3,6 +3,25 @@
 	"storybook_rooms": ["living_room"],
 	"sprites": {},
 	"_wall_portraits": "Art Phase 1 (2026-11-15): framed portraits on the side walls, per storybook room. Art config only: not furniture, never an obstacle, not in furniture.json. wall: left/right; v: [from, to] along the wall (0 back .. 1 front; side doors are at 0.39-0.61); h: [from, to] up the wall (0 floor .. 1 top; wainscot up to 0.36); variant: lady / child / gentleman.",
+	"_wear": "Art Phase 2 (2026-11-15): how worn a room looks; presentation only (RoomWear, RoomStage). Shown in every room. fade_per_second: how fast dirt/polish/cold appear and fade (real seconds). Dirt: dull_alpha (brown-grey wash over floor and walls), dust_patches / dust_alpha (dust and every third a stain, never within door_clear floor units of a door, inside floor_margin), web_alpha / web_radius (cobwebs in the top corners), web_tops (cobweb on top of tall furniture: kind -> [x, y] local px of its top-left corner), motes / mote_alpha (dust specks drifting in the light). Clean: polish_alpha (sheen bands on the floor). Cold: breath_period (seconds) / breath_alpha (puffs from people in a cold room), cold_corner_alpha (dusk-blue shadows creeping into corners as the room turns cold or dark). Fire: ember_seconds (real seconds embers glow after the fire goes out). Window: frost and a draught on the floor when open (storybook rooms).",
+	"wear": {
+		"fade_per_second": 1.0,
+		"dull_alpha": 0.2,
+		"dust_patches": 7,
+		"dust_alpha": 0.3,
+		"door_clear": 0.14,
+		"floor_margin": 0.06,
+		"web_alpha": 0.55,
+		"web_radius": 46,
+		"web_tops": {"bookshelf": [-54, -206], "wardrobe": [-56, -214]},
+		"motes": 12,
+		"mote_alpha": 0.55,
+		"polish_alpha": 0.07,
+		"breath_period": 3.5,
+		"breath_alpha": 0.45,
+		"cold_corner_alpha": 0.4,
+		"ember_seconds": 25.0
+	},
 	"wall_portraits": {
 		"living_room": [
 			{"wall": "left", "v": [0.1, 0.3], "h": [0.46, 0.84], "variant": "lady"},

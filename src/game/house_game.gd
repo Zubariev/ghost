@@ -575,9 +575,15 @@ func _run_loss_capture(dir: String) -> void:
 ## same camera; only the room's state differs. Changed through the same rules the ghost's
 ## actions use, without advancing time.
 func _run_art_test(dir: String) -> void:
+	# Art Phase 2: the run-down start — dirty, cold rooms (dust, stains, cobwebs, motes in the
+	# window light, frost and a draught at the open window, cold corners; breath on the cook).
+	await _show(dir, "00-run-down-morning-living-room", "06:30", "living_room", Vector2(0.5, 0.93))
+	await _show(dir, "00b-run-down-morning-kitchen-breath", "06:40", "kitchen", Vector2(0.5, 0.93))
 	# 21:30 — the family's evening in the living room (still daytime in the game's clock).
 	await _show(dir, "01-cozy-evening-family", "21:30", "living_room", Vector2(0.5, 0.93))
+	_stage.track_fire()   # the fire is burning; seen going out below (embers)
 	_haunt_living_room()
+	_stage.track_fire()
 	await _show(dir, "02-haunted-evening-family", "21:30", "living_room", Vector2(0.5, 0.93))
 	# 22:10 — night, the room empty: cozy, then fully haunted.
 	_cozy_living_room()

@@ -27,6 +27,18 @@ const LOOKS: Dictionary = {
 }
 
 
+## Where the head of [param npc_id] is when drawn at [param foot] with scale [param s] in
+## [param pose] (for effects such as breath; matches [method draw_person]).
+static func head_point(npc_id: String, foot: Vector2, s: float, pose: String) -> Vector2:
+	var look: Dictionary = LOOKS.get(npc_id, LOOKS["mother"])
+	var h: float = float(look["height"]) * s
+	var sit: bool = pose in ["sit", "broken"]
+	var head: Vector2 = foot + Vector2(0, (-20.0 if sit else -34.0) * h - 46.0 * h - 15.0 * s)
+	if pose == "broken":
+		head += Vector2(0, 8 * s)
+	return head
+
+
 ## Draws one family member standing (or posed) at [param foot].
 ## [param pose]: "stand", "walk", "sit", "sleep", "broken", "tricycle".
 static func draw_person(canvas: CanvasItem, npc_id: String, foot: Vector2, s: float, pose: String, phase: float, facing_left: bool) -> void:

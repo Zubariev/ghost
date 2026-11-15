@@ -323,6 +323,26 @@ static func _floor_lamp(state: StringName) -> Array:
 	return parts
 
 
+## One feathery frost sprig at [param from], growing along [param angle] for [param length] px:
+## a fine stem with short side branches that shrink toward the tip.
+static func _frost_sprig(from: Vector2, angle: float, length: float, color: Color) -> Array:
+	var dir := Vector2(cos(angle), sin(angle))
+	var parts: Array = [[_stroke(from, from + dir * length, 0.6), color, "bare"]]
+	for i: int in 3:
+		var at: Vector2 = from + dir * length * (0.3 + 0.22 * float(i))
+		var twig: float = length * (0.4 - 0.1 * float(i))
+		for side: float in [-1.0, 1.0]:
+			var d: Vector2 = dir.rotated(side * 0.8)
+			parts.append([_stroke(at, at + d * twig, 0.45), color, "bare"])
+	return parts
+
+
+## A thin quad from [param a] to [param b], [param half] px either side.
+static func _stroke(a: Vector2, b: Vector2, half: float) -> PackedVector2Array:
+	var n: Vector2 = (b - a).normalized().orthogonal() * half
+	return PackedVector2Array([a + n, b + n, b - n, a - n])
+
+
 ## The tall arched window (concept target): walnut frame, small panes with a fanlight, heavy
 ## green velvet curtains on a rod, gathered by gold tiebacks and falling to the floor; panes
 ## show day sky or a moonlit night; open swings the lower sash and lets the curtains billow.
@@ -342,6 +362,20 @@ static func _window(state: StringName, is_day: bool, time: float) -> Array:
 		# The fanlight stays; the lower sash swings into the room.
 		parts.append([_arch(-w, w, shoulder, shoulder, top, 16), glass, "plain", Ink.Tier.INTERACTIVE])
 		parts.append([PackedVector2Array([Vector2(-w, shoulder), Vector2(-6, shoulder + 12), Vector2(-6, bottom - 12), Vector2(-w, bottom)]), glass.darkened(0.2), "plain", Ink.Tier.INTERACTIVE])
+		# Frost (art Phase 2): a thin translucent rime hugging the glass edges, thicker in the
+		# corners, with feathery fern sprigs growing in from the corners — no blobs or even
+		# spikes (reviews 2026-11-15).
+		var rime := Color(Palette.SB_MOON, 0.22)
+		parts.append([PackedVector2Array([Vector2(-w, shoulder), Vector2(w, shoulder), Vector2(w, shoulder - 3), Vector2(w * 0.4, shoulder - 2), Vector2(-w * 0.3, shoulder - 3.5), Vector2(-w, shoulder - 2.5)]), rime, "bare"])
+		parts.append([PackedVector2Array([Vector2(-w, shoulder), Vector2(-w + 4, shoulder + 20), Vector2(-w + 3, bottom - 20), Vector2(-w + 5, bottom), Vector2(-w, bottom)]), rime, "bare"])
+		parts.append([PackedVector2Array([Vector2(-w, bottom), Vector2(-6, bottom - 12), Vector2(-8, bottom - 15), Vector2(-w * 0.5, bottom - 9.5), Vector2(-w, bottom - 4)]), rime, "bare"])
+		var fern := Color(Palette.SB_MOON, 0.55)
+		for sprig: Vector4 in [
+			Vector4(-w + 1, shoulder - 1, -0.6, 11), Vector4(w - 1, shoulder - 1, -2.5, 10),
+			Vector4(-w + 2, shoulder + 2, 0.7, 12), Vector4(-w + 2, bottom - 3, -0.6, 13),
+			Vector4(-10, bottom - 13, -2.3, 8),
+		]:
+			parts.append_array(_frost_sprig(Vector2(sprig.x, sprig.y), sprig.z, sprig.w, fern))
 	else:
 		if not is_day:
 			parts.append([Ink.ellipse(Vector2(w * 0.42, shoulder + 16), 8, 8, 14), Palette.SB_MOON, "bare"])

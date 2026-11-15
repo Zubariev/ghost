@@ -8,6 +8,12 @@
 ## and panelled shell, firelight / lamplight / moonlight pools, the paper shader, and an eased
 ## warm-to-haunted mood ([RoomMood]) that the game's colour grade reads. Any prop with a
 ## painted sprite in that file is drawn from the image instead ([PropVisuals]).
+##
+## Room wear (art Phase 2, every room): a dirty room is duller, with dust and stains on the floor,
+## cobwebs in the corners and on tall furniture, and dust motes in its light; a clean room has a
+## faint sheen; a cold room shows people's breath; cold or dark rooms gather dusk-blue shadow in
+## the corners; embers fade after the fire goes out ([RoomWear]). Drawn under furniture and
+## people, so wear never covers them (breath belongs to the person).
 class_name RoomStage
 extends Node2D
 
@@ -57,6 +63,14 @@ var _wall_alpha: Dictionary = {"left": 1.0, "right": 1.0, "back": 1.0}
 var _warmth: float = 1.0
 var _night: float = 0.0
 var _mood_room: String = ""
+## Room wear shown now (eased): dirt, polish, cold 0..1.
+var _dirt: float = 0.0
+var _polish: float = 0.0
+var _cold: float = 0.0
+var _wear: RoomWear
+## room id -> seconds (of _time) when its fire went out while on screen; absent = no embers.
+var _fire_out_at: Dictionary = {}
+var _fire_was_burning: Dictionary = {}
 
 
 ## True when the room on screen is drawn in the storybook style.
@@ -79,6 +93,20 @@ func settle_mood() -> void:
 	_mood_room = navigator.room_id
 	_warmth = RoomMood.warmth(sim.house.rooms[navigator.room_id])
 	_night = 0.0 if sim.house.is_day else 1.0
+	var room: RoomState = sim.house.rooms[navigator.room_id]
+	_dirt = RoomWear.dirt_target(room)
+	_polish = RoomWear.polish_target(room)
+	_cold = RoomWear.cold_target(room)
+
+
+## Notices the fire on screen going out (embers then fade); called every frame, and by captures.
+func track_fire() -> void:
+	var burning: bool = RoomMood.fire_burning(sim.house.rooms[navigator.room_id])
+	if bool(_fire_was_burning.get(navigator.room_id, false)) and not burning:
+		_fire_out_at[navigator.room_id] = _time
+	if burning:
+		_fire_out_at.erase(navigator.room_id)
+	_fire_was_burning[navigator.room_id] = burning
 
 
 func _process(delta: float) -> void:
@@ -88,6 +116,11 @@ func _process(delta: float) -> void:
 		settle_mood()
 	_warmth = RoomMood.approach(_warmth, RoomMood.warmth(sim.house.rooms[navigator.room_id]), delta)
 	_night = move_toward(_night, 0.0 if sim.house.is_day else 1.0, NIGHT_EASE_PER_SECOND * delta)
+	var room: RoomState = sim.house.rooms[navigator.room_id]
+	_dirt = _wear_model().ease(_dirt, RoomWear.dirt_target(room), delta)
+	_polish = _wear_model().ease(_polish, RoomWear.polish_target(room), delta)
+	_cold = _wear_model().ease(_cold, RoomWear.cold_target(room), delta)
+	track_fire()
 	if paper_material == null and ResourceLoader.exists(PAPER_SHADER_PATH):
 		var paper := ShaderMaterial.new()
 		paper.shader = load(PAPER_SHADER_PATH)
@@ -114,6 +147,7 @@ func _draw() -> void:
 		StorybookShell.draw_side_wall(self, false, float(_wall_alpha["right"]))
 		StorybookShell.draw_wall_portraits(self, visuals.wall_portraits(room_id), _wall_alpha)
 		StorybookShell.draw_doors(self, sim.house, room_id, _wall_alpha)
+		_draw_wear_surfaces(room_id)
 		_draw_storybook_light(room_id)
 	else:
 		draw_rect(Rect2(-200, -200, 1680, 1120), Palette.BACKGROUND)
@@ -122,7 +156,10 @@ func _draw() -> void:
 		_draw_side_wall(true, float(_wall_alpha["left"]))
 		_draw_side_wall(false, float(_wall_alpha["right"]))
 		_draw_doors(room_id)
+		_draw_wear_surfaces(room_id)
 		_draw_lamp_glow(room_id)
+	_draw_cold_corners()
+	_draw_motes(room_id)
 	# Depth-sorted content: [screen y, callable]
 	var items: Array = []
 	for piece: Dictionary in layout.pieces(room_id):
@@ -144,6 +181,12 @@ func _draw() -> void:
 		var target_key: String = object_id if not object_id.is_empty() else String(piece.get("pickup", piece.get("hide_id", "")))
 		var highlighted: bool = target_key == target_object and not target_key.is_empty()
 		items.append([y, _draw_piece.bind(piece, uv, state, highlighted, not target_key.is_empty(), storybook)])
+		var web_tops: Dictionary = _wear_config().get("web_tops", {})
+		if _dirt > 0.01 and web_tops.has(kind):
+			var corner: Array = web_tops[kind]
+			var s: float = RoomGeometry.scale_at(uv.y)
+			items.append([y + 0.01, _draw_web.bind(RoomGeometry.to_screen(uv) + Vector2(float(corner[0]), float(corner[1])) * s,
+				Vector2.RIGHT, Vector2.DOWN, 0.5 * s)])
 	var markers: Array = []
 	for i: int in sim.routines.size():
 		var routine: NpcRoutine = sim.routines[i]
@@ -180,6 +223,11 @@ func _draw() -> void:
 	if harm_uv.x > -1.0:
 		_draw_wisps(ghost_uv, harm_uv, effort)
 		_draw_ring(harm_uv, effort)
+	if _cold > 0.01:
+		for i: int in sim.routines.size():
+			var placed: Dictionary = motion.person(i, room_id)
+			if not placed.is_empty() and String(placed["pose"]) != "sleep":
+				_draw_breath(i, sim.routines[i].schedule.npc_id, placed)
 	for marker: Array in markers:
 		draw_string(ThemeDB.fallback_font, marker[0], marker[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 30,
 			Color("e0735f") if marker[1] == "!" else Color("f0c36a"))
@@ -202,6 +250,156 @@ func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted:
 		StorybookArt.draw(self, piece, uv, state, highlighted, sim.house.is_day, interactive, _time)
 	else:
 		FurnitureArt.draw(self, kind, uv, state, highlighted, sim.house.is_day)
+	if kind == "fireplace" and state == &"out" and _fire_out_at.has(navigator.room_id):
+		_draw_embers(RoomGeometry.to_screen(uv), _wear_model().ember_glow(_time - float(_fire_out_at[navigator.room_id])))
+
+
+# --- Room wear (art Phase 2) ------------------------------------------------------------
+
+func _wear_config() -> Dictionary:
+	return visuals.wear_config() if visuals != null else {}
+
+
+func _wear_model() -> RoomWear:
+	if _wear == null:
+		_wear = RoomWear.new(_wear_config())
+	return _wear
+
+
+## Dirt and polish on the room's surfaces, under all furniture: a dull wash over floor and
+## walls, dust patches and stains, cobwebs in the top corners; a clean room's floor sheen.
+func _draw_wear_surfaces(room_id: String) -> void:
+	var cfg: Dictionary = _wear_config()
+	if _dirt > 0.01:
+		var dull := Color(Palette.SB_BROWN_GREY, float(cfg.get("dull_alpha", 0.2)) * _dirt)
+		draw_colored_polygon(RoomGeometry.floor_polygon(), dull)
+		draw_colored_polygon(RoomGeometry.back_wall_polygon(), Color(dull, dull.a * float(_wall_alpha["back"])))
+		draw_colored_polygon(RoomGeometry.left_wall_polygon(), Color(dull, dull.a * float(_wall_alpha["left"])))
+		draw_colored_polygon(RoomGeometry.right_wall_polygon(), Color(dull, dull.a * float(_wall_alpha["right"])))
+		var dust_alpha: float = float(cfg.get("dust_alpha", 0.3)) * _dirt
+		var patches: Array[Vector3] = _wear_model().dust_patches(room_id, _door_uvs(room_id))
+		for i: int in patches.size():
+			var p: Vector3 = patches[i]
+			var at: Vector2 = RoomGeometry.to_screen(Vector2(p.x, p.y))
+			var s: float = RoomGeometry.scale_at(p.y) * p.z
+			var stain: bool = i % 3 == 2
+			var shape: PackedVector2Array = Ink.wobble(Ink.ellipse(at, (34.0 if stain else 62.0) * s, (10.0 if stain else 17.0) * s, 18), float(i) * 3.7, 3.0 * s)
+			var color: Color = Color(Palette.SB_WALNUT_DARK, dust_alpha * 0.8) if stain else Color(Palette.SB_ASH, dust_alpha)
+			for piece: PackedVector2Array in floor_pieces(shape):
+				draw_colored_polygon(piece, color)
+		var web_radius: float = float(cfg.get("web_radius", 46))
+		var top_left: Vector2 = RoomGeometry.BACK_LEFT + Vector2(0, -RoomGeometry.BACK_WALL_HEIGHT)
+		var top_right: Vector2 = RoomGeometry.BACK_RIGHT + Vector2(0, -RoomGeometry.BACK_WALL_HEIGHT)
+		var front_left: Vector2 = RoomGeometry.FRONT_LEFT + Vector2(0, -RoomGeometry.SIDE_WALL_FRONT_HEIGHT)
+		var front_right: Vector2 = RoomGeometry.FRONT_RIGHT + Vector2(0, -RoomGeometry.SIDE_WALL_FRONT_HEIGHT)
+		_draw_web(top_left, Vector2.RIGHT, Vector2.DOWN, web_radius / 46.0 * float(_wall_alpha["back"]))
+		_draw_web(top_right, Vector2.LEFT, Vector2.DOWN, web_radius / 46.0 * float(_wall_alpha["back"]))
+		_draw_web(front_left, (top_left - front_left).normalized(), Vector2.DOWN, web_radius / 46.0 * 1.2 * float(_wall_alpha["left"]))
+		_draw_web(front_right, (top_right - front_right).normalized(), Vector2.DOWN, web_radius / 46.0 * 1.2 * float(_wall_alpha["right"]))
+	if _polish > 0.01:
+		var sheen := Color(Palette.SB_CREAM, float(cfg.get("polish_alpha", 0.07)) * _polish)
+		for u0: float in [0.22, 0.48, 0.74]:
+			var band := PackedVector2Array([RoomGeometry.to_screen(Vector2(u0, 0.0)), RoomGeometry.to_screen(Vector2(u0 + 0.07, 0.0)),
+				RoomGeometry.to_screen(Vector2(u0 - 0.1, 1.0)), RoomGeometry.to_screen(Vector2(u0 - 0.19, 1.0))])
+			for piece: PackedVector2Array in floor_pieces(band):
+				draw_colored_polygon(piece, sheen)
+
+
+## A cobweb fanned between two directions from [param corner]; [param size] 1 = web_radius px.
+func _draw_web(corner: Vector2, along_a: Vector2, along_b: Vector2, size: float) -> void:
+	var cfg: Dictionary = _wear_config()
+	var radius: float = float(cfg.get("web_radius", 46)) * size
+	var color := Color(Palette.SB_CREAM, float(cfg.get("web_alpha", 0.55)) * _dirt)
+	var a0: float = along_a.angle()
+	var a1: float = along_b.angle()
+	var span: float = wrapf(a1 - a0, -PI, PI)
+	var threads: int = 5
+	for k: int in threads:
+		var dir := Vector2.from_angle(a0 + span * float(k) / float(threads - 1))
+		draw_line(corner, corner + dir * radius, color, 1.0, true)
+	for ring: int in 3:
+		var r: float = radius * (0.3 + 0.27 * float(ring))
+		var points := PackedVector2Array()
+		for k: int in threads:
+			var t: float = float(k) / float(threads - 1)
+			var sag: float = 1.0 - 0.12 * sin(t * PI)   # threads sag a little between spokes
+			points.append(corner + Vector2.from_angle(a0 + span * t) * r * (sag if k > 0 and k < threads - 1 else 1.0))
+		draw_polyline(points, color, 1.0, true)
+
+
+## Dusk-blue shadow gathering in the corners as the room turns cold or dark.
+func _draw_cold_corners() -> void:
+	var amount: float = (1.0 - _warmth) * float(_wear_config().get("cold_corner_alpha", 0.4))
+	if amount <= 0.01:
+		return
+	var shade := Color(Palette.SB_DUSK_BLUE.darkened(0.45), amount)
+	for corner: Vector2 in [RoomGeometry.BACK_LEFT, RoomGeometry.BACK_RIGHT, RoomGeometry.FRONT_LEFT, RoomGeometry.FRONT_RIGHT]:
+		_floor_glow(corner, Vector2(230, 90), shade)
+	for corner: Vector2 in [RoomGeometry.BACK_LEFT + Vector2(0, -RoomGeometry.BACK_WALL_HEIGHT), RoomGeometry.BACK_RIGHT + Vector2(0, -RoomGeometry.BACK_WALL_HEIGHT)]:
+		Ink.glow(self, corner, Vector2(120, 110), Color(shade, shade.a * 0.6), 5)
+
+
+## Dust specks drifting in the room's light (window, lit lamps, burning fire) while dirty.
+func _draw_motes(room_id: String) -> void:
+	if _dirt <= 0.01:
+		return
+	var alpha: float = float(_wear_config().get("mote_alpha", 0.55)) * _dirt
+	var lights: Array = []
+	var room: RoomState = sim.house.rooms[room_id]
+	for piece: Dictionary in layout.pieces(room_id):
+		var kind: String = String(piece["kind"])
+		var uv := Vector2(float(piece["u"]), float(piece["v"]))
+		var foot: Vector2 = RoomGeometry.to_screen(uv)
+		var object_id: String = String(piece.get("object", ""))
+		var obj: ObjectState = sim.house.objects.get(object_id) if not object_id.is_empty() else null
+		if kind == "window":
+			lights.append([foot.lerp(RoomGeometry.to_screen(uv + Vector2(0.04, 0.3)), 0.4) + Vector2(0, -40), Vector2(90, 70)])
+		elif obj != null and obj.kind == "lamp" and obj.state == &"lit":
+			lights.append([foot + Vector2(0, -95) * RoomGeometry.scale_at(uv.y), Vector2(60, 60)])
+		elif kind == "fireplace" and RoomMood.fire_burning(room):
+			lights.append([foot + Vector2(0, -45), Vector2(80, 45)])
+	for li: int in lights.size():
+		var centre: Vector2 = lights[li][0]
+		var radius: Vector2 = lights[li][1]
+		var offsets: Array[Vector2] = _wear_model().mote_offsets(_time, float(li) + 1.0)
+		for i: int in offsets.size():
+			var twinkle: float = 0.55 + 0.45 * sin(_time * 1.3 + float(i) * 2.1)
+			draw_circle(centre + offsets[i] * radius, 1.4, Color(Palette.SB_CREAM, alpha * twinkle), true, -1.0, true)
+
+
+## Small puffs of breath in front of a person's face in a cold room.
+func _draw_breath(index: int, npc_id: String, placed: Dictionary) -> void:
+	var a: float = _wear_model().breath_alpha(_time, index) * _cold
+	if a <= 0.01:
+		return
+	var uv: Vector2 = placed["uv"]
+	var s: float = RoomGeometry.scale_at(uv.y)
+	var side: float = -1.0 if Vector2(placed["facing"]).x < 0.0 else 1.0
+	var mouth: Vector2 = FamilyArt.head_point(npc_id, RoomGeometry.to_screen(uv), s, String(placed["pose"])) + Vector2(side * 12.0, 4.0) * s
+	var rise: float = (1.0 - a / maxf(float(_wear_config().get("breath_alpha", 0.45)), 0.01)) * 6.0 * s
+	for k: int in 3:
+		var at: Vector2 = mouth + Vector2(side * (5.0 + 6.0 * float(k)), -rise - 2.0 * float(k)) * Vector2(s, 1.0)
+		draw_circle(at, (2.5 + 1.6 * float(k)) * s, Color(Palette.SB_CREAM, a * (1.0 - 0.25 * float(k))), true, -1.0, true)
+
+
+## Embers glowing in the grate after the fire went out, fading by [param glow] 1..0.
+func _draw_embers(hearth: Vector2, glow: float) -> void:
+	if glow <= 0.01:
+		return
+	for k: int in 6:
+		var flicker: float = 0.6 + 0.4 * sin(_time * (2.0 + float(k) * 0.7) + float(k))
+		var at: Vector2 = hearth + Vector2(-24.0 + 10.0 * float(k), -6.0 - 3.0 * float(k % 2))
+		draw_circle(at, 2.2, Color(Palette.SB_EMBER.lightened(0.35), glow * flicker), true, -1.0, true)
+	Ink.glow(self, hearth + Vector2(0, -8), Vector2(40, 12), Color(Palette.SB_EMBER, 0.35 * glow), 4)
+
+
+## Floor positions of this room's doors (dust stays clear of them).
+func _door_uvs(room_id: String) -> Array[Vector2]:
+	var doors: Array[Vector2] = []
+	for other: String in sim.house.rooms:
+		if other != room_id and sim.house.walk_minutes(room_id, other) > 0:
+			doors.append(layout.door_uv(room_id, other))
+	return doors
 
 
 ## Storybook light pools on the floor and walls: firelight in front of a burning fireplace,
@@ -228,6 +426,23 @@ func _draw_storybook_light(room_id: String) -> void:
 			var beam := PackedVector2Array([sill + Vector2(-52, -60), sill + Vector2(52, -60), patch + Vector2(110, 0), patch + Vector2(-90, 0)])
 			draw_colored_polygon(beam, Color(light, light.a * 0.45))
 			_floor_glow(patch, Vector2(130, 34), light)
+			if sim.house.get_object_state(String(piece.get("object", ""))) == &"open":
+				_draw_draught(uv)
+
+
+## Art Phase 2: a cold draught spreading over the floor from an open window — pale wavy
+## streaks drifting into the room.
+func _draw_draught(window_uv: Vector2) -> void:
+	for k: int in 4:
+		var points := PackedVector2Array()
+		var drift: float = fposmod(_time * 0.12 + float(k) * 0.25, 1.0)
+		for i: int in 14:
+			var t: float = float(i) / 13.0
+			var v: float = 0.03 + t * 0.3
+			var u: float = window_uv.x + (float(k) - 1.5) * 0.045 * (1.0 + t) + sin(t * 7.0 + _time * 1.6 + float(k)) * 0.012
+			points.append(RoomGeometry.to_screen(Vector2(u, v)))
+		var fade: float = sin(drift * PI)
+		draw_polyline(points, Color(Palette.SB_MOON, 0.22 * fade), 2.0, true)
 
 
 func _floor_glow(centre: Vector2, radius: Vector2, color: Color) -> void:
