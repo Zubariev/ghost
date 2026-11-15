@@ -34,6 +34,9 @@ Any prop can be swapped for a painted image without touching gameplay.
 
 If the file is missing, the code drawing is used and a warning is printed.
 
+Side-wall portraits are not props: they are listed under `"wall_portraits"` in the same file and
+drawn on the wall plane (`docs/art/environments/ENVIRONMENT_GUIDELINES.md` §3).
+
 ## What the image never changes
 
 The walking footprint (`assets/data/house/movement.json` → `footprints`), sight blockers

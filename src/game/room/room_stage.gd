@@ -112,6 +112,7 @@ func _draw() -> void:
 		StorybookShell.draw_back_wall(self, float(_wall_alpha["back"]))
 		StorybookShell.draw_side_wall(self, true, float(_wall_alpha["left"]))
 		StorybookShell.draw_side_wall(self, false, float(_wall_alpha["right"]))
+		StorybookShell.draw_wall_portraits(self, visuals.wall_portraits(room_id), _wall_alpha)
 		StorybookShell.draw_doors(self, sim.house, room_id, _wall_alpha)
 		_draw_storybook_light(room_id)
 	else:

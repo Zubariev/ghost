@@ -52,15 +52,16 @@ toward the concept. All visual; no position, footprint or size in data changed.
 | Sofa | Dusty-rose camelback | Faded green, rose cushions | **Dusty rose**, walnut base rail, olive and cream throw pillows |
 | Rug | Rectangular, blue and orange pattern | Oval, rose with a gold ring | Rectangle laid in floor perspective (u ±0.20, v ±0.12): muted terracotta border, dusk-blue field, parchment medallion and corner motifs, cream fringe |
 | Walls | Walnut wainscot panels on all walls | Panels on the back wall, plain band on the sides | Panel mouldings on the side walls too |
-| Portraits | Several framed portraits and photos | Two paintings | Two paintings + three framed family photos on the mantel |
+| Portraits | Several framed portraits and photos | Two paintings | Two paintings, three framed family photos on the mantel, and two side-wall portraits (a lady on the left wall, a child on the right, near the back; `visual_style.json` → `wall_portraits`) |
 | Mantel | Clock, framed photos, vase | Small items | Candle, three framed photos, vase with a sprig (the pendulum clock stays on the wall) |
 | Side lamps | Table lamps on small tables | One floor lamp | Unchanged — a decorative lit lamp would mislead when the ghost has put the real lamp out |
 | Characters | Painted people | Code-drawn placeholders | Unchanged (character phase) |
 
-Still different, by design or pending a decision: the room box instead of the concept's free
-perspective; no extra wall portraits (the back wall is full; side-wall pictures would be new
-decor entries in `furniture.json` — a data change to decide); the fireplace is smaller than the
-concept's (its width is set by the wall space between the room's left edge and the window).
+Still different, by design: the room box instead of the concept's free perspective; the
+fireplace is smaller than the concept's (its width is set by the back-wall space between the
+room's left edge and the window, and its position by `furniture.json`); the side-wall portraits
+are narrow because the side walls are steeply foreshortened, and sit near the back because the
+side doors take the middle of each wall.
 
 ### Phase 1 review result (2026-11-15)
 

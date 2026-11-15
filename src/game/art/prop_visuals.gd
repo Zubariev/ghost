@@ -23,6 +23,8 @@ const STYLE_PATH: String = "res://assets/art/visual_style.json"
 
 var _storybook_rooms: Array = []
 var _sprites: Dictionary = {}
+## room id -> side-wall portraits (art Phase 1): [{wall, v: [from, to], h: [from, to], variant}]
+var _wall_portraits: Dictionary = {}
 ## Loads a texture by path; injectable for tests. Default: ResourceLoader when the file exists.
 var _loader: Callable
 var _cache: Dictionary = {}
@@ -31,12 +33,20 @@ var _cache: Dictionary = {}
 func _init(config: Dictionary, loader: Callable = Callable()) -> void:
 	_storybook_rooms = config.get("storybook_rooms", [])
 	_sprites = config.get("sprites", {})
+	_wall_portraits = config.get("wall_portraits", {})
 	_loader = loader if loader.is_valid() else _load_texture
 
 
 ## True when [param room_id] is drawn in the storybook style.
 func is_storybook(room_id: String) -> bool:
 	return _storybook_rooms.has(room_id)
+
+
+## Framed portraits hung on the side walls of [param room_id] (art config only: never furniture,
+## never an obstacle). Each: wall "left"/"right", v [from, to] along the wall (0 back .. 1 front),
+## h [from, to] up the wall (0 floor .. 1 top), variant.
+func wall_portraits(room_id: String) -> Array:
+	return _wall_portraits.get(room_id, [])
 
 
 ## The image path for a prop: the state's own image if given, else the prop's image; "" when

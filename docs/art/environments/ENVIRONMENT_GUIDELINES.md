@@ -36,7 +36,10 @@ coordinates, navigation or gameplay to imitate the concept.
    without filling every space; no decoration added only to fill a gap; doors, routes, people and
    targets stay legible; avoid tangencies between people and furniture or wall decor.
 5. **Walls tell the story** (paintings, clocks, shelves) while the back wall still reads as a wall
-   and doors stay clear.
+   and doors stay clear. Back-wall pieces are furniture entries; **side-wall portraits** are art
+   config in `assets/art/visual_style.json` → `wall_portraits` (wall, v range along it, h range up
+   it, variant), drawn by `StorybookShell.draw_wall_portraits`. A test keeps them on the wall,
+   above the wainscot and clear of the side doors (v 0.39–0.61).
 6. **Turn the room on** in `assets/art/visual_style.json` → `storybook_rooms`. Rooms not listed
    keep the placeholder look.
 7. **Capture both states** and review (checklist §7). The user approves each room.

@@ -144,6 +144,65 @@ static func _back_door(canvas: CanvasItem, alpha: float) -> void:
 	Ink.outline(canvas, frame, Ink.Tier.FURNITURE, 67.0, _a(Palette.SB_CONTOUR, alpha))
 
 
+## Side-wall portraits from [method PropVisuals.wall_portraits] (art Phase 1): drawn on the
+## wall plane, after the wainscot and before the doors; they fade with their wall.
+static func draw_wall_portraits(canvas: CanvasItem, portraits: Array, wall_alpha: Dictionary) -> void:
+	for entry: Dictionary in portraits:
+		var left: bool = String(entry.get("wall", "left")) == "left"
+		var v: Array = entry.get("v", [0.1, 0.3])
+		var h: Array = entry.get("h", [0.46, 0.84])
+		var alpha: float = float(wall_alpha["left" if left else "right"])
+		var parts: Array = portrait_parts(left, Vector2(float(v[0]), float(v[1])), Vector2(float(h[0]), float(h[1])), String(entry.get("variant", "")))
+		for i: int in parts.size():
+			var part: Array = parts[i]
+			if bool(part[2]):
+				Ink.fill(canvas, part[0], _a(part[1], alpha), 111.0 + float(i))
+				Ink.outline(canvas, part[0], Ink.Tier.BACKGROUND, 113.0 + float(i), _a(Palette.SB_CONTOUR, alpha))
+			else:
+				canvas.draw_colored_polygon(part[0], _a(part[1], alpha))
+
+
+## One portrait as [polygon (screen px), colour, outlined]: a gilt frame, a dark ground and a
+## head-and-shoulders sitter, laid on the side wall's slant. Variants: "lady" (dark hair in a
+## bun, rose dress), "child" (fair hair, dusk-blue sailor collar); anything else a gentleman.
+static func portrait_parts(left: bool, v: Vector2, h: Vector2, variant: String) -> Array:
+	var at := func(fv: float, fh: float) -> Vector2:
+		return RoomGeometry.side_wall_point(left, lerpf(v.x, v.y, fv), lerpf(h.x, h.y, fh))
+	var quad := func(a: Vector2, b: Vector2) -> PackedVector2Array:
+		return PackedVector2Array([at.call(a.x, b.y), at.call(b.x, b.y), at.call(b.x, a.y), at.call(a.x, a.y)])
+	var oval := func(c: Vector2, r: Vector2) -> PackedVector2Array:
+		var pts := PackedVector2Array()
+		for i: int in 16:
+			var t: float = TAU * float(i) / 16.0
+			pts.append(at.call(c.x + cos(t) * r.x, c.y + sin(t) * r.y))
+		return pts
+	var ground: Color = Palette.SB_GREEN.darkened(0.35)
+	var clothes: Color = Palette.SB_CHARCOAL.lightened(0.08)
+	var hair: Color = Palette.SB_BROWN_GREY.darkened(0.25)
+	if variant == "lady":
+		ground = Palette.SB_DUSK_BLUE.darkened(0.3)
+		clothes = Palette.SB_ROSE.darkened(0.2)
+		hair = Palette.SB_WALNUT_DARK
+	elif variant == "child":
+		ground = Palette.SB_OLIVE.darkened(0.3)
+		clothes = Palette.SB_DUSK_BLUE
+		hair = Palette.SB_PARCHMENT
+	var parts: Array = [
+		[quad.call(Vector2(0, 0), Vector2(1, 1)), Palette.SB_GOLD, true],
+		[quad.call(Vector2(0.14, 0.1), Vector2(0.86, 0.9)), ground, false],
+		[PackedVector2Array([at.call(0.22, 0.1), at.call(0.78, 0.1), at.call(0.7, 0.36), at.call(0.3, 0.36)]), clothes, false],
+		[oval.call(Vector2(0.5, 0.56), Vector2(0.19, 0.17)), hair, false],
+		[oval.call(Vector2(0.5, 0.5), Vector2(0.14, 0.13)), Palette.SB_SKIN.darkened(0.12), false],
+	]
+	if variant == "lady":
+		parts.append([oval.call(Vector2(0.5, 0.72), Vector2(0.08, 0.05)), hair, false])
+	elif variant == "child":
+		parts.append([PackedVector2Array([at.call(0.3, 0.36), at.call(0.7, 0.36), at.call(0.5, 0.26)]), Palette.SB_CREAM, false])
+	else:
+		parts.append([PackedVector2Array([at.call(0.38, 0.45), at.call(0.62, 0.45), at.call(0.5, 0.42)]), hair, false])
+	return parts
+
+
 static func _wainscot(canvas: CanvasItem, x0: float, x1: float, top: float, bottom: float, alpha: float) -> void:
 	var panel := StorybookArt._rect(x0, top, x1, bottom)
 	Ink.fill(canvas, panel, _a(Palette.SB_WALNUT, alpha), 71.0, 0.1)

@@ -165,6 +165,25 @@ func test_every_storybook_shape_can_be_filled_in_every_state() -> void:
 							"%s %s (%s, day %s) part %d cannot be filled" % [room_id, kind, state, day, i]).is_false()
 
 
+func test_wall_portraits_hang_clear_of_doors_and_above_the_wainscot() -> void:
+	# Art Phase 1 (2026-11-15): side-wall portraits are art config, not furniture; they must
+	# stay on the wall, above the wainscot and away from the side doors (v 0.39-0.61).
+	var style: Dictionary = JsonData.read(PropVisuals.STYLE_PATH)
+	var portraits: Dictionary = style.get("wall_portraits", {})
+	assert_bool(portraits.is_empty()).is_false()
+	for room_id: String in portraits:
+		assert_bool((style.get("storybook_rooms", []) as Array).has(room_id)).override_failure_message(room_id + " is not a storybook room").is_true()
+		for entry: Dictionary in portraits[room_id]:
+			var v: Array = entry["v"]
+			var h: Array = entry["h"]
+			assert_bool(["left", "right"].has(String(entry["wall"]))).is_true()
+			assert_bool(float(v[0]) >= 0.04 and float(v[1]) <= 0.96 and float(v[0]) < float(v[1])).override_failure_message("%s portrait off the wall" % room_id).is_true()
+			assert_bool(float(v[1]) <= 0.36 or float(v[0]) >= 0.64).override_failure_message("%s portrait over a side door" % room_id).is_true()
+			assert_bool(float(h[0]) >= StorybookShell.WAINSCOT_HEIGHT and float(h[1]) <= 0.95 and float(h[0]) < float(h[1])).override_failure_message("%s portrait height" % room_id).is_true()
+			for part: PackedVector2Array in StorybookShell.portrait_parts(String(entry["wall"]) == "left", Vector2(float(v[0]), float(v[1])), Vector2(float(h[0]), float(h[1])), String(entry.get("variant", ""))).map(func(p: Array) -> PackedVector2Array: return p[0]):
+				assert_bool(Geometry2D.triangulate_polygon(part).is_empty()).override_failure_message("%s portrait part cannot be filled" % room_id).is_false()
+
+
 func test_every_room_has_at_least_two_hiding_spots() -> void:
 	# User decision 2026-11-15: with one spot, a searcher checks it first and a glimpsed
 	# ghost that hid there was always caught.

@@ -18,6 +18,9 @@ func _config() -> Dictionary:
 			"armchair:olive": {"sprite": OLIVE_CHAIR_PATH},
 			"sofa": {"sprite": ""},
 		},
+		"wall_portraits": {
+			"living_room": [{"wall": "left", "v": [0.1, 0.3], "h": [0.46, 0.84], "variant": "lady"}],
+		},
 	}
 
 
@@ -70,3 +73,15 @@ func test_a_missing_sprite_file_falls_back_to_code() -> void:
 	var visuals := PropVisuals.new({"sprites": {"sofa": {"sprite": "res://nowhere/sofa.png"}}})
 	# Act / Assert
 	assert_object(visuals.texture_for("sofa", "", &"")).is_null()
+
+
+func test_wall_portraits_are_listed_per_room() -> void:
+	# Arrange
+	var visuals: PropVisuals = _visuals()
+	# Act
+	var here: Array = visuals.wall_portraits("living_room")
+	var elsewhere: Array = visuals.wall_portraits("kitchen")
+	# Assert
+	assert_int(here.size()).is_equal(1)
+	assert_str(String(here[0]["variant"])).is_equal("lady")
+	assert_array(elsewhere).is_empty()
