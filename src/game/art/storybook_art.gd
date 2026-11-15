@@ -74,9 +74,11 @@ static func draw(canvas: CanvasItem, piece: Dictionary, uv: Vector2, state: Stri
 ## The animated, state-driven part of a piece (fire and its glow, smoke from a cold grate, a lit
 ## lamp's glow), drawn over the piece at [param foot] with scale [param s]. Separate from the
 ## shapes so it also runs on top of a painted sprite (art Phase 3, 2026-11-15).
-static func draw_effects(canvas: CanvasItem, kind: String, state: StringName, foot: Vector2, s: float, time: float) -> void:
+## [param code_shapes] false: a painted layer replaces the code flames (the glow stays).
+static func draw_effects(canvas: CanvasItem, kind: String, state: StringName, foot: Vector2, s: float, time: float,
+		code_shapes: bool = true) -> void:
 	if kind == "fireplace" and state == &"burning":
-		_draw_fire(canvas, foot, s, time)
+		_draw_fire(canvas, foot, s, time, code_shapes)
 	elif kind == "fireplace":
 		_draw_smoke(canvas, foot, s, time)
 	if kind == "floor_lamp" and state != &"out":
@@ -517,8 +519,10 @@ static func _clock(time: float) -> Array:
 	]
 
 
-static func _draw_fire(canvas: CanvasItem, foot: Vector2, s: float, time: float) -> void:
+static func _draw_fire(canvas: CanvasItem, foot: Vector2, s: float, time: float, flames: bool = true) -> void:
 	Ink.glow(canvas, foot + Vector2(0, -26) * s, Vector2(60, 34) * s, Color(Palette.SB_CANDLELIGHT, 0.6), 6)
+	if not flames:
+		return
 	for k: int in 3:
 		var x: float = (-16.0 + 16.0 * float(k)) * s
 		var h: float = (34.0 + 10.0 * sin(time * (7.0 + float(k)) + float(k) * 2.0)) * s

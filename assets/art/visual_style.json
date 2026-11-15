@@ -1,12 +1,18 @@
 {
-	"_source": "Whimsical Gothic Storybook art direction (2026-11-15), living room art test. storybook_rooms: rooms drawn in the new style; others keep the placeholder look until approved. sprites: optional painted images replacing code-drawn props, keyed by furniture kind or kind:variant (variant = the piece's 'variant' in furniture.json). Each entry: sprite (res:// path to a PNG/WebP), states (visual state -> path; e.g. fireplace burning/out, lamp lit/out, window closed/open), anchor ([x, y] of the image, 0..1, that sits on the piece's floor position; default bottom centre [0.5, 1.0]), effects (art Phase 3, 2026-11-15: the code-drawn animation kept on top of a painted prop, e.g. the fire and smoke in a painted fireplace: offset [x, y] in screen px at depth 1 from the anchor point, and scale of that drawing), scale (size at the front of the room; depth scaling is applied on top). Empty or missing files fall back to the code drawing. Gameplay data (footprints, sight blockers, hiding spots, interaction range) never depends on these images. See assets/art/props/sprite_guide.md.",
+	"_source": "Whimsical Gothic Storybook art direction (2026-11-15), living room art test. storybook_rooms: rooms drawn in the new style; others keep the placeholder look until approved. sprites: optional painted images replacing code-drawn props, keyed by furniture kind or kind:variant (variant = the piece's 'variant' in furniture.json). Each entry: sprite (res:// path to a PNG/WebP), states (visual state -> path; e.g. fireplace burning/out, lamp lit/out, window closed/open), anchor ([x, y] of the image, 0..1, that sits on the piece's floor position; default bottom centre [0.5, 1.0]), effects (art Phase 3, 2026-11-15: the code-drawn animation kept on top of a painted prop, e.g. the fire and smoke in a painted fireplace: offset [x, y] in screen px at depth 1 from the anchor point, and scale of that drawing; effects.states: per visual state a painted layer drawn there instead of the code shapes — e.g. the burning logs and flames — with its own sprite, anchor, scale and flicker, the strength of a gentle stretch and sway; the code glow stays), scale (size at the front of the room; depth scaling is applied on top). Empty or missing files fall back to the code drawing. Gameplay data (footprints, sight blockers, hiding spots, interaction range) never depends on these images. See assets/art/props/sprite_guide.md.",
 	"storybook_rooms": ["living_room"],
 	"sprites": {
 		"fireplace": {
 			"sprite": "res://assets/art/props/fireplace.png",
 			"anchor": [0.5, 0.888],
 			"scale": 0.5,
-			"effects": {"offset": [0, -2], "scale": 1.0}
+			"effects": {
+				"offset": [0, -2],
+				"scale": 1.0,
+				"states": {
+					"burning": {"sprite": "res://assets/art/props/fireplace_flames.png", "anchor": [0.5, 0.968], "scale": 0.5, "flicker": 0.06}
+				}
+			}
 		}
 	},
 	"_wall_portraits": "Art Phase 1 (2026-11-15): framed portraits on the side walls, per storybook room. Art config only: not furniture, never an obstacle, not in furniture.json. wall: left/right; v: [from, to] along the wall (0 back .. 1 front; side doors are at 0.39-0.61); h: [from, to] up the wall (0 floor .. 1 top; wainscot up to 0.36); variant: lady / child / gentleman.",

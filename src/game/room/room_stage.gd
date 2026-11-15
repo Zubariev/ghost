@@ -259,7 +259,10 @@ func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted:
 		if visuals.draw_sprite(self, kind, variant, state, hearth, depth, highlighted):
 			painted = true
 			hearth += visuals.effects_offset(kind, variant) * depth
-			StorybookArt.draw_effects(self, kind, state, hearth, depth * visuals.effects_scale(kind, variant), _time)
+			var layer: Dictionary = visuals.effect_layer(kind, variant, state)
+			StorybookArt.draw_effects(self, kind, state, hearth, depth * visuals.effects_scale(kind, variant), _time, layer.is_empty())
+			if not layer.is_empty():
+				_draw_effect_layer(layer, hearth, depth)
 	if not painted:
 		if storybook:
 			StorybookArt.draw(self, piece, uv, state, highlighted, sim.house.is_day, interactive, _time)
@@ -267,6 +270,19 @@ func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted:
 			FurnitureArt.draw(self, kind, uv, state, highlighted, sim.house.is_day)
 	if kind == "fireplace" and state == &"out" and _fire_out_at.has(navigator.room_id):
 		_draw_embers(hearth, _wear_model().ember_glow(_time - float(_fire_out_at[navigator.room_id])))
+
+
+## A painted effects layer (e.g. burning logs and flames) at [param at], with a gentle flicker:
+## it stretches up and down and sways about its anchor (the logs barely move, the tips most).
+func _draw_effect_layer(layer: Dictionary, at: Vector2, depth: float) -> void:
+	var tex: Texture2D = layer["texture"]
+	var size: Vector2 = tex.get_size() * float(layer["scale"]) * depth
+	var f: float = float(layer["flicker"])
+	var stretch: float = 1.0 + f * (0.6 * sin(_time * 7.3) + 0.4 * sin(_time * 11.1 + 1.3))
+	var sway: float = f * 0.6 * sin(_time * 3.1 + 0.7)
+	draw_set_transform_matrix(Transform2D(Vector2(1.0 - (stretch - 1.0) * 0.4, 0.0), Vector2(sway, stretch), at))
+	draw_texture_rect(tex, Rect2(-Vector2(layer["anchor"]) * size, size), false)
+	draw_set_transform_matrix(Transform2D.IDENTITY)
 
 
 # --- Room wear (art Phase 2) ------------------------------------------------------------

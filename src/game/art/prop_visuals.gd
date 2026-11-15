@@ -98,6 +98,25 @@ func effects_scale(kind: String, variant: String) -> float:
 	return float((_entry(kind, variant).get("effects", {}) as Dictionary).get("scale", 1.0))
 
 
+## The painted layer drawn at the effects point while the prop is in [param state] (e.g. the
+## burning logs and flames of a painted fireplace), replacing the code-drawn shapes of that
+## state: {texture, anchor, scale, flicker}; empty when there is none or its file is missing.
+func effect_layer(kind: String, variant: String, state: StringName) -> Dictionary:
+	var effects: Dictionary = _entry(kind, variant).get("effects", {})
+	var layer: Dictionary = (effects.get("states", {}) as Dictionary).get(String(state), {})
+	var path: String = String(layer.get("sprite", ""))
+	if path.is_empty():
+		return {}
+	if not _cache.has(path):
+		_cache[path] = _loader.call(path)
+	var tex: Texture2D = _cache[path]
+	if tex == null:
+		return {}
+	var a: Array = layer.get("anchor", [0.5, 1.0])
+	return {"texture": tex, "anchor": Vector2(float(a[0]), float(a[1])),
+		"scale": float(layer.get("scale", 1.0)), "flicker": float(layer.get("flicker", 0.0))}
+
+
 ## Image scale at the front of the room (depth scaling is applied on top).
 func scale(kind: String, variant: String) -> float:
 	return float(_entry(kind, variant).get("scale", 1.0))

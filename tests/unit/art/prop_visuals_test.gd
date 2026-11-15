@@ -6,6 +6,7 @@ extends GdUnitTestSuite
 const LAMP_PATH: String = "res://fake/lamp.png"
 const LAMP_OUT_PATH: String = "res://fake/lamp_out.png"
 const OLIVE_CHAIR_PATH: String = "res://fake/armchair_olive.png"
+const LAMP_FLAME_PATH: String = "res://fake/lamp_flame.png"
 
 var _loaded: Array[String] = []
 
@@ -15,7 +16,8 @@ func _config() -> Dictionary:
 		"storybook_rooms": ["living_room"],
 		"sprites": {
 			"floor_lamp": {"sprite": LAMP_PATH, "states": {"out": LAMP_OUT_PATH}, "anchor": [0.5, 0.9], "scale": 0.5,
-				"effects": {"offset": [3, -8], "scale": 0.6}},
+				"effects": {"offset": [3, -8], "scale": 0.6,
+					"states": {"lit": {"sprite": LAMP_FLAME_PATH, "anchor": [0.5, 0.9], "scale": 0.5, "flicker": 0.05}}}},
 			"armchair:olive": {"sprite": OLIVE_CHAIR_PATH},
 			"sofa": {"sprite": ""},
 		},
@@ -96,3 +98,21 @@ func test_a_painted_prop_says_where_its_code_drawn_animation_goes() -> void:
 	# No effects entry: the animation sits at the floor point, unscaled
 	assert_vector(visuals.effects_offset("armchair", "olive")).is_equal(Vector2.ZERO)
 	assert_float(visuals.effects_scale("armchair", "olive")).is_equal(1.0)
+
+
+func test_a_painted_effects_layer_is_drawn_only_in_its_state() -> void:
+	# Art Phase 3 flame layer (2026-11-15): painted flames replace the code flames while burning.
+	var visuals: PropVisuals = _visuals()
+	var lit: Dictionary = visuals.effect_layer("floor_lamp", "", &"lit")
+	assert_object(lit.get("texture")).is_not_null()
+	assert_vector(lit["anchor"]).is_equal(Vector2(0.5, 0.9))
+	assert_float(lit["scale"]).is_equal(0.5)
+	assert_float(lit["flicker"]).is_equal(0.05)
+	assert_dict(visuals.effect_layer("floor_lamp", "", &"out")).is_empty()
+	assert_dict(visuals.effect_layer("armchair", "olive", &"lit")).is_empty()
+
+
+func test_a_missing_effects_layer_file_falls_back_to_the_code_shapes() -> void:
+	var visuals := PropVisuals.new({"sprites": {"fireplace": {"sprite": "res://nowhere/fp.png",
+		"effects": {"states": {"burning": {"sprite": "res://nowhere/flames.png"}}}}}})
+	assert_dict(visuals.effect_layer("fireplace", "", &"burning")).is_empty()

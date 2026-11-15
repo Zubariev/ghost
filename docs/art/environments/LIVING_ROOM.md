@@ -5,7 +5,7 @@
 | In-game art test (as built) | **APPROVED baseline** — built and approved 2026-11-15 (`6bfc25b`, `5f1a966`, evidence `d7e26aa`); Phase 1 refinement **APPROVED** 2026-11-15 (user moved on to Phase 2) |
 | Concept `living_room_cozy.jpeg` | **APPROVED as the Phase 1 visual target** (user decision 2026-11-15) — its look, not its perspective or geometry |
 | Full-size haunted concept | OPEN — none yet |
-| Painted fireplace (art Phase 3 trial) | **EXPERIMENTAL** — built 2026-11-15, awaiting review (§8) |
+| Painted fireplace (art Phase 3 trial) | **APPROVED** — built and approved 2026-11-15 (§8) |
 
 The first and so far only room in the storybook style.
 
@@ -105,7 +105,7 @@ Same layout, positions and camera. Capture: `bash tools/play.sh art-test` →
       geometry unchanged; headless day run without errors.
 - [ ] Side-by-side screenshots with the concept retained in `production/qa/evidence/`.
 
-## 8. Phase 3 — painted fireplace trial (EXPERIMENTAL, 2026-11-15)
+## 8. Phase 3 — painted fireplace trial (APPROVED, 2026-11-15)
 
 The first painted prop, to test the sprite path (`../SPRITE_SPEC.md`) before any more are made.
 
@@ -141,9 +141,16 @@ fireplace is a wall piece, drawn before the depth-sorted furniture, people and g
 pools on the floor, gameplay. `--code-art` (`bash tools/play.sh art-test <dir> --code-art`)
 draws every prop in code again, for comparison; a missing image falls back to code by itself.
 
+**Painted flame layer (2026-11-15, after the trial's approval).** The flat code flames looked
+pasted on in the painted firebox. Now `effects.states.burning` draws
+`assets/art/props/fireplace_flames.png` (140 × 124, ~70 × 62 px on screen; source
+`art/concepts/props/fireplace/fireplace_flames_source.png`, cut out with `-- <source> <out> 0 0.115`)
+at the firebox floor while the fire burns, with a gentle flicker (`flicker` 0.06: a stretch and a
+sway about the logs). The code glow and the floor firelight stay; out, the layer goes and the code
+smoke and embers show. A missing file brings the code flames back. The logs are drawn in front of
+the painted grate (it is low, so they read as piled on it).
+
 **Differences from the code-drawn fireplace (to review).**
-- The code flames are flat shapes on a painted firebox (seen with the first sprite: they look
-  pasted on). Later option: a painted flame layer the code flickers and switches off.
 - The mantel candle is painted unlit; the code drawing lit it while the fire burned.
 - The hearth is a raised stone step seen from the front, not a slab laid in the floor's perspective.
 

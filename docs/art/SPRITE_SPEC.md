@@ -18,6 +18,10 @@ How-to steps: `assets/art/props/sprite_guide.md`. Rules: `ART_DIRECTION.md`, `VI
   smoke, embers, a lamp's glow — still runs on top of the image, at `offset` [x, y] (screen px at
   depth 1, from the anchor point) with `scale`. So state changes that animate stay in code and
   the image shows only what never changes.
+- `effects.states` (flame layer, 2026-11-15): per visual state, a painted layer drawn at the effects
+  point *instead of* the code shapes (the code glow stays): `sprite`, `anchor`, `scale`, `flicker`
+  (strength of a stretch and sway about the anchor). Used for the fireplace's burning logs and flames.
+  Paint such a layer isolated, hard-edged, no glow (the game adds it).
 - A missing file falls back to the code drawing with a warning. The ghost's target highlight is
   added by the code around the image.
 - **Gameplay never reads the image**: position, footprint, sight blocking, hiding spot and

@@ -223,6 +223,8 @@ func test_every_shipped_sprite_loads_and_wall_sprites_fit_the_back_wall() -> voi
 		var variant: String = key.get_slice(":", 1) if key.contains(":") else ""
 		var entry: Dictionary = style["sprites"][key]
 		var paths: Array = [String(entry.get("sprite", ""))] + (entry.get("states", {}) as Dictionary).values()
+		for layer: Dictionary in ((entry.get("effects", {}) as Dictionary).get("states", {}) as Dictionary).values():
+			paths.append(String(layer.get("sprite", "")))
 		for path: String in paths:
 			if not path.is_empty():
 				assert_bool(ResourceLoader.exists(path)).override_failure_message("missing sprite " + path).is_true()
