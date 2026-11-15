@@ -41,7 +41,7 @@ obstacle.
 
 ## Style
 
-Follow `design/art-direction.md`: the storybook palette (`src/game/art/palette.gd`, `SB_*`), muted
+Follow `docs/art/ART_DIRECTION.md`: the storybook palette (`src/game/art/palette.gd`, `SB_*`), muted
 brown-charcoal contours (never pure black), visible but subtle brushwork, interactive objects
 clearly readable. Paint the neutral (cozy) lighting; the game adds the warm and haunted grade and
 the light pools itself, so do not bake strong lighting into the image.

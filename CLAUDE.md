@@ -80,3 +80,45 @@ elsewhere in the repo, so they are restated here rather than lost:
 - **Helpers in `.claude/scripts/` emit observations, never verdicts.** A script
   that scores or judges will eventually contradict a mode or override it cannot
   see. (Cited by `artifact-check.sh` and `adr-dep-graph.sh`.)
+  
+## Art Direction and Visual Design
+
+The project maintains a dedicated visual design knowledge base under `/docs/art/` and `/art/`.
+
+Before implementing or modifying any visual element, you must:
+
+1. Read `/docs/art/ART_DIRECTION.md`.
+2. Read the relevant environment, character, or prop specifications.
+3. Inspect the corresponding visual references and concept art in `/art/`.
+4. Respect the approval status of each design decision.
+
+### Design Authority
+
+- APPROVED decisions are mandatory.
+- PROVISIONAL decisions should be followed unless there is a clear reason to revisit them.
+- EXPERIMENTAL concepts are exploratory and must not silently become production standards.
+- REJECTED concepts must not be reused.
+
+### Implementation Principles
+
+- Keep visual presentation separate from gameplay logic.
+- Keep sprites independent from collision shapes and interaction areas.
+- Make visual assets replaceable without changing gameplay behavior.
+- Preserve existing movement, navigation, interaction, and collision systems unless explicitly instructed otherwise.
+- Do not redesign established gameplay systems as part of visual implementation.
+
+### Visual Consistency
+
+All new visual assets and environments must follow the approved Art Direction.
+
+When a requested implementation conflicts with an existing approved design decision, identify the conflict before proceeding.
+
+Do not invent new visual standards without documenting them.
+
+### Reference Images
+
+Reference images and concept art are visual guidance, not necessarily production-ready assets.
+
+Do not automatically use complete concept illustrations as in-game backgrounds.
+
+Analyze their composition, shape language, materials, lighting, palette, and object design, then implement these principles using appropriate Godot assets and scene structures.
