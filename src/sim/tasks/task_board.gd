@@ -101,3 +101,14 @@ func release(task_key: String, npc_id: String) -> void:
 
 func claimed_by(task_key: String) -> String:
 	return _claims.get(task_key, "")
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## Who holds which task (the tasks themselves are rebuilt from the house).
+func save_state() -> Dictionary:
+	return {"claims": _claims.duplicate()}
+
+
+func load_state(data: Dictionary) -> void:
+	_claims.assign(data["claims"])

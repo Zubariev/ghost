@@ -44,7 +44,7 @@ func test_esc_leaves_settings_first_then_closes_the_menu() -> void:
 	# Arrange: open the menu, then Settings from it
 	_menu.open()
 	await get_tree().process_frame
-	(_menu._main.body.get_child(1) as Button).pressed.emit()
+	(_menu._main.body.get_child(2) as Button).pressed.emit()   # Settings
 	await get_tree().process_frame
 	var in_settings: bool = _menu._sub is SettingsPanel and not _menu._main.visible
 	# Act / Assert: the first Esc returns to the pause menu, the second resumes the game

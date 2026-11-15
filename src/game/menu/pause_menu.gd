@@ -1,5 +1,5 @@
 ## The in-game pause menu (2026-11-15): Esc pauses the game and opens it over a dimmed room —
-## Продовжити (resume), Налаштування (the shared [SettingsPanel]), Головне меню (asks first: the
+## Продовжити (resume), Зберегти гру (a new entry in the save list, 2026-11-16), Налаштування (the shared [SettingsPanel]), Головне меню (asks first: the
 ## game is not saved; saving is the next task). Esc closes a sub-screen, or the menu itself
 ## (resuming). Built from the main menu's pieces ([MenuPanel], [PlaqueButton]). It only shows
 ## and reports; the game pauses and resumes the clock.
@@ -10,6 +10,8 @@ extends CanvasLayer
 signal resumed()
 ## The player applied new settings in the pause menu's Settings.
 signal settings_applied(settings: GameSettings)
+## The player asked to save; the game saves and answers with [method show_saved].
+signal save_requested()
 
 const MENU_SCENE: String = "res://src/game/menu/main_menu.tscn"
 
@@ -18,6 +20,7 @@ var _main: MenuPanel
 var _sub: MenuPanel
 var _sub_opener: Button
 var _resume: Button
+var _status: Label
 
 
 func _ready() -> void:
@@ -42,12 +45,21 @@ func open() -> void:
 	_main = MenuPanel.create(tr("PAUSE_TITLE"), Vector2(420, 0))
 	_main.body.alignment = BoxContainer.ALIGNMENT_CENTER
 	_resume = _plaque(tr("PAUSE_RESUME"), close)
+	_plaque(tr("PAUSE_SAVE"), func() -> void: save_requested.emit())
 	var settings: Button = _plaque(tr("MENU_SETTINGS"), Callable())
 	settings.pressed.connect(func() -> void: _open_settings(settings))
 	var to_menu: Button = _plaque(tr("PAUSE_MAIN_MENU"), Callable())
 	to_menu.pressed.connect(func() -> void: _confirm_main_menu(to_menu))
+	_status = _main.add_text("", 15, Palette.SB_CANDLELIGHT)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_show(_main)
 	_resume.grab_focus()
+
+
+## Tells the player whether the save worked.
+func show_saved(ok: bool) -> void:
+	if _status != null:
+		_status.text = tr("PAUSE_SAVED") if ok else tr("PAUSE_SAVE_FAILED")
 
 
 ## Closes the menu (and any sub-screen) and resumes the game.

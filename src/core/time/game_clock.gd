@@ -133,3 +133,19 @@ func is_day() -> bool:
 	if _day_start < _night_start:
 		return minute >= _day_start and minute < _night_start
 	return minute >= _day_start or minute < _night_start
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## The clock's exact state for a save game (not the pause: a loaded game runs).
+func save_state() -> Dictionary:
+	return {"total": total_minutes, "speed": _speed_index, "fraction": _fraction, "was_day": _was_day}
+
+
+## Restores [method save_state]'s data, without emitting signals.
+func load_state(data: Dictionary) -> void:
+	total_minutes = int(data["total"])
+	_speed_index = clampi(int(data["speed"]), 0, _speeds.size() - 1)
+	_fraction = float(data["fraction"])
+	_was_day = bool(data["was_day"])
+	paused = false

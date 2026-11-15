@@ -344,3 +344,20 @@ func _rest(walker: Dictionary, goal: Dictionary) -> void:
 static func _toward(from_uv: Vector2, to_uv: Vector2) -> Vector2:
 	var direction: Vector2 = to_uv - from_uv
 	return direction.normalized() if direction.length() > 0.0001 else Vector2(0, 1)
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## Every person's place, walk and glance, the time, and the glance dice.
+func save_state() -> Dictionary:
+	return {"walkers": _walkers.duplicate(true), "time": _time, "rng": _glance_rng.state}
+
+
+## Restores [method save_state]'s data (fresh copies, never the saved arrays themselves).
+func load_state(data: Dictionary) -> void:
+	var walkers: Array[Dictionary] = []
+	walkers.assign((data["walkers"] as Array).duplicate(true))
+	if walkers.size() == _walkers.size():
+		_walkers = walkers
+	_time = float(data["time"])
+	_glance_rng.state = int(data["rng"])

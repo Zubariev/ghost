@@ -231,3 +231,34 @@ func find_path(from_room: String, to_room: String) -> Array[String]:
 		route.push_front(step)
 		step = previous[step]
 	return route
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## Daylight, every room's temperature, light and cleanliness, and every object's state.
+func save_state() -> Dictionary:
+	var room_data: Dictionary = {}
+	for id: String in rooms:
+		var room: RoomState = rooms[id]
+		room_data[id] = [int(room.temperature), int(room.light), int(room.cleanliness)]
+	var object_data: Dictionary = {}
+	for id: String in objects:
+		object_data[id] = String(objects[id].state)
+	return {"is_day": is_day, "rooms": room_data, "objects": object_data}
+
+
+## Restores [method save_state]'s data, without emitting signals. Rooms or objects the save
+## does not know keep their state.
+func load_state(data: Dictionary) -> void:
+	is_day = bool(data["is_day"])
+	var room_data: Dictionary = data["rooms"]
+	for id: String in room_data:
+		if rooms.has(id):
+			var values: Array = room_data[id]
+			rooms[id].temperature = int(values[0]) as RoomState.Temperature
+			rooms[id].light = int(values[1]) as RoomState.Light
+			rooms[id].cleanliness = int(values[2]) as RoomState.Cleanliness
+	var object_data: Dictionary = data["objects"]
+	for id: String in object_data:
+		if objects.has(id):
+			objects[id].state = StringName(object_data[id])

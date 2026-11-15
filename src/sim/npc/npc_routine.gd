@@ -425,3 +425,56 @@ func _set_state(new_state: State) -> void:
 	if new_state != state:
 		state = new_state
 		state_changed.emit(new_state)
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## Where the NPC is in its day: room, state, activity (by id), claimed task, job, walk.
+func save_state() -> Dictionary:
+	return {"room": room_id, "state": int(state), "current": current.id if current != null else "",
+		"task": current_task.to_dict() if current_task != null else {}, "work_done": work_done_minutes,
+		"activity_started": _activity_started, "job_kind": int(_job_kind), "job_room": _job_room,
+		"job_work": _job_work_minutes, "job_requirements": _job_requirements.duplicate(true),
+		"job_on_start": _job_on_start.duplicate(true), "job_on_success": _job_on_success.duplicate(true),
+		"started": _started, "finished": _finished, "self_fix": _self_fix_object, "held_from": int(_held_from),
+		"step_left": _step_left, "path": _path.duplicate(), "next_room": _next_room, "leg_minutes": _leg_minutes,
+		"leg_left": _leg_left}
+
+
+## Restores [method save_state]'s data, without emitting signals.
+func load_state(data: Dictionary) -> void:
+	room_id = String(data["room"])
+	state = int(data["state"]) as State
+	current = null
+	for activity: Activity in schedule.activities:
+		if activity.id == String(data["current"]):
+			current = activity
+	var task: Dictionary = data["task"]
+	current_task = HouseTask.from_dict(task) if not task.is_empty() else null
+	work_done_minutes = int(data["work_done"])
+	_activity_started = bool(data["activity_started"])
+	_job_kind = int(data["job_kind"]) as JobKind
+	_job_room = String(data["job_room"])
+	_job_work_minutes = int(data["job_work"])
+	# Fresh arrays: the live ones may be an activity's own lists (shared by reference), and
+	# writing into them would rewrite the schedule (found by the save test, 2026-11-16).
+	_job_requirements = _dicts(data["job_requirements"])
+	_job_on_start = _dicts(data["job_on_start"])
+	_job_on_success = _dicts(data["job_on_success"])
+	_started = bool(data["started"])
+	_finished = bool(data["finished"])
+	_self_fix_object = String(data["self_fix"])
+	_held_from = int(data["held_from"]) as State
+	_step_left = int(data["step_left"])
+	var path: Array[String] = []
+	path.assign(data["path"])
+	_path = path
+	_next_room = String(data["next_room"])
+	_leg_minutes = int(data["leg_minutes"])
+	_leg_left = int(data["leg_left"])
+
+
+static func _dicts(values: Array) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	out.assign(values.duplicate(true))
+	return out

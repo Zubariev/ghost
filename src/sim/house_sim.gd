@@ -91,3 +91,28 @@ func _on_minute_advanced(total_minutes: int) -> void:
 	for routine: NpcRoutine in routines:
 		routine.step(spent)
 	morale.end_minute()
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## The whole simulation's exact state: clock, house, task claims, every routine, morale.
+## Loading it into a freshly built simulation and running both on gives the same day.
+func save_state() -> Dictionary:
+	var routine_data: Dictionary = {}
+	for routine: NpcRoutine in routines:
+		routine_data[routine.schedule.npc_id] = routine.save_state()
+	return {"clock": clock.save_state(), "house": house.save_state(), "board": board.save_state(),
+		"routines": routine_data, "morale": morale.save_state()}
+
+
+## Restores [method save_state]'s data into this (freshly built, started) simulation.
+func load_state(data: Dictionary) -> void:
+	clock.load_state(data["clock"])
+	house.load_state(data["house"])
+	board.load_state(data["board"])
+	var routine_data: Dictionary = data["routines"]
+	for routine: NpcRoutine in routines:
+		if routine_data.has(routine.schedule.npc_id):
+			routine.load_state(routine_data[routine.schedule.npc_id])
+	morale.load_state(data["morale"])
+

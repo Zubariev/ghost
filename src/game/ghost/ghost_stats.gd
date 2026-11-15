@@ -64,3 +64,21 @@ func action_keys() -> Array[String]:
 	var keys: Array[String] = []
 	keys.assign(_actions.keys())
 	return keys
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## Every count for the end summary.
+func save_state() -> Dictionary:
+	return {"noticed": noticed, "caught": caught, "items": items_found, "notes": notes_found,
+		"spent": energy_spent, "lost": energy_lost, "actions": _actions.duplicate()}
+
+
+func load_state(data: Dictionary) -> void:
+	noticed = int(data["noticed"])
+	caught = int(data["caught"])
+	items_found = int(data["items"])
+	notes_found = int(data["notes"])
+	energy_spent = float(data["spent"])
+	energy_lost = float(data["lost"])
+	_actions.assign(data["actions"])

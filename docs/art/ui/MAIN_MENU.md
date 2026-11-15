@@ -16,7 +16,7 @@ the painting.
 | Entry | Does |
 |---|---|
 | Нова гра | Opens the existing briefing screen (premise, family, controls; Esc returns to the menu), then the game — the startup flow is unchanged |
-| Завантажити гру | The save-selection screen, showing its empty state: **there is no save system yet** (see Missing) |
+| Завантажити гру | The saves, newest first, the dawn autosave marked; Завантажити starts the game from one (skipping the briefing), Видалити asks first; a save from another game version is listed but cannot be loaded; empty state when there are none |
 | Налаштування | Display mode, window size, controls help at the start, morale changes above people; Apply saves and applies, За замовчуванням fills in the defaults, Назад discards. Saved in `user://settings.cfg` (`GameSettings`) |
 | Автори | Placeholders for people (no names invented); real attributions for the fonts and the engine |
 | Вихід | Asks «Вийти з гри?», then quits |
@@ -30,11 +30,32 @@ summary «На головну» returns here.
 Esc in a game pauses it and opens the pause menu over the dimmed room (`PauseMenu`, a layer above
 the HUD; it replaces the old «ПАУЗА» caption): **Продовжити** (resume), **Налаштування** (the same
 `SettingsPanel` as the main menu; applying it switches the floating morale texts at once),
-**Головне меню** (asks first — the game is not saved). Esc steps back out of a sub-screen, then
-resumes. Not offered while the end summary shows.
+**Зберегти гру** (2026-11-16: adds a save to the list and says «Гру збережено.»), **Головне меню**
+(asks first — unsaved progress is lost). Esc steps back out of a sub-screen, then resumes. Not
+offered while the end summary shows.
 
-**Saving — next task** (user decision 2026-11-15): a save system with an unlimited list of saves;
-then the pause menu gets «Зберегти гру» and the Load screen lists the saves.
+## Saving (2026-11-16)
+
+User decisions: save anywhere, at the exact moment; an unlimited list of saves; an autosave at each
+dawn (one, replaced each day); automatic names («День 2 · 14:30 · Кухня · рішучість 42», plus the
+real date and time).
+
+- **What is saved** (`HouseGame.save_state`): the simulation (clock and speed, rooms, objects, task
+  claims, every routine mid-activity or mid-walk, morale and everything charged), the family's
+  movement (positions, routes, glances and their dice), stealth (hiding, every incident, the search
+  dice, the energy ledger), the ghost (room and position, energy and its refill pause, finds and
+  journal, stats), the monocle and the key events. Each system has `save_state` / `load_state`.
+- **Not saved:** a harm action under way and an open search grid (the ghost starts them again).
+- **Files** (`SaveStore`): `user://saves/`, one file per save, Godot's binary Variant format (exact
+  numbers; objects are never decoded), `{version, meta, state}`. A save from another `VERSION` is
+  listed but cannot be loaded.
+- **Loading:** the game scene starts as usual, then `load_state` overwrites it
+  (`HouseGame.pending_load`, set by the Load screen).
+- **Proof:** saving mid-game and loading into a fresh game, both run on with the same input and stay
+  identical — the simulation through a night into day 2, and the whole game frame for frame while
+  grandma is in the middle of an incident with the ghost (`tests/integration/save/`; both
+  mutation-checked: dropping the incidents or the walkers from the save fails them). Found and
+  fixed on the way: loading wrote into an activity's own requirement list (shared by reference).
 
 ## Look
 
@@ -65,11 +86,6 @@ then the pause menu gets «Зберегти гру» and the Load screen lists t
 - **Title in Ukrainian:** «Привид / проти / людей», laid out like the concept's three lines.
 
 ## Missing integrations
-
-- **Saving and loading:** none in the game — the next task (unlimited list of saves, user decision
-  2026-11-15). The Load screen shows its empty state until then; with saves: list them with their
-  metadata (and delete), add «Зберегти гру» to the pause menu; the main-menu question in the
-  pause menu can then offer to save first.
 - **Audio:** add Master / Music / Effects volume to `GameSettings` and the Settings screen with
   the first audio bus.
 - **Credits:** fill in the people when known.

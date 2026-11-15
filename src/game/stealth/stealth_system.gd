@@ -330,3 +330,27 @@ func _person(routine: NpcRoutine, index: int, room_id: String) -> Dictionary:
 static func _empty() -> Dictionary:
 	return {"phase": Phase.NONE, "left": 0, "last_seen": Vector2.ZERO, "room": "", "search_left": 0,
 		"spot": "", "spot_uv": Vector2.ZERO, "queue": [], "spots": []}
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## Hiding, every person's incident (noticing, searching, fright), the search dice, the
+## energy ledger.
+func save_state() -> Dictionary:
+	return {"hidden_in": hidden_in, "hidden_room": hidden_room, "ledger": energy_ledger.duplicate(true),
+		"spent": energy_spent, "incidents": _incidents.duplicate(true), "rng": _rng.state, "minute": _minute}
+
+
+## Restores [method save_state]'s data, without emitting signals.
+func load_state(data: Dictionary) -> void:
+	hidden_in = String(data["hidden_in"])
+	hidden_room = String(data["hidden_room"])
+	var ledger: Array[Dictionary] = []
+	ledger.assign((data["ledger"] as Array).duplicate(true))
+	energy_ledger = ledger
+	energy_spent = int(data["spent"])
+	var incidents: Dictionary[String, Dictionary] = {}
+	incidents.assign((data["incidents"] as Dictionary).duplicate(true))
+	_incidents = incidents
+	_rng.state = int(data["rng"])
+	_minute = int(data["minute"])

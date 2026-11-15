@@ -291,3 +291,32 @@ func _on_object_state_changed(object_id: String, new_state: StringName) -> void:
 	if object_id != _food_id:
 		return
 	_food_late = new_state == _food_ready and _meal_missed_while_cooking
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## Every NPC's morale and Broken state and everything charged for the activity in hand.
+func save_state() -> Dictionary:
+	return {"outcome": outcome, "morale": _morale.duplicate(), "broken": _broken.duplicate(),
+		"recover": _recover_minutes.duplicate(), "charged": _charged.duplicate(), "bad": _bad.duplicate(),
+		"dark": _dark_charged.duplicate(), "started_at": _started_at.duplicate(), "minute": _minute, "total": _total,
+		"starting": _starting, "meal_missed": _meal_missed_while_cooking, "food_late": _food_late,
+		"eating_late": _eating_late.duplicate()}
+
+
+## Restores [method save_state]'s data, without emitting signals.
+func load_state(data: Dictionary) -> void:
+	outcome = String(data["outcome"])
+	_morale.assign(data["morale"])
+	_broken.assign(data["broken"])
+	_recover_minutes.assign(data["recover"])
+	_charged.assign(data["charged"])
+	_bad.assign(data["bad"])
+	_dark_charged.assign(data["dark"])
+	_started_at.assign(data["started_at"])
+	_minute = int(data["minute"])
+	_total = int(data["total"])
+	_starting = bool(data["starting"])
+	_meal_missed_while_cooking = bool(data["meal_missed"])
+	_food_late = bool(data["food_late"])
+	_eating_late.assign(data["eating_late"])

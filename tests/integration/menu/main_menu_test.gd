@@ -10,12 +10,14 @@ var _menu: MainMenu
 
 func before_test() -> void:
 	MainMenu._settings_applied = true   # never resize the test window from saved settings
+	MainMenu.save_dir = "user://test_no_saves_here"   # never the player's own saves
 	_menu = load(MENU_SCENE).instantiate() as MainMenu
 	get_tree().root.add_child(_menu)
 	await get_tree().process_frame
 
 
 func after_test() -> void:
+	MainMenu.save_dir = SaveStore.DIR
 	if is_instance_valid(_menu):
 		_menu.free()
 	await get_tree().process_frame   # let closed panels finish freeing
@@ -64,3 +66,24 @@ func test_every_sub_screen_fits_on_the_screen() -> void:
 			"%s panel %s does not fit" % [_menu._buttons[index].text, rect]).is_true()
 		_menu._close_panel()
 		await get_tree().process_frame
+
+
+func test_the_load_screen_lists_saves_and_delete_asks_then_removes() -> void:
+	# Arrange: one save in the test folder
+	var store := SaveStore.new(MainMenu.save_dir)
+	var path: String = store.save({"x": 1}, {"day": 2, "time": "14:30", "room": "Кухня", "resolve": 42})
+	# Act: open Load, then Delete on the row, then Yes
+	_menu._buttons[1].pressed.emit()
+	await get_tree().process_frame
+	var plaques: Array[Node] = _menu._panel.body.find_children("*", "PlaqueButton", true, false)
+	var listed: bool = plaques.size() == 2   # Load and Delete for the one save
+	(plaques[1] as Button).pressed.emit()
+	await get_tree().process_frame
+	var asked: bool = _menu._panel.buttons.get_child_count() == 2   # Yes / No
+	(_menu._panel.buttons.get_child(0) as Button).pressed.emit()
+	await get_tree().process_frame
+	# Assert
+	assert_bool(listed).is_true()
+	assert_bool(asked).is_true()
+	assert_bool(FileAccess.file_exists(path)).is_false()
+	assert_bool(store.has_any()).is_false()

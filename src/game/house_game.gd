@@ -17,6 +17,7 @@
 ## Run with `--capture=<dir>` for a scripted tour that saves screenshots and quits; add
 ## `--art-test` to capture only the cozy and haunted living room, or `--capture-loss` to
 ## play three days without the ghost and capture the loss summary.
+class_name HouseGame
 extends Node2D
 
 const STRINGS_PATH: String = "res://assets/i18n/strings.csv"
@@ -40,6 +41,9 @@ const KEYS: Dictionary = {
 
 const MORALE_DROP_COLOR := Color("f08a78")
 const MORALE_GAIN_COLOR := Color("a8e08c")
+
+## A saved game to load when this scene starts (set by the Load screen, 2026-11-16).
+static var pending_load: Dictionary = {}
 
 var _sim: HouseSim
 ## The in-game pause menu (Esc).
@@ -138,6 +142,11 @@ func _ready() -> void:
 	_connect_events()
 	_update_view()
 	_hud.show_day_card(_sim.clock.day_number())
+	if not pending_load.is_empty():
+		var state: Dictionary = pending_load
+		pending_load = {}
+		load_state(state)
+		_hud.add_log(tr("LOG_GAME_LOADED"))
 	var capture_dir: String = _capture_dir()
 	if not capture_dir.is_empty():
 		_run_capture(capture_dir)
@@ -475,7 +484,10 @@ func _connect_events() -> void:
 	_loot.taken.connect(func(item_id: String) -> void: _stats.record_find(_loot.kind_of(item_id)))
 	_sim.clock.phase_changed.connect(func(is_day: bool) -> void:
 		if is_day and not _sim.is_over():
-			_hud.show_day_card(_sim.clock.day_number()))
+			_hud.show_day_card(_sim.clock.day_number())
+			_autosave())
+	_pause_menu.save_requested.connect(func() -> void:
+		_pause_menu.show_saved(not SaveStore.new().save(save_state(), save_meta()).is_empty()))
 	_hud.restart_requested.connect(func() -> void: get_tree().reload_current_scene())
 	_hud.title_requested.connect(func() -> void: get_tree().change_scene_to_file(TITLE_SCENE))
 	_casting.failed.connect(func(_object_id: String, why: String) -> void:
@@ -496,6 +508,51 @@ func _morale_float(delta: int, reason: String) -> String:
 ## applied by the settings screen itself.
 func _apply_game_settings(settings: GameSettings) -> void:
 	_hud.set_float_source(_stage.visible_floats if settings.show_morale_floats else Callable())
+
+
+# --- Save games (2026-11-16) -------------------------------------------------------------
+
+## The whole game's exact state: the simulation, the ghost (place, energy, finds, stats), the
+## family's movement and the stealth incidents, and the game's own flags. A harm action under
+## way and an open search grid are not kept (the ghost starts them again).
+func save_state() -> Dictionary:
+	return {"sim": _sim.save_state(), "ghost": _navigator.save_state(), "energy": _energy.save_state(),
+		"loot": _loot.save_state(), "stats": _stats.save_state(), "stealth": _stealth.save_state(),
+		"motion": _motion.save_state(), "game": {"monocle": _has_monocle, "key_events": _key_events.duplicate()}}
+
+
+## How the save shows in the list: day, time, the ghost's room, the family's resolve.
+func save_meta() -> Dictionary:
+	return {"day": _sim.clock.day_number(), "time": GameClock.format_time(_sim.clock.minute_of_day()),
+		"room": _sim.house.rooms[_navigator.room_id].display_name, "resolve": roundi(_sim.morale.family_average())}
+
+
+## Puts [method save_state]'s data into this freshly started game and redraws the view.
+func load_state(data: Dictionary) -> void:
+	_casting.cancel()
+	_sim.load_state(data["sim"])
+	_navigator.load_state(data["ghost"])
+	_energy.load_state(data["energy"])
+	_loot.load_state(data["loot"])
+	_stats.load_state(data["stats"])
+	_stealth.load_state(data["stealth"])
+	_motion.load_state(data["motion"])
+	var game: Dictionary = data["game"]
+	_has_monocle = bool(game["monocle"])
+	_key_events.assign(game["key_events"])
+	_hud.hide_loot_grid()
+	_hud.hide_day_card()
+	_hud.show_map(_loot.has_map())
+	_refresh_slots()
+	_stage.settle_mood()
+	_hud.refresh()
+	_update_view()
+
+
+## The dawn autosave (one, replaced each day). Not in captures.
+func _autosave() -> void:
+	if _capture_dir().is_empty():
+		SaveStore.new().save(save_state(), save_meta(), true)
 
 
 func _key_event(text: String) -> void:
@@ -665,10 +722,12 @@ func _run_hud_test(dir: String) -> void:
 	_sim.clock.paused = true
 	_pause_menu.open()
 	await _show(dir, "36-pause-menu", "21:31", "living_room", Vector2(0.5, 0.93))
-	(_pause_menu._main.body.get_child(1) as Button).pressed.emit()
+	_pause_menu.show_saved(true)   # how a save is confirmed (the capture does not write one)
+	await _show(dir, "36b-pause-menu-saved", "21:31", "living_room", Vector2(0.5, 0.93))
+	(_pause_menu._main.body.get_child(2) as Button).pressed.emit()   # Settings
 	await _show(dir, "37-pause-settings", "21:31", "living_room", Vector2(0.5, 0.93))
 	_pause_menu._close_sub()
-	(_pause_menu._main.body.get_child(2) as Button).pressed.emit()
+	(_pause_menu._main.body.get_child(3) as Button).pressed.emit()   # Main menu
 	await _show(dir, "38-pause-main-menu-question", "21:31", "living_room", Vector2(0.5, 0.93))
 
 

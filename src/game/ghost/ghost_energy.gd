@@ -141,3 +141,16 @@ func _take(amount: float, reason: String) -> float:
 	if not was_low and is_low():
 		low_warning.emit()
 	return taken
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## Energy and the no-refill pause left.
+func save_state() -> Dictionary:
+	return {"value": value, "pause_left": _pause_left}
+
+
+## Restores [method save_state]'s data, without emitting signals.
+func load_state(data: Dictionary) -> void:
+	value = clampf(float(data["value"]), 0.0, _max)
+	_pause_left = float(data["pause_left"])

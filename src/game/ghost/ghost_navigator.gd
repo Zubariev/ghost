@@ -96,3 +96,15 @@ func _cross(step: Vector2i, blocked: Vector2, entered: Vector2) -> Vector2:
 	room_id = target
 	room_changed.emit(room_id)
 	return entered
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## Where the ghost is.
+func save_state() -> Dictionary:
+	return {"room": room_id, "uv": uv}
+
+
+func load_state(data: Dictionary) -> void:
+	room_id = String(data["room"])
+	uv = data["uv"]

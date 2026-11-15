@@ -162,4 +162,15 @@ EXIT_NO,Ні
 PAUSE_TITLE,Пауза
 PAUSE_RESUME,Продовжити
 PAUSE_MAIN_MENU,Головне меню
-PAUSE_QUIT_CONFIRM,"Вийти в головне меню? Цю гру не збережено — її буде втрачено."
+PAUSE_QUIT_CONFIRM,"Вийти в головне меню? Незбережений прогрес буде втрачено."
+PAUSE_SAVE,Зберегти гру
+PAUSE_SAVED,Гру збережено.
+PAUSE_SAVE_FAILED,Не вдалося зберегти гру.
+LOG_GAME_LOADED,Гру завантажено.
+LOAD_AUTOSAVE,Автозбереження
+LOAD_ENTRY,"День %d · %s · %s · рішучість %d"
+LOAD_SAVED_AT,Збережено %s
+LOAD_BUTTON,Завантажити
+LOAD_DELETE,Видалити
+LOAD_DELETE_CONFIRM,Видалити це збереження?
+LOAD_UNUSABLE,Збереження зі старої версії гри — завантажити не можна.

@@ -218,3 +218,20 @@ func _open(spot_id: String, now: int) -> void:
 		_grid.append(present[i] if i < present.size() else "")
 	_open_spot = spot_id
 	searched.emit(spot_id, grid())
+
+
+# --- Save (2026-11-16) ------------------------------------------------------------------
+
+## What the ghost has, what it found, and when renewables were taken. A search under way or an
+## open grid is not kept: a loaded game starts with the grid closed (search again).
+func save_state() -> Dictionary:
+	return {"inventory": inventory.duplicate(), "lore": lore_found.duplicate(), "collected": _collected.duplicate(),
+		"taken_at": _taken_at.duplicate()}
+
+
+func load_state(data: Dictionary) -> void:
+	close()
+	inventory.assign(data["inventory"])
+	lore_found.assign(data["lore"])
+	_collected.assign(data["collected"])
+	_taken_at.assign(data["taken_at"])
