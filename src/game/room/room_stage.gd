@@ -245,22 +245,28 @@ func _draw() -> void:
 	FamilyArt.storybook = false
 
 
-## One furniture piece: its painted sprite if it has one, else the code drawing for the
-## room's look.
+## One furniture piece: its painted sprite if it has one (with the code-drawn animation —
+## fire, smoke, glow — on top at the sprite's effects point, art Phase 3), else the code
+## drawing for the room's look.
 func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted: bool, interactive: bool, storybook: bool) -> void:
 	var kind: String = String(piece["kind"])
 	var variant: String = String(piece.get("variant", ""))
+	var hearth: Vector2 = RoomGeometry.to_screen(uv)
+	var painted: bool = false
 	if visuals != null:
 		var wall: bool = StorybookArt.is_wall(kind)
 		var depth: float = 1.0 if wall else RoomGeometry.scale_at(uv.y)
-		if visuals.draw_sprite(self, kind, variant, state, RoomGeometry.to_screen(uv), depth, highlighted):
-			return
-	if storybook:
-		StorybookArt.draw(self, piece, uv, state, highlighted, sim.house.is_day, interactive, _time)
-	else:
-		FurnitureArt.draw(self, kind, uv, state, highlighted, sim.house.is_day)
+		if visuals.draw_sprite(self, kind, variant, state, hearth, depth, highlighted):
+			painted = true
+			hearth += visuals.effects_offset(kind, variant) * depth
+			StorybookArt.draw_effects(self, kind, state, hearth, depth * visuals.effects_scale(kind, variant), _time)
+	if not painted:
+		if storybook:
+			StorybookArt.draw(self, piece, uv, state, highlighted, sim.house.is_day, interactive, _time)
+		else:
+			FurnitureArt.draw(self, kind, uv, state, highlighted, sim.house.is_day)
 	if kind == "fireplace" and state == &"out" and _fire_out_at.has(navigator.room_id):
-		_draw_embers(RoomGeometry.to_screen(uv), _wear_model().ember_glow(_time - float(_fire_out_at[navigator.room_id])))
+		_draw_embers(hearth, _wear_model().ember_glow(_time - float(_fire_out_at[navigator.room_id])))
 
 
 # --- Room wear (art Phase 2) ------------------------------------------------------------

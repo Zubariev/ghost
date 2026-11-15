@@ -14,7 +14,8 @@ func _config() -> Dictionary:
 	return {
 		"storybook_rooms": ["living_room"],
 		"sprites": {
-			"floor_lamp": {"sprite": LAMP_PATH, "states": {"out": LAMP_OUT_PATH}, "anchor": [0.5, 0.9], "scale": 0.5},
+			"floor_lamp": {"sprite": LAMP_PATH, "states": {"out": LAMP_OUT_PATH}, "anchor": [0.5, 0.9], "scale": 0.5,
+				"effects": {"offset": [3, -8], "scale": 0.6}},
 			"armchair:olive": {"sprite": OLIVE_CHAIR_PATH},
 			"sofa": {"sprite": ""},
 		},
@@ -85,3 +86,13 @@ func test_wall_portraits_are_listed_per_room() -> void:
 	assert_int(here.size()).is_equal(1)
 	assert_str(String(here[0]["variant"])).is_equal("lady")
 	assert_array(elsewhere).is_empty()
+
+
+func test_a_painted_prop_says_where_its_code_drawn_animation_goes() -> void:
+	# Art Phase 3 (2026-11-15): e.g. the fire inside a painted fireplace's firebox.
+	var visuals: PropVisuals = _visuals()
+	assert_vector(visuals.effects_offset("floor_lamp", "")).is_equal(Vector2(3, -8))
+	assert_float(visuals.effects_scale("floor_lamp", "")).is_equal(0.6)
+	# No effects entry: the animation sits at the floor point, unscaled
+	assert_vector(visuals.effects_offset("armchair", "olive")).is_equal(Vector2.ZERO)
+	assert_float(visuals.effects_scale("armchair", "olive")).is_equal(1.0)

@@ -107,7 +107,10 @@ func _ready() -> void:
 	_loot = GhostLoot.new(JsonData.read(GhostLoot.LOOT_PATH))
 	_stage.loot = _loot
 	_stage.sight_config = stealth_cfg
-	_stage.visuals = PropVisuals.new(JsonData.read(PropVisuals.STYLE_PATH))
+	var style: Dictionary = JsonData.read(PropVisuals.STYLE_PATH)
+	if OS.get_cmdline_user_args().has("--code-art"):
+		style["sprites"] = {}   # comparison captures: every prop drawn in code (art Phase 3)
+	_stage.visuals = PropVisuals.new(style)
 	_sim.clock.minute_advanced.connect(func(total: int) -> void:
 		if not _sim.is_over():
 			_stealth.on_minute(posmod(total - 1, GameClock.MINUTES_PER_DAY)))
@@ -661,6 +664,13 @@ func _run_art_test(dir: String) -> void:
 	_navigator.place("living_room", Vector2(0.38, 0.36))
 	_toggle_hide()
 	await _show(dir, "08-cozy-night-ghost-hidden-in-sofa", "22:10", "living_room", _navigator.uv)
+	# Art Phase 3: the ghost on the hearth in front of the (painted) fireplace, burning and out —
+	# it must stay in front of the wall piece and readable against the stone.
+	_toggle_hide()
+	await _show(dir, "09-cozy-night-ghost-at-hearth", "22:10", "living_room", Vector2(0.2, 0.06))
+	_haunt_living_room()
+	_stage.track_fire()
+	await _show(dir, "10-haunted-night-ghost-at-hearth", "22:11", "living_room", Vector2(0.2, 0.06))
 
 
 ## Art test only: lamp out and window open, through the ghost's own rules.

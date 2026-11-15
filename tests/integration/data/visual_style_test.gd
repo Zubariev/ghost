@@ -210,3 +210,26 @@ func test_every_room_has_at_least_two_hiding_spots() -> void:
 			if piece.has("hide_id"):
 				spots += 1
 		assert_int(spots).override_failure_message("%s has %d hiding spot(s)" % [room_id, spots]).is_greater_equal(2)
+
+
+func test_every_shipped_sprite_loads_and_wall_sprites_fit_the_back_wall() -> void:
+	# Art Phase 3 (2026-11-15): the painted fireplace. Every configured image must load (else the
+	# room silently falls back to code); a wall piece must not rise above the ceiling line, and
+	# its code-drawn animation point must lie on the image.
+	var style: Dictionary = JsonData.read(PropVisuals.STYLE_PATH)
+	var visuals := PropVisuals.new(style)
+	for key: String in style.get("sprites", {}):
+		var kind: String = key.get_slice(":", 0)
+		var variant: String = key.get_slice(":", 1) if key.contains(":") else ""
+		var entry: Dictionary = style["sprites"][key]
+		var paths: Array = [String(entry.get("sprite", ""))] + (entry.get("states", {}) as Dictionary).values()
+		for path: String in paths:
+			if not path.is_empty():
+				assert_bool(ResourceLoader.exists(path)).override_failure_message("missing sprite " + path).is_true()
+		var tex: Texture2D = visuals.texture_for(kind, variant, &"")
+		assert_object(tex).override_failure_message(key + " does not load").is_not_null()
+		var size: Vector2 = tex.get_size() * visuals.scale(kind, variant)
+		var rect := Rect2(-visuals.anchor(kind, variant) * size, size)
+		if StorybookArt.is_wall(kind):
+			assert_float(-rect.position.y).override_failure_message(key + " rises above the ceiling").is_less_equal(RoomGeometry.BACK_WALL_HEIGHT + 2.0)
+		assert_bool(rect.has_point(visuals.effects_offset(kind, variant))).override_failure_message(key + " effects point off the image").is_true()

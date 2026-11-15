@@ -86,6 +86,18 @@ func anchor(kind: String, variant: String) -> Vector2:
 	return Vector2(float(a[0]), float(a[1]))
 
 
+## Where the code-drawn animation of a painted prop sits (art Phase 3): the offset in screen
+## px at depth 1 from the prop's floor point; e.g. the fire inside a painted fireplace's firebox.
+func effects_offset(kind: String, variant: String) -> Vector2:
+	var o: Array = (_entry(kind, variant).get("effects", {}) as Dictionary).get("offset", [0, 0])
+	return Vector2(float(o[0]), float(o[1]))
+
+
+## Scale of the code-drawn animation of a painted prop (1 = as in the code drawing).
+func effects_scale(kind: String, variant: String) -> float:
+	return float((_entry(kind, variant).get("effects", {}) as Dictionary).get("scale", 1.0))
+
+
 ## Image scale at the front of the room (depth scaling is applied on top).
 func scale(kind: String, variant: String) -> float:
 	return float(_entry(kind, variant).get("scale", 1.0))

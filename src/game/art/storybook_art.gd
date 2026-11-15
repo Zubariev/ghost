@@ -68,6 +68,13 @@ static func draw(canvas: CanvasItem, piece: Dictionary, uv: Vector2, state: Stri
 		elif surface == "fabric":
 			Ink.weave(canvas, poly, color, part_seed, 8.0 * s)
 		Ink.outline(canvas, poly, part_tier, part_seed)
+	draw_effects(canvas, kind, state, foot, s, time)
+
+
+## The animated, state-driven part of a piece (fire and its glow, smoke from a cold grate, a lit
+## lamp's glow), drawn over the piece at [param foot] with scale [param s]. Separate from the
+## shapes so it also runs on top of a painted sprite (art Phase 3, 2026-11-15).
+static func draw_effects(canvas: CanvasItem, kind: String, state: StringName, foot: Vector2, s: float, time: float) -> void:
 	if kind == "fireplace" and state == &"burning":
 		_draw_fire(canvas, foot, s, time)
 	elif kind == "fireplace":

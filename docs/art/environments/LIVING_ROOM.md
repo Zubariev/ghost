@@ -5,6 +5,7 @@
 | In-game art test (as built) | **APPROVED baseline** — built and approved 2026-11-15 (`6bfc25b`, `5f1a966`, evidence `d7e26aa`); Phase 1 refinement **APPROVED** 2026-11-15 (user moved on to Phase 2) |
 | Concept `living_room_cozy.jpeg` | **APPROVED as the Phase 1 visual target** (user decision 2026-11-15) — its look, not its perspective or geometry |
 | Full-size haunted concept | OPEN — none yet |
+| Painted fireplace (art Phase 3 trial) | **EXPERIMENTAL** — built 2026-11-15, awaiting review (§8) |
 
 The first and so far only room in the storybook style.
 
@@ -104,7 +105,71 @@ Same layout, positions and camera. Capture: `bash tools/play.sh art-test` →
       geometry unchanged; headless day run without errors.
 - [ ] Side-by-side screenshots with the concept retained in `production/qa/evidence/`.
 
-## 7. Open
+## 8. Phase 3 — painted fireplace trial (EXPERIMENTAL, 2026-11-15)
+
+The first painted prop, to test the sprite path (`../SPRITE_SPEC.md`) before any more are made.
+
+**Source.** Generated images kept as references in `art/concepts/props/fireplace/`:
+- First try: `fireplace_source_empty.jpeg` / `fireplace_source_burning.jpeg` (1200 × 896 JPEG, white
+  background). Rejected after the first capture: seen at an angle (the user asked for straight-on;
+  SPRITE_SPEC asks for a front view), tall and narrow (~171 px wide against the code's ~228), bare
+  mantel; the burning one has its flames painted in.
+- **Used:** `fireplace_source_front.png` (1402 × 1122 PNG, opaque white background): straight-on
+  elevation, empty firebox with an iron grate, the mantel's candle, three framed family photos and
+  rose vase painted in, even light.
+
+**Sprite.** `assets/art/props/fireplace.png`, 410 × 387 RGBA, made with `tools/sprite_cutout.gd`
+(`-- <source> <out> 170 0.4174`): white background removed by flood fill from the border plus
+enclosed near-white pockets (the candlestick's handle loop, gaps in the sprig), edges un-blended
+(no fringe on dark or magenta), the chimney cut at source row 170 so it meets the ceiling line,
+scaled to 0.4174, 4 px transparent padding. Imported lossless, no mipmaps (Godot defaults; no
+shimmer or blur seen at half size).
+
+**Config** (`assets/art/visual_style.json` → `sprites.fireplace`): `anchor` [0.5, 0.888] (the
+chimney breast's centre where it meets the hearth, i.e. the piece's back-wall point), `scale` 0.5
+(2× art), `effects` offset [0, −2] and scale 1.0 (the painted firebox is as wide as the code one).
+On screen: about 205 × 194 px — the breast ~171 px wide (code: 176) and exactly back-wall high
+(170 px), the mantel at about the code mantel's height, the hearth ~19 px onto the floor.
+
+**Fire stays code.** One image for both states. The fire, its glow, the smoke from a cold grate and
+the fading embers are still drawn by code, on top of the image at the effects point
+(`StorybookArt.draw_effects`, called by `RoomStage._draw_piece` after the sprite). No painted fire is
+used: it would not go out when the room turns cold.
+
+**Unchanged.** `furniture.json` (u 0.18, back wall, decor), geometry, camera, draw order (the
+fireplace is a wall piece, drawn before the depth-sorted furniture, people and ghost), firelight
+pools on the floor, gameplay. `--code-art` (`bash tools/play.sh art-test <dir> --code-art`)
+draws every prop in code again, for comparison; a missing image falls back to code by itself.
+
+**Differences from the code-drawn fireplace (to review).**
+- The code flames are flat shapes on a painted firebox (seen with the first sprite: they look
+  pasted on). Later option: a painted flame layer the code flickers and switches off.
+- The mantel candle is painted unlit; the code drawing lit it while the fire burned.
+- The hearth is a raised stone step seen from the front, not a slab laid in the floor's perspective.
+
+**Review checklist** (captures `production/qa/evidence/art-phase3-fireplace/`, code version in
+`…-code/`): scale and alignment on the back wall; clean edges; readable at game scale; fits the
+storybook look beside code-drawn pieces; the ghost in front of it (shots 09, 10); fire and smoke
+inside the firebox; cozy and haunted.
+
+### Painted walls and floor — feasibility (not built)
+
+- The shell is drawn by `StorybookShell` as fixed screen-space polygons from `RoomGeometry`
+  (floor trapezoid, back wall rectangle, two side-wall trapezoids), then doors, wear, light pools
+  and the grade on top. The room box never moves, so painted surfaces can be added without
+  touching geometry, projection or navigation.
+- **Recommended:** images painted *already in the box's projection* (one per surface, sized to
+  its screen polygon, transparent outside it), drawn instead of the code surface by the same
+  kind of config as `sprites` (e.g. `shell` per room and surface). No distortion, no new
+  rendering path. Doors, the wall fade (alpha when the ghost is in a wall), wear, light and the
+  grade stay code and sit on top. Cost: one set of images per room look.
+- **Alternative:** tileable textures mapped onto the polygons with `draw_polygon` UVs. Godot 2D
+  maps each triangle affinely, so a trapezoid shows a skew along its diagonal; it needs the
+  surface cut into many thin strips. Cheaper art, more code, plank/panel lines less controllable.
+- Either way: painted wall art must leave the door openings to the code (doors differ per room),
+  and must not bake in light or the wainscot's state.
+
+## 9. Open
 
 - Full-size haunted concept.
 - Family redraw (character phase).

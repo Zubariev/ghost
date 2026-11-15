@@ -14,6 +14,10 @@ How-to steps: `assets/art/props/sprite_guide.md`. Rules: `ART_DIRECTION.md`, `VI
 - Drawn size on screen = image pixels × `scale` × depth, where depth runs 0.78 at the back wall to
   1.12 at the front edge (`RoomGeometry`). Wall pieces (window, fireplace, paintings, clock) use
   depth 1.0 at the back wall's base.
+- `effects` (art Phase 3, 2026-11-15): the code-drawn animation of the piece — fire and its glow,
+  smoke, embers, a lamp's glow — still runs on top of the image, at `offset` [x, y] (screen px at
+  depth 1, from the anchor point) with `scale`. So state changes that animate stay in code and
+  the image shows only what never changes.
 - A missing file falls back to the code drawing with a warning. The ghost's target highlight is
   added by the code around the image.
 - **Gameplay never reads the image**: position, footprint, sight blocking, hiding spot and
@@ -33,7 +37,7 @@ The game renders at 1280 × 720.
 
 | Piece | On screen (w × h px) | Paint at (2×) |
 |---|---|---|
-| Fireplace (wall) | ~190 × 150 | ~380 × 300 |
+| Fireplace (wall) | ~228 × 183 (breast 170 high + hearth) | ~456 × 366 (the painted trial is ~205 × 194: breast 171 wide, see LIVING_ROOM §8) |
 | Window with curtains (wall) | ~170 × 150 | ~340 × 300 |
 | Sofa | ~235 × 100 | ~470 × 200 (at its depth, scale ≈ 0.9) |
 | Armchair (wingback) | ~100 × 115 | ~200 × 230 |
@@ -51,7 +55,7 @@ The game renders at 1280 × 720.
 | Item | Rule |
 |---|---|
 | Format | PNG, RGBA, 8-bit, sRGB. Lossless WebP allowed. No JPEG for props. |
-| Background | Transparent; straight (not premultiplied) alpha. |
+| Background | Transparent; straight (not premultiplied) alpha. A painting delivered on a plain light background (e.g. a generated JPEG) is cut out with `tools/sprite_cutout.gd` (flood fill from the border, edge un-blend, crop, scale, padding); keep the source in `art/concepts/props/<kind>/`. |
 | Padding | 4 px of transparent margin at 2× on every side (filter bleed). |
 | View | Front view as the piece stands in the room box, slightly from above (matching the box's floor slope); no free perspective. |
 | Floor contact | The `anchor` point is where the piece meets the floor: bottom centre for floor props; the base line for wall props. |
@@ -59,6 +63,8 @@ The game renders at 1280 × 720.
 | Contours | Painted in, by tier (`VISUAL_STYLE_GUIDE.md` §2), at 2× width: interactive 4.8 px, furniture 3.4 px, background 2.2 px; dark muted brown, never black. |
 | Palette | `COLOR_PALETTE.md`. No ghost cyan in props. |
 | Highlights | Do not paint selection outlines; the game draws them. |
+| Animated or state effects | Do not paint what the code animates or switches: flames, firelight, smoke, a lamp's glow. Paint the empty firebox, the unlit shade; the code draws the rest on top (`effects`). |
+| Height | A wall piece must fit the back wall (170 px on screen from its base); a test checks it. |
 
 ## 4. Naming and location
 
@@ -87,8 +93,8 @@ The game renders at 1280 × 720.
 - Texture filtering and mipmaps for images drawn at 0.39–0.56 of their size (2× art at
   scale 0.5 × depth): check for shimmer or blur; decide import settings and whether a project
   setting change is needed (that change needs approval).
-- Animated parts (fire flicker, smoke, curtain sway) are drawn in code today; a painted image
-  replaces the whole code drawing, so animation would be lost. Decide: code overlays on top of
-  images, or frame sequences.
-- Whether walls, floor and doors get an image path (`StorybookShell`), and its spec.
+- Animated parts: **resolved in the fireplace trial** — code overlays on top of the image
+  (`effects`, §1). Frame sequences not needed so far. Curtain sway (window) not yet tried.
+- Walls, floor and doors: feasibility written up in `environments/LIVING_ROOM.md` §8
+  (recommended: per-surface images painted in the box's projection; not built).
 - Character sprites (frames per pose and walk cycle) — character phase.
