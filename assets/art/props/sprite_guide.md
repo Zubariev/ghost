@@ -1,5 +1,7 @@
 # Painted prop sprites
 
+Specification (sizes, format, naming, states): `docs/art/SPRITE_SPEC.md` (PROVISIONAL).
+
 The storybook look is code-drawn for now (`src/game/art/storybook_art.gd`, `storybook_shell.gd`).
 Any prop can be swapped for a painted image without touching gameplay.
 

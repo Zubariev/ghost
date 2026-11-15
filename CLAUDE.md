@@ -83,29 +83,39 @@ elsewhere in the repo, so they are restated here rather than lost:
   
 ## Art Direction and Visual Design
 
-The project maintains a dedicated visual design knowledge base under `/docs/art/` and `/art/`.
+The project keeps its visual-design knowledge base in `/docs/art/` and its concept art and
+moodboards in `/art/` (not imported by Godot: `art/.gdignore`).
 
-Before implementing or modifying any visual element, you must:
+Before implementing or modifying any visual element:
 
 1. Read `/docs/art/ART_DIRECTION.md`.
-2. Read the relevant environment, character, or prop specifications.
-3. Inspect the corresponding visual references and concept art in `/art/`.
-4. Respect the approval status of each design decision.
+2. Read the relevant guide: `VISUAL_STYLE_GUIDE.md`, `COLOR_PALETTE.md`, `SPRITE_SPEC.md`,
+   `environments/ENVIRONMENT_GUIDELINES.md`, and the room's own file (e.g. `environments/LIVING_ROOM.md`).
+3. Inspect the corresponding concept references in `/art/`.
+4. Respect each decision's status.
 
 ### Design Authority
 
 - APPROVED decisions are mandatory.
-- PROVISIONAL decisions should be followed unless there is a clear reason to revisit them.
+- PROVISIONAL decisions are the current working direction; follow them, and say so before revisiting one.
 - EXPERIMENTAL concepts are exploratory and must not silently become production standards.
+- OPEN decisions must be surfaced when relevant; never guess or silently resolve them.
 - REJECTED concepts must not be reused.
+
+The GDD and the Demo Specification remain authoritative for gameplay, camera, room geometry,
+projection, navigation and demo scope. If an art document appears to conflict with them, report
+the conflict before implementing (see `ART_DIRECTION.md` §2 and §4).
 
 ### Implementation Principles
 
 - Keep visual presentation separate from gameplay logic.
-- Keep sprites independent from collision shapes and interaction areas.
-- Make visual assets replaceable without changing gameplay behavior.
-- Preserve existing movement, navigation, interaction, and collision systems unless explicitly instructed otherwise.
-- Do not redesign established gameplay systems as part of visual implementation.
+- This project has no physics collision shapes: walking footprints, sight blockers, hiding spots
+  and interaction ranges are data (`assets/data/`). Images never define or change them.
+- Make visual assets replaceable without changing gameplay behavior (`PropVisuals`, `SPRITE_SPEC.md`).
+- Preserve movement, navigation, interaction, room dimensions and coordinates unless explicitly
+  instructed otherwise.
+- Do not redesign established gameplay systems or rewrite the room view's architecture as part
+  of visual work.
 
 ### Visual Consistency
 
@@ -117,8 +127,11 @@ Do not invent new visual standards without documenting them.
 
 ### Reference Images
 
-Reference images and concept art are visual guidance, not necessarily production-ready assets.
+Reference images and concept art are visual guidance, not production-ready assets. A generated
+image does not become a standard because it is in `/art/`.
 
-Do not automatically use complete concept illustrations as in-game backgrounds.
+Do not use complete concept illustrations as in-game backgrounds.
 
-Analyze their composition, shape language, materials, lighting, palette, and object design, then implement these principles using appropriate Godot assets and scene structures.
+Analyze their composition, shape language, materials, lighting, palette, and object design, then
+implement these principles within the existing Godot architecture. Before a broad restyle, report
+the plan and wait for approval.

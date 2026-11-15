@@ -1,60 +1,106 @@
 # Visual Style Guide
 
-Lines, shapes, surfaces, materials, proportions and readability. Status per section.
-Main document: `ART_DIRECTION.md`. Colours: `COLOR_PALETTE.md`.
+Shapes, lines, texture, materials, characters, readability and layering. Status per section.
+Main document: `ART_DIRECTION.md`. Colours: `COLOR_PALETTE.md`. Painted images: `SPRITE_SPEC.md`.
 
-## Linework — APPROVED
+## 1. Shape language — PROVISIONAL
+
+- Organic, slightly irregular silhouettes over perfect geometry; rectangles get slightly bowed
+  edges and rounded corners.
+- Mild exaggeration and asymmetry make furniture, props and characters memorable (the stone
+  chimney narrows upward; bookcases and clocks are tall and narrow; heavy bases, curved tops).
+- Silhouette first: every object reads as itself as a flat shape before surface detail.
+- Repeated pieces may vary subtly but keep one design language; no sterile modular repetition.
+- No ornament that reduces readability at game scale.
+
+## 2. Linework — APPROVED (direction), values PROVISIONAL
 
 Reference: `art/moodboards/supplementary/materials_lines_lighting_sheet.jpeg` ("organic
 variable-weight contours").
 
-- Hand-drawn, slightly wobbly, varying width; dark muted brown (`SB_CONTOUR`), never black and
-  never uniform.
-- Strength by tier, strongest first (code: `Ink.Tier`, `Ink.WIDTH`, `Ink.ALPHA`):
+- Hand-drawn, slightly wobbly, varying width; dark muted brown, never black, never uniform.
+- Strength by tier, strongest first (code: `Ink.Tier`, `Ink.WIDTH`, `Ink.ALPHA`, `Ink.WOBBLE` 1.3 px):
 
-| Tier | Width (px, scale 1) | Opacity | Used for |
+| Tier | Width (px at scale 1) | Opacity | Used for |
 |---|---|---|---|
 | Character | 2.8 | 1.0 | Family and ghost |
 | Interactive | 2.4 | 0.95 | Objects the ghost can act on, hiding spots |
 | Furniture | 1.7 | 0.8 | Other furniture |
 | Background | 1.1 | 0.55 | Walls, floor, decor |
 
-- Inner detail lines (folds, planks, book spines) are thinner and lighter than the outline.
+- Inner construction lines (folds, planks, book spines) are thinner and lighter than outlines.
+- Background architecture uses softer, lighter contours (`SB_CONTOUR_SOFT`).
 
-## Shapes — PROVISIONAL
+## 3. Surface and texture — APPROVED (direction)
 
-- Organic and slightly exaggerated: heavy bases, curved tops, leaning tall pieces (the stone
-  chimney narrows upward; bookcases and clocks are tall and narrow).
-- Silhouettes first: every object must read as itself as a flat shape.
-- No perfect geometry; rectangles get slightly bowed edges and rounded corners.
+- Subtle cold-press paper grain; restrained gouache-like pigment variation; soft tonal transitions
+  on background surfaces (`Ink.fill`, `canvas_art_storybook_paper.gdshader`; brush streaks only a
+  few percent of tone).
+- Texture supports material identity; it must never become noise.
+- Keep high-frequency detail away from small interactive targets.
+- No photo textures, no generic grunge, no single strong noise layer that makes every material
+  look the same.
 
-## Surfaces and materials — APPROVED (surfaces) / PROVISIONAL (material list)
+## 4. Materials — PROVISIONAL
 
-Reference: the swatches in the materials sheet; `art/concepts/environments/living_room/living_room_base.jpeg`.
+| Material | Treatment | In code |
+|---|---|---|
+| Wood (walnut) | Warm, aged, painted; simplified grain along the length, darker ends, imperfect edges | `Ink.wood_grain`, `SB_WALNUT*` |
+| Stone | Irregular rounded blocks with mortar gaps; restrained mottling and value variation | not yet (Phase 1: fireplace) |
+| Fabric (velvet, wool) | Soft painted folds, woven texture, soft highlights on curves; muted patterns | `Ink.weave` |
+| Plaster / wallpaper | Aged cream; subtle repeating pattern (faded damask), lower contrast than props | `StorybookShell` |
+| Wainscot | Walnut panels with mouldings below the plaster | `StorybookShell` (panels on the back wall; plain band on the side walls) |
+| Brass / metal | Small aged highlights on handles, frames, lamp bases; subdued reflections | `SB_GOLD` |
+| Glass | Restrained reflections; keeps the view and silhouette; day / night tones | `SB_GLASS_DAY/NIGHT` |
+| Paper / books | Aged cream, muted edges, simple readable shapes | `SB_BOOKS` |
 
-- Soft vertical shading, pigment variation, faint paper grain; brush streaks only a few percent
-  of tone (`Ink.fill`, `canvas_art_storybook_paper.gdshader`).
-- Materials and how to show them:
-  - **Walnut wood** — grain lines along the length, darker ends (`Ink.wood_grain`).
-  - **Fieldstone** — irregular rounded stones with mortar gaps (fireplace).
-  - **Velvet and wool** — woven texture, soft highlights on curves (`Ink.weave`); terracotta and olive.
-  - **Aged plaster** — cream with soft stains; wainscot panels below in walnut.
-  - **Brass and gold** — small warm highlights on handles, frames, lamp bases.
-  - **Glass** — day `SB_GLASS_DAY`, night `SB_GLASS_NIGHT`, with mullions.
+## 5. Characters — OPEN (design), rules APPROVED
 
-## Proportions — EXPERIMENTAL
+- Characters read as independent actors, never as part of the decoration.
+- Silhouette, posture and head/body proportion communicate who it is and what they are doing.
+- Character values and contours stay distinct from nearby furniture; avoid costume detail that
+  vanishes at game scale.
+- Proportions (draft: adults about 5–6 heads, children smaller and rounder, grandparents shorter
+  and stooped) are decided with the family design in the character phase.
 
-Characters: about 5–6 heads tall for adults, children smaller and rounder; grandparents shorter
-and stooped. Final proportions wait for the family design decision (`ART_DIRECTION.md`,
-Characters).
+## 6. Readability — APPROVED
 
-## Readability — APPROVED
+Hierarchy, strongest first:
 
-- Interactive objects and hiding spots: stronger contour tier and the cyan highlight when the
-  ghost can act on them. Decor (`"decor": true` in `furniture.json`) is softer and never
+1. Characters and the ghost.
+2. Interactive / sabotageable props and hiding spots.
+3. Major furniture.
+4. Architecture.
+5. Decorative detail and atmosphere.
+
+- Interactive objects and hiding spots get the stronger contour tier and the cyan highlight when
+  the ghost can act on them. Decor (`"decor": true` in `furniture.json`) is softer and never
   highlighted.
-- Changed states must be visible at game size: lamp lit / out, window shut / open, stove working /
-  jammed, computer working / cracked, groceries present / hidden.
+- State changes must be visible at game size: lamp lit / out, window shut / open, stove working /
+  jammed, computer working / cracked, groceries present / hidden, fire burning / out.
 - The ghost is the only cyan thing on screen.
-- Visuals never change gameplay: footprints, sight blockers, hiding spots and interaction range
-  come from data, not from image sizes (`PropVisuals`, `assets/art/props/sprite_guide.md`).
+- Avoid tangencies where a person's silhouette merges with a chair back, lamp, shelf or picture.
+- Visuals never change gameplay (see `ART_DIRECTION.md` §8).
+
+## 7. Layering — PROVISIONAL (principle, not a node hierarchy)
+
+Visual responsibilities kept apart, as they are in the current code:
+
+| Responsibility | Where it is drawn now |
+|---|---|
+| Walls, wallpaper, wainscot, doors | `StorybookShell` (first) |
+| Floor | `StorybookShell` (first) |
+| Light pools (fire, lamp, moon) | `RoomStage._draw_storybook_light` (over the floor) |
+| Flat pieces (rugs) | depth list, always first |
+| Wall pieces (window, fireplace, paintings, clock) | depth list, after flat pieces |
+| Furniture, interactive props, people, ghost | one depth-sorted list by screen y |
+| Harm ring, wisps, hidden glint, markers | after the sorted list |
+| Colour grade | `post_art_room_grade.gdshader` on its own canvas layer under the HUD |
+
+Foreground occluders: OPEN (deferred).
+
+## 8. Avoid
+
+Photorealism, clean corporate vector art, pure black or uniformly heavy outlines, saturated
+cartoon palettes, a blue grade as the only haunted treatment, dense decoration that competes with
+gameplay, direct imitation of any named reference.
