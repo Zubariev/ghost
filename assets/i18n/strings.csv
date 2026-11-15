@@ -86,3 +86,36 @@ INVENTORY_LABEL,Знахідки
 JOURNAL_TITLE,Знахідки й записи (J — закрити)
 JOURNAL_EMPTY,Ще нічого не знайдено.
 NOTE_CLOSE,(клацніть щоб закрити)
+TITLE_PREMISE,"Будинок довго стояв порожнім — це ваш дім. Тепер сюди в'їхала сім'я з шести людей."
+TITLE_GOAL,"Ви — привид. Зіпсуйте їм побут, щоб рішучість сім'ї (середня мораль) впала до %d, — і вони поїдуть. На це у вас %d дні."
+TITLE_FAMILY,Сім'я
+INTRO_father,Ремонт: лагодить усе зламане. Дрібні дива його не лякають.
+INTRO_mother,Прибирання: тримає дім у чистоті й порядку.
+INTRO_grandma,"Готує їжу для всіх. Ходить повільно."
+INTRO_grandpa,"Читає в бібліотеці. Повільний, зате добре помічає незвичне."
+INTRO_son,"Грає на комп'ютері у своїй кімнаті, читає комікси в бібліотеці."
+INTRO_daughter,"Грається ляльками в різних кімнатах. Найшвидша в домі."
+TITLE_CONTROLS,Керування
+TITLE_START,Почати
+TITLE_START_HINT,Enter — почати
+FAMILY_RESOLVE,Рішучість сім'ї
+FAMILY_RESOLVE_VALUE,%d · поїдуть на %d
+DAY_CARD_SUB,"Сім'я ще тут. Рішучість: %d (поїдуть на %d)"
+SUMMARY_WHEN,"%s, %s"
+SUMMARY_FAMILY,"Рішучість сім'ї наприкінці: %d (поріг — %d)"
+SUMMARY_GHOST,Привид
+SUMMARY_ACTIONS,Дій виконано: %d
+SUMMARY_ACTION_LINE,%s — %d
+SUMMARY_SEEN,Помічено: %d · спіймано: %d
+SUMMARY_FINDS,"Знайдено: предметів — %d, записів — %d"
+SUMMARY_ENERGY,"Енергія: на дії — %d, втрачено через людей — %d"
+BTN_RESTART,Грати знову
+BTN_TITLE,На головну
+SUMMARY_KIND_lamp,Лампи
+SUMMARY_KIND_window,Вікна
+SUMMARY_KIND_stove,Плита
+SUMMARY_KIND_grocery_basket,Продукти
+SUMMARY_KIND_computer,Комп'ютер
+SUMMARY_KIND_monocle,Монокль
+REASON_meal_cold,холодна їжа
+KEY_EVENTS_NONE,— жодних: сім'я навіть не помітила привида.

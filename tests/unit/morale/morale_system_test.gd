@@ -171,6 +171,16 @@ func test_family_leaves_when_the_average_reaches_the_threshold() -> void:
 	assert_float(_morale.family_average()).is_equal(20.0)
 
 
+func test_leave_threshold_comes_from_the_rules() -> void:
+	# Arrange
+	var rules: Dictionary = Fx.morale_rules()
+	rules["family_leaves_at_average"] = 33
+	# Act
+	_start(_one(), Fx.COOK_START, rules)
+	# Assert
+	assert_int(_morale.leave_threshold()).is_equal(33)
+
+
 func test_one_broken_member_alone_does_not_make_them_leave() -> void:
 	# Arrange
 	var routines: Array[NpcRoutine] = _two()

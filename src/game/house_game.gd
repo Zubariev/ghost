@@ -12,8 +12,11 @@
 ## interrupts it at no cost. Energy refills by itself (faster hidden, in dark or cold rooms).
 ## Art test (2026-11-15): storybook rooms (assets/art/visual_style.json) get a colour-grade
 ## layer between the room and the HUD that follows the room's warm-to-haunted mood.
+## Stage 6 (Demo Spec §10.4): a day card at each dawn, the ghost's stats ([GhostStats]) and
+## the end summary with Play again (reloads this scene: a fresh run) and To title.
 ## Run with `--capture=<dir>` for a scripted tour that saves screenshots and quits; add
-## `--art-test` to capture only the cozy and haunted living room.
+## `--art-test` to capture only the cozy and haunted living room, or `--capture-loss` to
+## play three days without the ghost and capture the loss summary.
 extends Node2D
 
 const STRINGS_PATH: String = "res://assets/i18n/strings.csv"
@@ -23,6 +26,7 @@ const GHOST_PATH: String = "res://assets/data/ghost/ghost.json"
 const STEALTH_PATH: String = "res://assets/data/ghost/stealth.json"
 const MOVEMENT_PATH: String = "res://assets/data/house/movement.json"
 const ENERGY_PATH: String = "res://assets/data/ghost/energy.json"
+const TITLE_SCENE: String = "res://src/game/title/title_screen.tscn"
 const GRADE_SHADER_PATH: String = "res://assets/shaders/post_art_room_grade.gdshader"
 ## Draw order: room (0), colour grade (1), HUD (2).
 const GRADE_LAYER: int = 1
@@ -54,7 +58,10 @@ var _ghost_slowest: float = 1.0
 var _interact_range: float = 0.16
 var _target: String = ""
 var _key_events: Array[String] = []
+var _stats := GhostStats.new()
 var _outcome_shown: bool = false
+## Capture only: keep the day card in the next shot (the tour does not run the HUD's fade).
+var _keep_day_card: bool = false
 
 
 func _ready() -> void:
@@ -120,6 +127,7 @@ func _ready() -> void:
 	_hud.set_energy(_energy)
 	_connect_events()
 	_update_view()
+	_hud.show_day_card(_sim.clock.day_number())
 	var capture_dir: String = _capture_dir()
 	if not capture_dir.is_empty():
 		_run_capture(capture_dir)
@@ -145,9 +153,15 @@ func _process(delta: float) -> void:
 		_navigator.move(direction * _ghost_speed * room_factor * delta)
 		_stealth.observe()
 	_update_view()
+	_show_outcome_if_over()
+
+
+## Shows the end summary once, when the scenario has ended.
+func _show_outcome_if_over() -> void:
 	if _sim.is_over() and not _outcome_shown:
 		_outcome_shown = true
-		_hud.show_outcome(_sim.morale.outcome == MoraleSystem.OUTCOME_WON, _key_events)
+		_casting.cancel()
+		_hud.show_outcome(_sim.morale.outcome == MoraleSystem.OUTCOME_WON, _key_events, _stats)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -411,6 +425,18 @@ func _connect_events() -> void:
 		var what: String = tr("ACT_" + GhostEnergy.action_key(obj))
 		_hud.add_log(tr("LOG_GHOST_ACTED") % [what, _sim.house.rooms[obj.room_id].display_name]))
 	_casting.cancelled.connect(func(_object_id: String) -> void: _hud.add_log(tr("LOG_ACT_CANCELLED")))
+	# Stage 6: the ghost's stats for the end summary, the day card, the summary's buttons
+	_casting.completed.connect(func(object_id: String) -> void:
+		_stats.record_action(GhostEnergy.action_key(_sim.house.objects[object_id])))
+	_energy.lost.connect(_stats.record_energy)
+	_stealth.noticed.connect(func(_npc: String) -> void: _stats.record_noticed())
+	_stealth.contact.connect(func(_npc: String, _how: String) -> void: _stats.record_caught())
+	_loot.taken.connect(func(item_id: String) -> void: _stats.record_find(_loot.kind_of(item_id)))
+	_sim.clock.phase_changed.connect(func(is_day: bool) -> void:
+		if is_day and not _sim.is_over():
+			_hud.show_day_card(_sim.clock.day_number()))
+	_hud.restart_requested.connect(func() -> void: get_tree().reload_current_scene())
+	_hud.title_requested.connect(func() -> void: get_tree().change_scene_to_file(TITLE_SCENE))
 	_casting.failed.connect(func(_object_id: String, why: String) -> void:
 		if why == GhostCasting.NOT_ENOUGH_ENERGY:
 			_hud.flash_not_enough_energy()
@@ -440,6 +466,11 @@ func _capture_dir() -> String:
 func _run_capture(dir: String) -> void:
 	set_process(false)
 	DirAccess.make_dir_recursive_absolute(dir)
+	_hud.hide_day_card()
+	if OS.get_cmdline_user_args().has("--capture-loss"):
+		await _run_loss_capture(dir)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--art-test") or OS.get_cmdline_args().has("--art-test"):
 		await _run_art_test(dir)
 		get_tree().quit()
@@ -474,6 +505,10 @@ func _run_capture(dir: String) -> void:
 	await _show(dir, "15-ghost-back-in-hall", "09:41", _navigator.room_id, _navigator.uv)
 	# Stage 5c: the family walking (next morning), half a game minute after each room change;
 	# sight zones on, so they show sight following the walk.
+	# Stage 6: the tour reaches day 3 here; the dawn day card.
+	_keep_day_card = true
+	await _show(dir, "26-day-card-dawn", "06:00", "hall", Vector2(0.5, 0.75))
+	_keep_day_card = false
 	await _show(dir, "16-family-down-the-stairs", "07:04", "hall", Vector2(0.95, 0.95), "06:58", 0.5)
 	await _show(dir, "17-family-to-the-table", "07:05", "dining_room", Vector2(0.95, 0.95), "07:04", 0.5)
 	await _show(dir, "18-mother-into-the-kitchen", "08:01", "kitchen", Vector2(0.05, 0.95), "07:58", 1.0)
@@ -507,7 +542,32 @@ func _run_capture(dir: String) -> void:
 	_hud._note.visible = false
 	_hud.toggle_journal(_journal_entries())
 	await _show(dir, "25-journal", "09:30", "living_room", Vector2(0.38, 0.36))
+	_hud.toggle_journal(_journal_entries())
+	_loot.close()
+	_hud.hide_loot_grid()
+	_stealth.unhide()
+	# Stage 6 (still day 3): the family-resolve bar low, then the win summary.
+	for routine: NpcRoutine in _sim.routines:
+		_sim.morale.set_morale(routine.schedule.npc_id, 30)
+	_hud.refresh()
+	_hud.set_family_hover(true)
+	await _show(dir, "27-family-resolve-low", "09:35", "hall", Vector2(0.5, 0.75))
+	_hud.set_family_hover(false)
+	for routine: NpcRoutine in _sim.routines:
+		_sim.morale.set_morale(routine.schedule.npc_id, 18)
+	_show_outcome_if_over()
+	await _show(dir, "28-win-summary", "09:36", "hall", Vector2(0.5, 0.75))
 	get_tree().quit()
+
+
+## Stage 6 capture: three days with a ghost that does nothing; the scenario ends lost at
+## midnight of day 3 and the summary is saved.
+func _run_loss_capture(dir: String) -> void:
+	await _show(dir, "29a-day-1-start", "06:00", "hall", Vector2(0.5, 0.75))
+	while not _sim.is_over():
+		_sim.advance(1.0)
+	_show_outcome_if_over()
+	await _show(dir, "29-loss-summary", "00:00", "hall", Vector2(0.5, 0.75))
 
 
 ## Art test capture (2026-11-15): the living room at night, cozy (lamp lit, window shut,
@@ -572,6 +632,8 @@ func _show(dir: String, shot_name: String, time_text: String, room_id: String, a
 		if extra >= 0.0 or _sim.clock.minute_of_day() == target:
 			extra = maxf(extra, 0.0) + minutes
 	_navigator.place(room_id, at)
+	if not _keep_day_card:
+		_hud.hide_day_card()
 	_stage.settle_mood()
 	_update_view()
 	for i: int in 12:

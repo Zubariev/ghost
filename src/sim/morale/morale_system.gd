@@ -103,6 +103,11 @@ func family_average() -> float:
 	return float(total) / _morale.size()
 
 
+## The family average at or below which the family leaves.
+func leave_threshold() -> int:
+	return int(_rules.get("family_leaves_at_average", _rules.get("broken_at", 10)))
+
+
 func is_broken(npc_id: String) -> bool:
 	return _broken.get(npc_id, false)
 
@@ -259,7 +264,7 @@ func _set_value(npc_id: String, value: int, reason: String) -> void:
 func _check_win() -> void:
 	if not outcome.is_empty() or _morale.is_empty():
 		return
-	if family_average() > float(_rules.get("family_leaves_at_average", _rules.get("broken_at", 10))):
+	if family_average() > float(leave_threshold()):
 		return
 	outcome = OUTCOME_WON
 	family_left.emit(_total)

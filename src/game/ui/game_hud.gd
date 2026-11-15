@@ -5,12 +5,19 @@
 ## action cannot be afforded, and pulses red while energy is low.
 ## Loot (2026-11-15): the searched spot's grid (click a slot to take it), the inventory line
 ## under the energy bar, a lore note when one is found, and the journal of finds (J).
+## Stage 6 (Demo Spec §10.4): the family-resolve bar (the family average, with a mark at the
+## leaving threshold; the number while the mouse is over it; it flashes when it drops), the
+## day card at each dawn, and the end summary (outcome, when, the ghost's stats, key events,
+## Play again / To title).
 ## All text goes through tr() (assets/i18n/strings.csv). Reads the simulation; never changes it.
 class_name GameHud
 extends CanvasLayer
 
 ## A loot grid slot was clicked.
 signal slot_clicked(index: int)
+## The end summary's buttons.
+signal restart_requested()
+signal title_requested()
 
 const LOG_LINES: int = 3
 const SLOT_SIZE := Vector2(52, 52)
@@ -18,6 +25,11 @@ const ENERGY_BAR_SIZE := Vector2(232, 16)
 const ENERGY_FLASH_SECONDS: float = 1.2
 const ENERGY_COLOR := Color(0.62, 0.86, 1.0)
 const ENERGY_LOW_COLOR := Color(0.95, 0.42, 0.36)
+const FAMILY_BAR_SIZE := Vector2(300, 18)
+const FAMILY_COLOR := Color(0.85, 0.72, 0.5)
+const DAY_CARD_SECONDS: float = 3.5
+const DAY_CARD_FADE_SECONDS: float = 1.0
+const SUMMARY_KEY_EVENTS: int = 8
 const NPC_COLORS: Dictionary = {
 	"father": Color("6fa8dc"), "mother": Color("93c47d"), "grandma": Color("c27ba0"),
 	"grandpa": Color("d5a66a"), "son": Color("e06666"), "daughter": Color("f1c232"),
@@ -53,6 +65,15 @@ var _chips: Dictionary[String, Label] = {}
 var _map: Control
 var _banner: PanelContainer
 var _banner_text: Label
+var _family_bar: Control
+var _family_hover: bool = false
+var _family_last: float = -1.0
+## Seconds left of the "resolve dropped" flash.
+var _family_flash: float = 0.0
+var _day_card: PanelContainer
+var _day_card_title: Label
+var _day_card_sub: Label
+var _day_card_left: float = 0.0
 
 
 func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
@@ -134,10 +155,38 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_map.size = Vector2(236, 120)
 	_map.draw.connect(_draw_map)
 	add_child(_map)
-	_banner = _panel(Vector2(240, 150), Vector2(800, 0))
-	_banner_text = _label(_banner, 18, Color(1, 0.95, 0.85))
+	var family := _panel(Vector2(14, 612), Vector2(0, 0))
+	_family_bar = Control.new()
+	_family_bar.custom_minimum_size = FAMILY_BAR_SIZE
+	_family_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+	_family_bar.mouse_entered.connect(func() -> void: _family_hover = true)
+	_family_bar.mouse_exited.connect(func() -> void: _family_hover = false)
+	_family_bar.draw.connect(_draw_family)
+	family.add_child(_family_bar)
+	family.mouse_filter = Control.MOUSE_FILTER_PASS
+	_day_card = _panel(Vector2(390, 230), Vector2(500, 0))
+	_day_card_title = _label(_day_card, 44, Palette.SB_CANDLELIGHT)
+	_day_card_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_day_card_sub = _label(_day_card, 17, Palette.SB_CREAM)
+	_day_card_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_day_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_day_card.visible = false
+	_banner = _panel(Vector2(240, 90), Vector2(800, 0))
+	_banner_text = _label(_banner, 17, Color(1, 0.95, 0.85))
 	_banner_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_banner_text.custom_minimum_size = Vector2(780, 0)
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override(&"separation", 16)
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	_banner.get_child(0).add_child(buttons)
+	for entry: Array in [[tr("BTN_RESTART"), restart_requested], [tr("BTN_TITLE"), title_requested]]:
+		var button := Button.new()
+		button.text = String(entry[0])
+		button.add_theme_font_size_override(&"font_size", 18)
+		button.custom_minimum_size = Vector2(200, 42)
+		var requested: Signal = entry[1]
+		button.pressed.connect(func() -> void: requested.emit())
+		buttons.add_child(button)
 	_banner.visible = false
 
 
@@ -154,6 +203,11 @@ func refresh() -> void:
 		var bar: String = "█".repeat(value / 10) + "·".repeat(10 - value / 10)
 		_chips[npc_id].text = "%s%s\n%3d %s" % [routine.schedule.display_name, " ✕" if routine.is_broken() else "", value, bar]
 	_map.queue_redraw()
+	var average: float = _sim.morale.family_average()
+	if _family_last >= 0.0 and average < _family_last:
+		_family_flash = ENERGY_FLASH_SECONDS
+	_family_last = average
+	_family_bar.queue_redraw()
 
 
 ## Shows [param energy] as the bar (stage 5d).
@@ -250,6 +304,56 @@ func tick(delta: float) -> void:
 	_lost_flash = maxf(0.0, _lost_flash - delta)
 	_short_flash = maxf(0.0, _short_flash - delta)
 	_energy_bar.queue_redraw()
+	if _family_flash > 0.0:
+		_family_flash = maxf(0.0, _family_flash - delta)
+		_family_bar.queue_redraw()
+	if _day_card_left > 0.0:
+		_day_card_left = maxf(0.0, _day_card_left - delta)
+		_day_card.modulate.a = clampf(_day_card_left / DAY_CARD_FADE_SECONDS, 0.0, 1.0)
+		_day_card.visible = _day_card_left > 0.0
+
+
+## The day card (stage 6): "Day N" and how the family is holding up; fades by itself.
+func show_day_card(day: int) -> void:
+	_day_card_title.text = tr("DAY_N") % day
+	_day_card_sub.text = tr("DAY_CARD_SUB") % [roundi(_sim.morale.family_average()), _sim.morale.leave_threshold()]
+	_day_card.reset_size()
+	_day_card.position = Vector2(640 - _day_card.size.x * 0.5, 230)
+	_day_card.modulate.a = 1.0
+	_day_card.visible = true
+	_day_card_left = DAY_CARD_SECONDS
+
+
+func hide_day_card() -> void:
+	_day_card_left = 0.0
+	_day_card.visible = false
+
+
+## Shows the number on the family bar as if hovered (capture only).
+func set_family_hover(on: bool) -> void:
+	_family_hover = on
+	_family_bar.queue_redraw()
+
+
+func _draw_family() -> void:
+	var font: Font = ThemeDB.fallback_font
+	var label_width: float = 118.0
+	var bar := Rect2(Vector2(label_width, 3), Vector2(FAMILY_BAR_SIZE.x - label_width, FAMILY_BAR_SIZE.y - 6))
+	var max_value: float = 100.0
+	var average: float = _sim.morale.family_average()
+	var threshold: float = float(_sim.morale.leave_threshold())
+	var color: Color = FAMILY_COLOR
+	if _family_flash > 0.0:
+		color = color.lerp(ENERGY_LOW_COLOR, _family_flash / ENERGY_FLASH_SECONDS)
+	_family_bar.draw_string(font, Vector2(0, 14), tr("FAMILY_RESOLVE"), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.95, 0.88, 0.75))
+	_family_bar.draw_rect(bar, Color(0.15, 0.15, 0.2))
+	_family_bar.draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(average / max_value, 0.0, 1.0), bar.size.y)), color)
+	var mark_x: float = bar.position.x + bar.size.x * threshold / max_value
+	_family_bar.draw_line(Vector2(mark_x, 0), Vector2(mark_x, FAMILY_BAR_SIZE.y), ENERGY_LOW_COLOR, 2.0)
+	_family_bar.draw_rect(bar, Color(0.6, 0.58, 0.5), false, 1.5)
+	if _family_hover:
+		_family_bar.draw_string(font, Vector2(mark_x + 6, 13), tr("FAMILY_RESOLVE_VALUE") % [roundi(average), int(threshold)],
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.05, 0.05, 0.1))
 
 
 func _draw_energy() -> void:
@@ -297,11 +401,31 @@ func add_log(text: String) -> void:
 	_log.text = "\n".join(_log_lines)
 
 
-func show_outcome(won: bool, key_events: Array[String]) -> void:
+## The end summary (stage 6): outcome, when it ended, the family's final resolve, what the
+## ghost did ([param stats]) and the last key events; Play again / To title below.
+func show_outcome(won: bool, key_events: Array[String], stats: GhostStats) -> void:
+	hide_day_card()
+	var clock: GameClock = _sim.clock
 	var title: String = tr("WIN_TITLE") if won else tr("LOSS_TITLE") % _sim.morale.scenario_days()
-	var lines: Array[String] = [title, "", tr("KEY_EVENTS")]
-	lines.append_array(key_events.slice(maxi(0, key_events.size() - 10)))
+	var day: int = mini(clock.day_number(), _sim.morale.scenario_days())
+	var time_text: String = GameClock.format_time(clock.minute_of_day()) if won else "24:00"
+	var lines: Array[String] = [title, tr("SUMMARY_WHEN") % [tr("DAY_N") % day, time_text],
+		tr("SUMMARY_FAMILY") % [roundi(_sim.morale.family_average()), _sim.morale.leave_threshold()], ""]
+	lines.append(tr("SUMMARY_GHOST"))
+	var kinds: Array[String] = []
+	for key: String in stats.action_keys():
+		kinds.append(tr("SUMMARY_ACTION_LINE") % [tr("SUMMARY_KIND_" + key), stats.actions_of(key)])
+	lines.append(tr("SUMMARY_ACTIONS") % stats.total_actions() + ("  (" + " · ".join(kinds) + ")" if not kinds.is_empty() else ""))
+	lines.append(tr("SUMMARY_SEEN") % [stats.noticed, stats.caught])
+	lines.append(tr("SUMMARY_FINDS") % [stats.items_found, stats.notes_found])
+	lines.append(tr("SUMMARY_ENERGY") % [roundi(stats.energy_spent), roundi(stats.energy_lost)])
+	lines.append("")
+	lines.append(tr("KEY_EVENTS"))
+	if key_events.is_empty():
+		lines.append(tr("KEY_EVENTS_NONE"))
+	lines.append_array(key_events.slice(maxi(0, key_events.size() - SUMMARY_KEY_EVENTS)))
 	_banner_text.text = "\n".join(lines)
+	_banner.reset_size()
 	_banner.visible = true
 
 
