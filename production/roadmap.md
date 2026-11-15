@@ -19,7 +19,7 @@ Repository: https://github.com/Zubariev/ghost (branch `main`).
 | 5c. Family movement | Walks round furniture, through matching doors and stairs; sight from walking position | `43a2718`, `2fe1ba3` | Demo Spec §8.9; `stage5c-movement` |
 | 5d. Ghost energy | Refill (hidden/dark/cold), action costs, timed harm with ring, detection penalties, HUD bar | `35907b8`, `9f14c1e`, `66818a7` | Demo Spec §8.10; `stage5d-energy` |
 | 5e. Floor keys | W/S + Space; pause on Esc | `a4a9c6c` | Demo Spec §8.7 |
-| Art test | Whimsical Gothic Storybook living room (cozy / haunted), painted-sprite path | `6bfc25b`, `5f1a966`, `d7e26aa` | `design/art-direction.md`; `art-test-living-room` |
+| Art test | Whimsical Gothic Storybook living room (cozy / haunted), painted-sprite path | `6bfc25b`, `5f1a966`, `d7e26aa` | `docs/art/ART_DIRECTION.md`; `art-test-living-room` |
 
 Automated tests: **189**. Run: see `tests/README.md`.
 
@@ -77,15 +77,20 @@ halved; late food makes a poor meal; no natural decay. Re-probe: casual ghost ta
 
 Art: the living room style is approved (2026-11-15). Paused by choice for gameplay; later art
 steps: redraw the six family members (still recoloured placeholder figures), then roll the style
-out to the other ten rooms (`design/art-direction.md`).
+out to the other ten rooms (`docs/art/ART_DIRECTION.md`).
 
 Provisional values to revisit with playtests: morale penalties and bonuses (Demo Spec §7.6 —
 an undisturbed day ends with everyone at 100), sight zone sizes, search time, anxiety values,
 energy amounts (§8.8), cooking and repair durations, ghost speed.
 
-### 5. Stage 6 — vertical slice
+### 5. Stage 6 — vertical slice — *built and captured 2026-11-15*
 The full 3-day scenario as one integrated demo: start, the three days, the end summary and a
-restart (Demo Spec §10). Retained screenshots for every screen.
+restart (Demo Spec §10, §10.4). Built: start screen (main scene), family-resolve bar, day card
+at dawn, end summary with the ghost's stats (GhostStats), Play again / To title; full-scenario
+integration test. Capture: `bash tools/play.sh capture` → `production/qa/evidence/stage6-slice/`
+(00 title, 01–28 tour incl. 26 day card, 27 resolve bar, 28 win summary; 29a/29 loss run).
+Open: a cook whose cooking overruns their own meal skips it without the missed-meal penalty.
+Polish: the resolve bar's hover number is dark on the dark empty part of the bar (shot 27).
 
 ### Later (Demo Spec §13 stage 7 and §14 P2)
 Polish and balance, sound, animation, wider object set, family adaptation, save/load, more
