@@ -80,8 +80,8 @@ the back wall (depth 1); paint at 2× (SPRITE_SPEC §2). Cut out with `tools/spr
 
 ## 7. Shared kinds and open points
 
-- **Shared kinds:** `double_bed`, `floor_lamp`, `rug`, `wardrobe`, `window` also appear in other rooms. A painted image is looked up by kind (or `kind:variant`), not by room (`PropVisuals`), so one painting would show in every room. A look of its own for this room needs a room-scoped key or a `variant` — decision OPEN (`ENVIRONMENT_GUIDELINES.md` §8).
-- The grandparents' bed and wardrobe are the same kinds: one painting each, or variants per bedroom.
+- **Shared kinds:** `double_bed`, `floor_lamp`, `rug`, `wardrobe`, `window` also appear in other rooms. Give this room its own painting with a room-scoped key in `visual_style.json` → `sprites`: `"parents_bedroom/<kind>"` (APPROVED 2026-11-15, `ENVIRONMENT_GUIDELINES.md` §8); without one, the house-wide `"<kind>"` image (if any) is used.
+- The grandparents' bed and wardrobe are the same kinds: each bedroom's own painting goes under `parents_bedroom/<kind>` and `grandparents_bedroom/<kind>`.
 
 ## 8. Review (when built)
 

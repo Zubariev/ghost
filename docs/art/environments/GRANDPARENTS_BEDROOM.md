@@ -74,7 +74,7 @@ the back wall (depth 1); paint at 2× (SPRITE_SPEC §2). Cut out with `tools/spr
 | Kind | Images | Height guide | Subject (after the preamble) |
 |---|---|---|---|
 | window | Wall piece. Two images: `closed`, `open` (sash swung in, curtains drawn aside). Frost, draught and curtain sway are code. | ~150 px | a small window with lace curtains |
-| double_bed | One image, made bed; a sleeping person is drawn over it by the code. | ~95 px | a high iron-and-brass double bed with a lace bedspread (variant of the shared kind) |
+| double_bed | One image, made bed; a sleeping person is drawn over it by the code. | ~95 px | a high iron-and-brass double bed with a lace bedspread (`grandparents_bedroom/double_bed`) |
 | wardrobe | One image (doors shut). Blocks sight. | ~185 px | a heavy dark wardrobe with a mirror door |
 | rocking_chair | One image; the rocking is not animated. | ~90 px | a wooden rocking chair with a knitted blanket and knitting |
 | floor_lamp | One image, shade unlit and neutral; the lit glow is code (`effects`), so lit and out share it. | ~170 px | shared brass floor lamp |
@@ -82,7 +82,7 @@ the back wall (depth 1); paint at 2× (SPRITE_SPEC §2). Cut out with `tools/spr
 
 ## 7. Shared kinds and open points
 
-- **Shared kinds:** `double_bed`, `floor_lamp`, `wardrobe`, `window` also appear in other rooms. A painted image is looked up by kind (or `kind:variant`), not by room (`PropVisuals`), so one painting would show in every room. A look of its own for this room needs a room-scoped key or a `variant` — decision OPEN (`ENVIRONMENT_GUIDELINES.md` §8).
+- **Shared kinds:** `double_bed`, `floor_lamp`, `wardrobe`, `window` also appear in other rooms. Give this room its own painting with a room-scoped key in `visual_style.json` → `sprites`: `"grandparents_bedroom/<kind>"` (APPROVED 2026-11-15, `ENVIRONMENT_GUIDELINES.md` §8); without one, the house-wide `"<kind>"` image (if any) is used.
 - The monocle stays code-drawn on the dresser so it can disappear when taken (pickup).
 
 ## 8. Review (when built)

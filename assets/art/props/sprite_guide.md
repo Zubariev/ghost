@@ -22,7 +22,9 @@ Any prop can be swapped for a painted image without touching gameplay.
    ```
 
    - Key: the furniture `kind` from `assets/data/house/furniture.json`, or `kind:variant` for one
-     variant only (`"armchair:olive"`, `"painting:portrait"`).
+     variant only (`"armchair:olive"`, `"painting:portrait"`). Prefix a room id to paint a shared
+     kind for one room only: `"kitchen/window"`, `"library/bookshelf"` — it wins in that room, and
+     the plain `"window"` image (if any) serves the other rooms.
    - `states`: one image per visual state. Lamps `lit` / `out`, windows `closed` / `open`,
      fireplace `burning` / `out`, the stove `working` / `broken`. A missing state uses `sprite`.
    - `anchor`: the point of the image (0..1 of its width and height) that sits on the piece's floor

@@ -73,15 +73,15 @@ the back wall (depth 1); paint at 2× (SPRITE_SPEC §2). Cut out with `tools/spr
 
 | Kind | Images | Height guide | Subject (after the preamble) |
 |---|---|---|---|
-| bookshelf | One image; reuse the living room's bookshelf kind or a library variant (see §7). | ~180 px | a tall dark-wood bookshelf crammed with books, a few ornaments; library variant: one shelf with rolled maps |
+| bookshelf | One image; a room can have its own (`<room>/bookshelf`, see §7). | ~180 px | a tall dark-wood bookshelf crammed with books, a few ornaments; library's own (`library/bookshelf`): one shelf with rolled maps |
 | reading_chair | One image (wingback reading chair). | ~115 px | a worn brown leather wingback reading chair with a cushion |
 | rug | Flat piece laid in the floor's perspective — keep code-drawn (perspective rug) or paint already projected (like the shell surfaces, LIVING_ROOM §8). | — | a round rug, faded blue with a gold border |
 | floor_lamp | One image, shade unlit and neutral; the lit glow is code (`effects`), so lit and out share it. | ~170 px | shared brass floor lamp (here as the reading lamp) |
 
 ## 7. Shared kinds and open points
 
-- **Shared kinds:** `bookshelf`, `floor_lamp`, `rug` also appear in other rooms. A painted image is looked up by kind (or `kind:variant`), not by room (`PropVisuals`), so one painting would show in every room. A look of its own for this room needs a room-scoped key or a `variant` — decision OPEN (`ENVIRONMENT_GUIDELINES.md` §8).
-- The living room's bookshelf and the library's are the same kind (`bookshelf`): one painting for both, or a `library` variant.
+- **Shared kinds:** `bookshelf`, `floor_lamp`, `rug` also appear in other rooms. Give this room its own painting with a room-scoped key in `visual_style.json` → `sprites`: `"library/<kind>"` (APPROVED 2026-11-15, `ENVIRONMENT_GUIDELINES.md` §8); without one, the house-wide `"<kind>"` image (if any) is used.
+- The living room's bookshelf and the library's are the same kind: the library's own painting goes under `library/bookshelf`.
 
 ## 8. Review (when built)
 

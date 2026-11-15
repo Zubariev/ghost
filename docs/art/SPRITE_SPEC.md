@@ -7,7 +7,9 @@ How-to steps: `assets/art/props/sprite_guide.md`. Rules: `ART_DIRECTION.md`, `VI
 ## 1. What the mechanism does (as built — APPROVED)
 
 - `PropVisuals` (`src/game/art/prop_visuals.gd`) reads `assets/art/visual_style.json` →
-  `sprites`. A key is a furniture `kind` (`"fireplace"`) or `kind:variant` (`"armchair:olive"`).
+  `sprites`. A key is a furniture `kind` (`"fireplace"`) or `kind:variant` (`"armchair:olive"`),
+  optionally scoped to one room (`"kitchen/window"`, `"library/bookshelf"`; 2026-11-15). The most
+  specific key wins: `room/kind:variant`, `room/kind`, `kind:variant`, `kind`.
 - Per entry: `sprite` (default image), `states` (one image per visual state), `anchor` (the point
   of the image, 0..1 of its size, that sits on the piece's floor position; default bottom centre
   `[0.5, 1.0]`), `scale` (image scale at depth 1.0).

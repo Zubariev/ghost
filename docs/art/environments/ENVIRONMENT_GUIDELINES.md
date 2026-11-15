@@ -149,12 +149,12 @@ and sizes cleanly; anything that animates or changes with state is a separate la
 (`effects.states`) or stays code; a white background cuts out cleanly with
 `tools/sprite_cutout.gd` if the object has an inked outline.
 
-**Shared kinds — OPEN.** Images are looked up by furniture kind (or `kind:variant`), not by room.
-Kinds in several rooms: `floor_lamp` (all eleven), `window` (six), `rug` (six), `wardrobe` and
-`double_bed` (two bedrooms), `stairs` (hall up, corridor down), `chest` (hall, corridor),
-`bookshelf` (living room, library), `chair`. Options:
-1. One painting per kind for the whole house (simplest; a brass floor lamp everywhere).
-2. A `variant` per piece in `furniture.json` where a room needs its own look (an asset reference
-   in gameplay data — needs approval; the code already supports `kind:variant`).
-3. Room-scoped keys in `visual_style.json` (`"kitchen/window"`), a small `PropVisuals` change.
+**Shared kinds — APPROVED: room-scoped keys** (user decision 2026-11-15). Kinds in several rooms:
+`floor_lamp` (all eleven), `window` (six), `rug` (six), `wardrobe` and `double_bed` (two
+bedrooms), `stairs` (hall up, corridor down), `chest` (hall, corridor), `bookshelf` (living room,
+library), `chair`. A room gets its own painting with a key `"<room id>/<kind>"` (or
+`"<room id>/<kind>:<variant>"`) in `visual_style.json` → `sprites`; `PropVisuals` looks up
+`room/kind:variant`, `room/kind`, `kind:variant`, then `kind`, so a house-wide `"<kind>"` image
+still serves every room without its own. `furniture.json` is not touched. A test checks that a
+room-scoped key names a real room that has that kind.
 

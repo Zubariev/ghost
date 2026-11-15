@@ -4,7 +4,8 @@
 ##
 ## [br]- [code]storybook_rooms[/code]: rooms drawn in the storybook style (the rest keep the
 ##   original placeholder look until they are restyled).
-## [br]- [code]sprites[/code]: per furniture kind (or [code]kind:variant[/code]), a painted
+## [br]- [code]sprites[/code]: per furniture kind (or [code]kind:variant[/code], or room-scoped
+##   [code]room/kind[/code] / [code]room/kind:variant[/code], which win in that room), a painted
 ##   image to draw instead of the code-drawn shape, optionally one per visual state, with its
 ##   anchor (the point that sits on the piece's floor position) and scale. An empty or
 ##   missing file falls back to the code drawing.
@@ -59,8 +60,8 @@ func wall_portraits(room_id: String) -> Array:
 
 ## The image path for a prop: the state's own image if given, else the prop's image; "" when
 ## it is drawn in code. [param variant] picks "kind:variant" entries first.
-func sprite_path(kind: String, variant: String, state: StringName) -> String:
-	var entry: Dictionary = _entry(kind, variant)
+func sprite_path(kind: String, variant: String, state: StringName, room: String = "") -> String:
+	var entry: Dictionary = _entry(kind, variant, room)
 	if entry.is_empty():
 		return ""
 	var by_state: Dictionary = entry.get("states", {})
@@ -70,8 +71,8 @@ func sprite_path(kind: String, variant: String, state: StringName) -> String:
 
 ## The painted image for a prop, or null when it is drawn in code (no entry, or the file is
 ## missing).
-func texture_for(kind: String, variant: String, state: StringName) -> Texture2D:
-	var path: String = sprite_path(kind, variant, state)
+func texture_for(kind: String, variant: String, state: StringName, room: String = "") -> Texture2D:
+	var path: String = sprite_path(kind, variant, state, room)
 	if path.is_empty():
 		return null
 	if not _cache.has(path):
@@ -81,28 +82,28 @@ func texture_for(kind: String, variant: String, state: StringName) -> Texture2D:
 
 ## Anchor of the prop's image (0..1 of its size) that sits on the floor position; default
 ## bottom centre.
-func anchor(kind: String, variant: String) -> Vector2:
-	var a: Array = _entry(kind, variant).get("anchor", [0.5, 1.0])
+func anchor(kind: String, variant: String, room: String = "") -> Vector2:
+	var a: Array = _entry(kind, variant, room).get("anchor", [0.5, 1.0])
 	return Vector2(float(a[0]), float(a[1]))
 
 
 ## Where the code-drawn animation of a painted prop sits (art Phase 3): the offset in screen
 ## px at depth 1 from the prop's floor point; e.g. the fire inside a painted fireplace's firebox.
-func effects_offset(kind: String, variant: String) -> Vector2:
-	var o: Array = (_entry(kind, variant).get("effects", {}) as Dictionary).get("offset", [0, 0])
+func effects_offset(kind: String, variant: String, room: String = "") -> Vector2:
+	var o: Array = (_entry(kind, variant, room).get("effects", {}) as Dictionary).get("offset", [0, 0])
 	return Vector2(float(o[0]), float(o[1]))
 
 
 ## Scale of the code-drawn animation of a painted prop (1 = as in the code drawing).
-func effects_scale(kind: String, variant: String) -> float:
-	return float((_entry(kind, variant).get("effects", {}) as Dictionary).get("scale", 1.0))
+func effects_scale(kind: String, variant: String, room: String = "") -> float:
+	return float((_entry(kind, variant, room).get("effects", {}) as Dictionary).get("scale", 1.0))
 
 
 ## The painted layer drawn at the effects point while the prop is in [param state] (e.g. the
 ## burning logs and flames of a painted fireplace), replacing the code-drawn shapes of that
 ## state: {texture, anchor, scale, flicker}; empty when there is none or its file is missing.
-func effect_layer(kind: String, variant: String, state: StringName) -> Dictionary:
-	var effects: Dictionary = _entry(kind, variant).get("effects", {})
+func effect_layer(kind: String, variant: String, state: StringName, room: String = "") -> Dictionary:
+	var effects: Dictionary = _entry(kind, variant, room).get("effects", {})
 	var layer: Dictionary = (effects.get("states", {}) as Dictionary).get(String(state), {})
 	var path: String = String(layer.get("sprite", ""))
 	if path.is_empty():
@@ -118,28 +119,41 @@ func effect_layer(kind: String, variant: String, state: StringName) -> Dictionar
 
 
 ## Image scale at the front of the room (depth scaling is applied on top).
-func scale(kind: String, variant: String) -> float:
-	return float(_entry(kind, variant).get("scale", 1.0))
+func scale(kind: String, variant: String, room: String = "") -> float:
+	return float(_entry(kind, variant, room).get("scale", 1.0))
 
 
 ## Draws the painted image of a prop with its foot at [param foot] and depth scale
 ## [param depth]; [param highlighted] adds the interaction halo. False when there is no image.
-func draw_sprite(canvas: CanvasItem, kind: String, variant: String, state: StringName, foot: Vector2, depth: float, highlighted: bool) -> bool:
-	var tex: Texture2D = texture_for(kind, variant, state)
+func draw_sprite(canvas: CanvasItem, kind: String, variant: String, state: StringName, foot: Vector2, depth: float, highlighted: bool,
+		room: String = "") -> bool:
+	var tex: Texture2D = texture_for(kind, variant, state, room)
 	if tex == null:
 		return false
-	var size: Vector2 = tex.get_size() * scale(kind, variant) * depth
-	var rect := Rect2(foot - anchor(kind, variant) * size, size)
+	var size: Vector2 = tex.get_size() * scale(kind, variant, room) * depth
+	var rect := Rect2(foot - anchor(kind, variant, room) * size, size)
 	if highlighted:
 		Ink.glow(canvas, rect.get_center(), rect.size * 0.62, Color(Palette.SB_HIGHLIGHT, 0.5))
 	canvas.draw_texture_rect(tex, rect, false)
 	return true
 
 
-func _entry(kind: String, variant: String) -> Dictionary:
-	if not variant.is_empty() and _sprites.has(kind + ":" + variant):
-		return _sprites[kind + ":" + variant]
-	return _sprites.get(kind, {})
+## The most specific entry: "room/kind:variant", "room/kind", "kind:variant", then "kind"
+## (room-scoped keys, user decision 2026-11-15: a shared kind such as a window or floor lamp can
+## look different in each room).
+func _entry(kind: String, variant: String, room: String = "") -> Dictionary:
+	var keys: Array[String] = []
+	if not room.is_empty():
+		if not variant.is_empty():
+			keys.append(room + "/" + kind + ":" + variant)
+		keys.append(room + "/" + kind)
+	if not variant.is_empty():
+		keys.append(kind + ":" + variant)
+	keys.append(kind)
+	for key: String in keys:
+		if _sprites.has(key):
+			return _sprites[key]
+	return {}
 
 
 static func _load_texture(path: String) -> Texture2D:

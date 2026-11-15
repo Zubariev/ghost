@@ -85,7 +85,7 @@ the back wall (depth 1); paint at 2× (SPRITE_SPEC §2). Cut out with `tools/spr
 
 ## 7. Shared kinds and open points
 
-- **Shared kinds:** `chest`, `floor_lamp`, `rug`, `stairs` also appear in other rooms. A painted image is looked up by kind (or `kind:variant`), not by room (`PropVisuals`), so one painting would show in every room. A look of its own for this room needs a room-scoped key or a `variant` — decision OPEN (`ENVIRONMENT_GUIDELINES.md` §8).
+- **Shared kinds:** `chest`, `floor_lamp`, `rug`, `stairs` also appear in other rooms. Give this room its own painting with a room-scoped key in `visual_style.json` → `sprites`: `"hall/<kind>"` (APPROVED 2026-11-15, `ENVIRONMENT_GUIDELINES.md` §8); without one, the house-wide `"<kind>"` image (if any) is used.
 - The front door sits at the open front edge (v 1.0), where the room has no wall: how to show it (a threshold mat, a door frame cut by the screen edge) is OPEN; foreground occluders are deferred.
 
 ## 8. Review (when built)

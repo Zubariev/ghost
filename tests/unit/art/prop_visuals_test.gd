@@ -116,3 +116,20 @@ func test_a_missing_effects_layer_file_falls_back_to_the_code_shapes() -> void:
 	var visuals := PropVisuals.new({"sprites": {"fireplace": {"sprite": "res://nowhere/fp.png",
 		"effects": {"states": {"burning": {"sprite": "res://nowhere/flames.png"}}}}}})
 	assert_dict(visuals.effect_layer("fireplace", "", &"burning")).is_empty()
+
+
+func test_a_room_scoped_sprite_wins_in_its_room_only() -> void:
+	# User decision 2026-11-15: shared kinds (window, floor lamp…) can look different per room.
+	var visuals := PropVisuals.new({"sprites": {
+		"window": {"sprite": "res://fake/window.png"},
+		"kitchen/window": {"sprite": "res://fake/kitchen_window.png", "scale": 0.4},
+		"armchair:olive": {"sprite": "res://fake/olive.png"},
+		"study/armchair:olive": {"sprite": "res://fake/study_olive.png"},
+	}}, func(path: String) -> Texture2D: return null)
+	assert_str(visuals.sprite_path("window", "", &"closed", "kitchen")).is_equal("res://fake/kitchen_window.png")
+	assert_float(visuals.scale("window", "", "kitchen")).is_equal(0.4)
+	assert_str(visuals.sprite_path("window", "", &"closed", "hall")).is_equal("res://fake/window.png")
+	assert_str(visuals.sprite_path("window", "", &"closed")).is_equal("res://fake/window.png")
+	assert_str(visuals.sprite_path("armchair", "olive", &"", "study")).is_equal("res://fake/study_olive.png")
+	assert_str(visuals.sprite_path("armchair", "olive", &"", "hall")).is_equal("res://fake/olive.png")
+	assert_str(visuals.sprite_path("sofa", "", &"", "kitchen")).is_equal("")

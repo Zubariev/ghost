@@ -75,15 +75,15 @@ the back wall (depth 1); paint at 2× (SPRITE_SPEC §2). Cut out with `tools/spr
 
 | Kind | Images | Height guide | Subject (after the preamble) |
 |---|---|---|---|
-| stairs | Back-wall piece rising to the ceiling; one image. It is the way between floors and a large hiding spot. | ~170 px | the top of a dark oak staircase going down, with a banister and newel post (variant of the hall stairs) |
+| stairs | Back-wall piece rising to the ceiling; one image. It is the way between floors and a large hiding spot. | ~170 px | the top of a dark oak staircase going down, with a banister and newel post (`upper_corridor/stairs`) |
 | rug | Flat piece laid in the floor's perspective — keep code-drawn (perspective rug) or paint already projected (like the shell surfaces, LIVING_ROOM §8). | — | a long runner, faded red with a cream border |
 | chest | One image (lid shut). | ~55 px | an old painted blanket chest |
 | floor_lamp | One image, shade unlit and neutral; the lit glow is code (`effects`), so lit and out share it. | ~170 px | shared brass floor lamp |
 
 ## 7. Shared kinds and open points
 
-- **Shared kinds:** `chest`, `floor_lamp`, `rug`, `stairs` also appear in other rooms. A painted image is looked up by kind (or `kind:variant`), not by room (`PropVisuals`), so one painting would show in every room. A look of its own for this room needs a room-scoped key or a `variant` — decision OPEN (`ENVIRONMENT_GUIDELINES.md` §8).
-- The hall stairs (going up) and the corridor stairs (going down) are the same kind: two paintings need a variant.
+- **Shared kinds:** `chest`, `floor_lamp`, `rug`, `stairs` also appear in other rooms. Give this room its own painting with a room-scoped key in `visual_style.json` → `sprites`: `"upper_corridor/<kind>"` (APPROVED 2026-11-15, `ENVIRONMENT_GUIDELINES.md` §8); without one, the house-wide `"<kind>"` image (if any) is used.
+- The hall stairs (going up) and the corridor stairs (going down) are the same kind: paint each under `hall/stairs` and `upper_corridor/stairs`.
 
 ## 8. Review (when built)
 

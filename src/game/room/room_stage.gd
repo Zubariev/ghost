@@ -256,11 +256,12 @@ func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted:
 	if visuals != null:
 		var wall: bool = StorybookArt.is_wall(kind)
 		var depth: float = 1.0 if wall else RoomGeometry.scale_at(uv.y)
-		if visuals.draw_sprite(self, kind, variant, state, hearth, depth, highlighted):
+		var room: String = navigator.room_id
+		if visuals.draw_sprite(self, kind, variant, state, hearth, depth, highlighted, room):
 			painted = true
-			hearth += visuals.effects_offset(kind, variant) * depth
-			var layer: Dictionary = visuals.effect_layer(kind, variant, state)
-			StorybookArt.draw_effects(self, kind, state, hearth, depth * visuals.effects_scale(kind, variant), _time, layer.is_empty())
+			hearth += visuals.effects_offset(kind, variant, room) * depth
+			var layer: Dictionary = visuals.effect_layer(kind, variant, state, room)
+			StorybookArt.draw_effects(self, kind, state, hearth, depth * visuals.effects_scale(kind, variant, room), _time, layer.is_empty())
 			if not layer.is_empty():
 				_draw_effect_layer(layer, hearth, depth)
 	if not painted:

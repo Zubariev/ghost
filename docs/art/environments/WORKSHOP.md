@@ -76,12 +76,12 @@ the back wall (depth 1); paint at 2× (SPRITE_SPEC §2). Cut out with `tools/spr
 | tool_rack | Back-wall piece; one image (tools hanging on pegs). Blocks sight. | ~120 px | a back-wall rack of hanging hand tools: saws, hammers, chisels, a coil of rope |
 | workbench | One image (vice, planks, shavings). | ~90 px | a heavy wooden workbench with a vice, a plank, wood shavings and a tin of nails |
 | crate | One image (lid on). | ~55 px | a battered wooden crate with a lid and stencilled letters |
-| floor_lamp | One image, shade unlit and neutral; the lit glow is code (`effects`), so lit and out share it. | ~170 px | shared floor lamp, or a workshop variant (a metal work lamp) |
+| floor_lamp | One image, shade unlit and neutral; the lit glow is code (`effects`), so lit and out share it. | ~170 px | a metal work lamp with a conical shade (`workshop/floor_lamp`) |
 
 ## 7. Shared kinds and open points
 
-- **Shared kinds:** `floor_lamp`, `window` also appear in other rooms. A painted image is looked up by kind (or `kind:variant`), not by room (`PropVisuals`), so one painting would show in every room. A look of its own for this room needs a room-scoped key or a `variant` — decision OPEN (`ENVIRONMENT_GUIDELINES.md` §8).
-- A workshop lamp different from the house's brass lamps needs a variant (shared `floor_lamp` kind).
+- **Shared kinds:** `floor_lamp`, `window` also appear in other rooms. Give this room its own painting with a room-scoped key in `visual_style.json` → `sprites`: `"workshop/<kind>"` (APPROVED 2026-11-15, `ENVIRONMENT_GUIDELINES.md` §8); without one, the house-wide `"<kind>"` image (if any) is used.
+- The workshop's metal work lamp goes under `workshop/floor_lamp`; the other rooms keep the brass lamp.
 
 ## 8. Review (when built)
 

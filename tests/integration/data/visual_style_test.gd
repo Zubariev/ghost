@@ -219,8 +219,16 @@ func test_every_shipped_sprite_loads_and_wall_sprites_fit_the_back_wall() -> voi
 	var style: Dictionary = JsonData.read(PropVisuals.STYLE_PATH)
 	var visuals := PropVisuals.new(style)
 	for key: String in style.get("sprites", {}):
-		var kind: String = key.get_slice(":", 0)
-		var variant: String = key.get_slice(":", 1) if key.contains(":") else ""
+		# Room-scoped keys "room/kind[:variant]" (2026-11-15) name a real room holding that kind.
+		var room: String = key.get_slice("/", 0) if key.contains("/") else ""
+		var bare: String = key.get_slice("/", 1) if key.contains("/") else key
+		var kind: String = bare.get_slice(":", 0)
+		var variant: String = bare.get_slice(":", 1) if bare.contains(":") else ""
+		if not room.is_empty():
+			var furniture: Dictionary = JsonData.read(FURNITURE_PATH)["rooms"]
+			assert_bool(furniture.has(room)).override_failure_message(key + ": no room " + room).is_true()
+			var kinds: Array = (furniture.get(room, []) as Array).map(func(p: Dictionary) -> String: return String(p["kind"]))
+			assert_bool(kinds.has(kind)).override_failure_message(key + ": no " + kind + " in " + room).is_true()
 		var entry: Dictionary = style["sprites"][key]
 		var paths: Array = [String(entry.get("sprite", ""))] + (entry.get("states", {}) as Dictionary).values()
 		for layer: Dictionary in ((entry.get("effects", {}) as Dictionary).get("states", {}) as Dictionary).values():
@@ -228,10 +236,10 @@ func test_every_shipped_sprite_loads_and_wall_sprites_fit_the_back_wall() -> voi
 		for path: String in paths:
 			if not path.is_empty():
 				assert_bool(ResourceLoader.exists(path)).override_failure_message("missing sprite " + path).is_true()
-		var tex: Texture2D = visuals.texture_for(kind, variant, &"")
+		var tex: Texture2D = visuals.texture_for(kind, variant, &"", room)
 		assert_object(tex).override_failure_message(key + " does not load").is_not_null()
-		var size: Vector2 = tex.get_size() * visuals.scale(kind, variant)
-		var rect := Rect2(-visuals.anchor(kind, variant) * size, size)
+		var size: Vector2 = tex.get_size() * visuals.scale(kind, variant, room)
+		var rect := Rect2(-visuals.anchor(kind, variant, room) * size, size)
 		if StorybookArt.is_wall(kind):
 			assert_float(-rect.position.y).override_failure_message(key + " rises above the ceiling").is_less_equal(RoomGeometry.BACK_WALL_HEIGHT + 2.0)
-		assert_bool(rect.has_point(visuals.effects_offset(kind, variant))).override_failure_message(key + " effects point off the image").is_true()
+		assert_bool(rect.has_point(visuals.effects_offset(kind, variant, room))).override_failure_message(key + " effects point off the image").is_true()

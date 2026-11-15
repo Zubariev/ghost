@@ -83,7 +83,7 @@ the back wall (depth 1); paint at 2× (SPRITE_SPEC §2). Cut out with `tools/spr
 
 ## 7. Shared kinds and open points
 
-- **Shared kinds:** `floor_lamp`, `window` also appear in other rooms. A painted image is looked up by kind (or `kind:variant`), not by room (`PropVisuals`), so one painting would show in every room. A look of its own for this room needs a room-scoped key or a `variant` — decision OPEN (`ENVIRONMENT_GUIDELINES.md` §8).
+- **Shared kinds:** `floor_lamp`, `window` also appear in other rooms. Give this room its own painting with a room-scoped key in `visual_style.json` → `sprites`: `"kitchen/<kind>"` (APPROVED 2026-11-15, `ENVIRONMENT_GUIDELINES.md` §8); without one, the house-wide `"<kind>"` image (if any) is used.
 - The stove's fire glow while working: code glow (like the fireplace) or a painted flame layer through the fire door (`effects.states.working`).
 
 ## 8. Review (when built)
