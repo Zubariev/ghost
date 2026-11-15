@@ -94,11 +94,31 @@ permanent top layer, although the layer concepts
 frame, would cover floor where people walk and hiding spots. Not added until decided; if added,
 they must fade when someone or the ghost is behind them.
 
-## 6. Rolling out to the other rooms — PROVISIONAL (planned)
+## 6. Rolling out to the other rooms — art Phase 4 (user decision 2026-11-15)
 
-Ten rooms use the placeholder look. Order to be decided with the user (likely kitchen, dining
-room, hall first: the family spends most time there). Each needs a concept or a written brief in
-a new `environments/<ROOM>.md`, then §3.
+**Every room is covered in Phase 4; order does not matter. Rooms will be painted** (props as
+images through `PropVisuals`, like the living-room fireplace). First step: one brief per room —
+written 2026-11-15, **PROVISIONAL**, awaiting review:
+
+| Room | Brief | Warm anchor | Ghost targets / hiding spots |
+|---|---|---|---|
+| Hall | `HALL.md` | lamp | lamp · stairs, chest |
+| Dining room | `DINING_ROOM.md` | lamp, laid table | lamp, window · sideboard, table |
+| Kitchen | `KITCHEN.md` | cast-iron range | stove, groceries, lamp, window · counter, table |
+| Library | `LIBRARY.md` | reading lamp | lamp · bookshelf (map), reading chair |
+| Workshop | `WORKSHOP.md` | work lamp | lamp, window · workbench, crate |
+| Parents' bedroom | `PARENTS_BEDROOM.md` | bed and lamp | lamp, window · bed, wardrobe |
+| Grandparents' bedroom | `GRANDPARENTS_BEDROOM.md` | bed and lamp | lamp, window · bed, wardrobe; monocle pickup |
+| Upper corridor | `UPPER_CORRIDOR.md` | lamp | lamp · stairs, chest |
+| Children's bedroom | `CHILDREN_BEDROOM.md` | lamp, computer screen | computer, lamp, window · bed, toy box |
+| Upper bathroom | `UPPER_BATHROOM.md` | lamp | lamp · bathtub, sink |
+
+Each brief: what the room is and who uses it; the gameplay layout from the data (positions,
+roles, door walls, on-screen widths from the footprints); light and the two states; the look;
+a concept-image brief; the props to paint with their images and states; open points; review
+items. The layout tables are generated from `assets/data/` — if the data changes, regenerate or
+correct them. Then per room: concept image (optional) → painted props → §3 steps → captures →
+user review. Characters come after the rooms, from generated images kept in the project.
 
 ## 7. Review checklist (every room, every visual change)
 
@@ -113,3 +133,28 @@ a new `environments/<ROOM>.md`, then §3.
 - [ ] No gameplay, footprint, coordinate, navigation or interaction change: full test suite passes,
       including the decor-off-routes and layout tests.
 - [ ] Screenshots of both states retained in `production/qa/evidence/`.
+
+## 8. Painted props for every room — PROVISIONAL (art Phase 4)
+
+**Brief preamble** — every prop brief in the room files starts with this, then the subject:
+
+> Isolated single object, front view, perfectly straight-on (no perspective, no visible side
+> faces), as it stands against a wall. Whimsical gothic storybook illustration: hand-inked
+> dark-brown outlines, muted painted textures, slightly worn and lived-in. Even, neutral light:
+> no cast shadows, no glow, no coloured light. Nothing the game animates or switches (flames, lit
+> glow, smoke, steam). Plain flat white background, whole object in frame.
+
+What the fireplace trial taught (`LIVING_ROOM.md` §8): straight-on reads right on the back wall
+and sizes cleanly; anything that animates or changes with state is a separate layer
+(`effects.states`) or stays code; a white background cuts out cleanly with
+`tools/sprite_cutout.gd` if the object has an inked outline.
+
+**Shared kinds — OPEN.** Images are looked up by furniture kind (or `kind:variant`), not by room.
+Kinds in several rooms: `floor_lamp` (all eleven), `window` (six), `rug` (six), `wardrobe` and
+`double_bed` (two bedrooms), `stairs` (hall up, corridor down), `chest` (hall, corridor),
+`bookshelf` (living room, library), `chair`. Options:
+1. One painting per kind for the whole house (simplest; a brass floor lamp everywhere).
+2. A `variant` per piece in `furniture.json` where a room needs its own look (an asset reference
+   in gameplay data — needs approval; the code already supports `kind:variant`).
+3. Room-scoped keys in `visual_style.json` (`"kitchen/window"`), a small `PropVisuals` change.
+

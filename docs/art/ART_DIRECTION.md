@@ -106,6 +106,9 @@ Starve* block in §13.4 (proposed in `proposals/PHASE0_REVIEW.md` §2, not appli
 | UI style | Dark wood, parchment, brass (primary moodboard) | EXPERIMENTAL | §6 |
 | Painted assets | Props replaceable by images per state; gameplay never depends on image size | APPROVED (mechanism); spec PROVISIONAL | `SPRITE_SPEC.md` |
 | Room-state visuals (dirt, polish, cold, embers) | GDD §13.3 visual language, every room | APPROVED — art Phase 2, approved 2026-11-15 | `environments/ENVIRONMENT_GUIDELINES.md` §4 |
+| Painted props (sprite path) | Fireplace trial with a painted flame layer; images by kind, animation as code or `effects` layers | APPROVED (trial) — art Phase 3, 2026-11-15 | `SPRITE_SPEC.md`, `environments/LIVING_ROOM.md` §8 |
+| Other ten rooms | Painted; one brief per room (identity, layout from data, states, concept and prop briefs) | PROVISIONAL — briefs drafted, art Phase 4 | `environments/ENVIRONMENT_GUIDELINES.md` §6, §8; `environments/<ROOM>.md` |
+| Shared prop kinds across rooms | One painting per kind, a `variant`, or room-scoped keys | OPEN | `environments/ENVIRONMENT_GUIDELINES.md` §8 |
 
 ## 6. Characters, ghost, UI
 
@@ -189,5 +192,8 @@ haunted treatment.
 - `SPRITE_SPEC.md` — painted prop images (PROVISIONAL).
 - `environments/ENVIRONMENT_GUIDELINES.md` — how a room is built, states, draw order, checklist.
 - `environments/LIVING_ROOM.md` — the art test and the Phase 1 target.
+- `environments/<ROOM>.md` — one brief per other room (art Phase 4): `HALL`, `DINING_ROOM`, `KITCHEN`,
+  `LIBRARY`, `WORKSHOP`, `PARENTS_BEDROOM`, `GRANDPARENTS_BEDROOM`, `UPPER_CORRIDOR`, `CHILDREN_BEDROOM`,
+  `UPPER_BATHROOM`.
 - `research/GEMINI_ART_DIRECTION_REPORT.md` — research input, not decisions.
 - `proposals/PHASE0_REVIEW.md` — Phase 0 changes and the proposed GDD/Spec wording.
