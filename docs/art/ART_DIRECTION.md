@@ -105,7 +105,7 @@ Starve* block in §13.4 (proposed in `proposals/PHASE0_REVIEW.md` §2, not appli
 | Ghost silhouette | Round sheet (built) vs. wispy tail (concepts) | OPEN — deferred | §6 |
 | UI style | Dark wood, parchment, brass (primary moodboard) | EXPERIMENTAL | §6 |
 | Painted assets | Props replaceable by images per state; gameplay never depends on image size | APPROVED (mechanism); spec PROVISIONAL | `SPRITE_SPEC.md` |
-| Room-state visuals (dirt, polish, cold, embers) | GDD §13.3 visual language, every room | PROVISIONAL — built in art Phase 2, awaiting review | `environments/ENVIRONMENT_GUIDELINES.md` §4 |
+| Room-state visuals (dirt, polish, cold, embers) | GDD §13.3 visual language, every room | APPROVED — art Phase 2, approved 2026-11-15 | `environments/ENVIRONMENT_GUIDELINES.md` §4 |
 
 ## 6. Characters, ghost, UI
 

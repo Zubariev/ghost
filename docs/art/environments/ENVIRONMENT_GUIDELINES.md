@@ -64,7 +64,7 @@ of `materials_lines_lighting_sheet.jpeg`, the kitchen day/night pair in `primary
   camera in both states, with enough contrast for people, routes and targets.
 - Known gap: placeholder rooms (not yet storybook) still show cold as a flat blue overlay
   (`Palette.COLD_OVERLAY`); it goes away as each room is restyled.
-- **Room-state visuals — PROVISIONAL (art Phase 2, built 2026-11-15, awaiting review).** GDD §13.3.
+- **Room-state visuals — APPROVED (art Phase 2, built and approved 2026-11-15).** GDD §13.3.
   Drawn by the room view in **every room** (`RoomWear`, `RoomStage`; numbers in
   `assets/art/visual_style.json` → `wear`), always under furniture and people:
   - **Dirty:** a brown-grey dulling wash over floor and walls; dust patches and stains on the
