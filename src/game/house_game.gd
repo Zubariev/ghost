@@ -324,6 +324,12 @@ func _act() -> void:
 	if _sim.is_over():
 		return
 	if not _stealth.hidden_in.is_empty():
+		if _loot.is_open() and _loot.open_spot() == _stealth.hidden_in:
+			# E again closes the searched spot's grid (user decision 2026-11-15); the ghost stays
+			# hidden, and the next hold of E searches again.
+			_loot.close()
+			_hud.hide_loot_grid()
+			return
 		_loot.start_search(_stealth.hidden_in)   # hold E while hidden: search the spot
 		return
 	if _target.is_empty():

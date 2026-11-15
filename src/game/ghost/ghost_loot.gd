@@ -7,7 +7,8 @@
 ##   what is there now. Items are taken one by one ([method take]).
 ## [br]- Unique items are in their spot until taken, then gone for good. Renewable materials
 ##   come back [code]respawn_minutes[/code] after being taken. Untaken items stay.
-## [br]- Leaving the spot closes the grid ([method close]); hiding again needs a new search.
+## [br]- Leaving the spot, or pressing E again while the grid is open (2026-11-15), closes the
+##   grid ([method close]); seeing it again needs a new search.
 ## [br]- Taken items go to [member inventory]; lore items are also listed in [member lore_found].
 ## [br]- HUD slot bar (user decision 2026-11-15): materials fill [code]inventory_slots[/code]
 ##   slots, one per kind, stacking; when every slot holds a kind, a new kind cannot be taken
