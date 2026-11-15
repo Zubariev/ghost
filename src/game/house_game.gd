@@ -415,6 +415,7 @@ func _connect_events() -> void:
 		names[routine.schedule.npc_id] = who
 	# HUD decision 2026-11-15: no event log; a person's morale change floats above them for a
 	# moment (their "!" / "?" markers already show noticing and searching).
+	_hud.set_float_source(_stage.visible_floats)
 	_sim.morale.morale_changed.connect(func(npc: String, _value: int, delta: int, reason: String) -> void:
 		if delta != 0 and reason != "set":
 			_stage.float_text(npc, _morale_float(delta, reason), MORALE_DROP_COLOR if delta < 0 else MORALE_GAIN_COLOR))
@@ -633,6 +634,9 @@ func _run_hud_test(dir: String) -> void:
 ## same camera; only the room's state differs. Changed through the same rules the ghost's
 ## actions use, without advancing time.
 func _run_art_test(dir: String) -> void:
+	# Art shots show the room, not the controls help (it shows for the first seconds of play).
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
 	# Art Phase 2: the run-down start — dirty, cold rooms (dust, stains, cobwebs, motes in the
 	# window light, frost and a draught at the open window, cold corners; breath on the cook).
 	await _show(dir, "00-run-down-morning-living-room", "06:30", "living_room", Vector2(0.5, 0.93))

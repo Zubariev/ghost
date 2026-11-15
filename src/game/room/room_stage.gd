@@ -237,7 +237,6 @@ func _draw() -> void:
 			var placed: Dictionary = motion.person(i, room_id)
 			if not placed.is_empty() and String(placed["pose"]) != "sleep":
 				_draw_breath(i, sim.routines[i].schedule.npc_id, placed)
-	_draw_floats()
 	for marker: Array in markers:
 		draw_string(ThemeDB.fallback_font, marker[0], marker[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 30,
 			Color("e0735f") if marker[1] == "!" else Color("f0c36a"))
@@ -388,11 +387,14 @@ func float_text(npc_id: String, text: String, color: Color) -> void:
 	_floats.append({"npc": npc_id, "text": text, "color": color, "born": _time})
 
 
-func _draw_floats() -> void:
+## The floating texts to show now, for the HUD to draw (on its own layer, so the room's
+## darkness and colour grade never dim them): {at (screen, text baseline centre), text,
+## color, alpha}, newest lowest above each person; only people in the room on screen.
+func visible_floats() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	if _floats.is_empty():
-		return
+		return out
 	var room_id: String = navigator.room_id
-	var font: Font = ThemeDB.fallback_font
 	var stacked: Dictionary = {}
 	for k: int in range(_floats.size() - 1, -1, -1):
 		var f: Dictionary = _floats[k]
@@ -408,14 +410,10 @@ func _draw_floats() -> void:
 			var row: int = int(stacked.get(f["npc"], 0))
 			stacked[f["npc"]] = row + 1
 			var head: Vector2 = FamilyArt.head_point(String(f["npc"]), RoomGeometry.to_screen(uv), s, String(placed["pose"]))
-			var text: String = String(f["text"])
-			var size: int = 15
-			var at: Vector2 = head + Vector2(-font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x * 0.5,
-				-30.0 * s - FLOAT_RISE * t - 16.0 * float(row))
-			var alpha: float = 1.0 - maxf(0.0, t - 0.6) / 0.4
-			draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 4, Color(0, 0, 0, 0.85 * alpha))
-			draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(f["color"], alpha))
+			out.append({"at": head + Vector2(0.0, -30.0 * s - FLOAT_RISE * t - 16.0 * float(row)), "text": f["text"],
+				"color": f["color"], "alpha": 1.0 - maxf(0.0, t - 0.6) / 0.4})
 			break
+	return out
 
 
 ## Small puffs of breath in front of a person's face in a cold room.

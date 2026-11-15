@@ -72,6 +72,9 @@ var _help: Label
 var _help_hint: Label
 var _help_held: bool = false
 var _family_panel: PanelContainer
+## Morale texts floating above people, drawn here so the room's darkness never dims them.
+var _float_layer: Control
+var _float_source: Callable
 var _loot_panel: PanelContainer
 var _loot_grid: GridContainer
 var _loot_slots: Array[String] = []
@@ -130,14 +133,15 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_journal_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_journal_text.custom_minimum_size = Vector2(780, 0)
 	_journal.visible = false
-	# Controls help: centred under the top bars; shown at the start, while H is held or paused.
-	_help = _label(self, 14, Color(1, 1, 1, 0.85))
+	# Controls help: in the top band between the energy panel and the family bar, above the
+	# room (it covered the back wall at y 140); shown at the start, while H is held or paused.
+	_help = _label(self, 13, Color(1, 1, 1, 0.85))
 	_help.text = tr("HELP_LINE")
 	_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_help.custom_minimum_size = Vector2(760, 0)
-	_help.size = Vector2(760, 0)
-	_help.position = Vector2(260, 140)
+	_help.custom_minimum_size = Vector2(620, 0)
+	_help.size = Vector2(620, 0)
+	_help.position = Vector2(310, 10)
 	_help.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
 	_help.add_theme_constant_override(&"outline_size", 5)
 	_help_hint = _label(self, 12, Color(1, 1, 1, 0.55))
@@ -164,6 +168,12 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_toast.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
 	_toast.add_theme_constant_override(&"outline_size", 5)
 	_toast.visible = false
+	_float_layer = Control.new()
+	_float_layer.size = Vector2(1280, 720)
+	_float_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_float_layer.draw.connect(_draw_floats)
+	add_child(_float_layer)
+	move_child(_float_layer, 0)   # under the panels
 	_map = Control.new()
 	_map.position = MAP_POS
 	_map.size = MAP_SIZE
@@ -298,6 +308,29 @@ func set_slots(slot_count: int, entries: Array) -> void:
 		var slot := _slot_row.get_child(i) as Control
 		slot.tooltip_text = String(entries[i][2]) if i < entries.size() else ""
 		slot.queue_redraw()
+
+
+## Where the floating texts come from: a Callable returning RoomStage.visible_floats().
+func set_float_source(source: Callable) -> void:
+	_float_source = source
+
+
+func _process(_delta: float) -> void:
+	if _float_source.is_valid():
+		_float_layer.queue_redraw()
+
+
+func _draw_floats() -> void:
+	if not _float_source.is_valid():
+		return
+	var font: Font = ThemeDB.fallback_font
+	var size: int = 15
+	for f: Dictionary in _float_source.call():
+		var text: String = String(f["text"])
+		var alpha: float = float(f["alpha"])
+		var at: Vector2 = Vector2(f["at"]) - Vector2(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x * 0.5, 0.0)
+		_float_layer.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 4, Color(0, 0, 0, 0.85 * alpha))
+		_float_layer.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(f["color"], alpha))
 
 
 ## Flashes the slot bar red: every slot is in use, a new kind cannot be taken.
