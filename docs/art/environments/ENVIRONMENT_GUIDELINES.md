@@ -64,9 +64,20 @@ of `materials_lines_lighting_sheet.jpeg`, the kitchen day/night pair in `primary
   camera in both states, with enough contrast for people, routes and targets.
 - Known gap: placeholder rooms (not yet storybook) still show cold as a flat blue overlay
   (`Palette.COLD_OVERLAY`); it goes away as each room is restyled.
-- **Room-state visuals — OPEN.** GDD §13.3 lists dirt (dust, cobwebs, stains), breakage (smoke,
-  sparks, cracks), cold (frost, breath). Dark, cold and broken objects are shown; **dirt is not
-  drawn at all**, so the run-down start is invisible. Planned for Phase 2.
+- **Room-state visuals — PROVISIONAL (art Phase 2, built 2026-11-15, awaiting review).** GDD §13.3.
+  Drawn by the room view in **every room** (`RoomWear`, `RoomStage`; numbers in
+  `assets/art/visual_style.json` → `wear`), always under furniture and people:
+  - **Dirty:** a brown-grey dulling wash over floor and walls; dust patches and stains on the
+    floor (fixed per room, never in a doorway); cobwebs in the four top corners and on top of
+    bookshelves and wardrobes; dust motes drifting in the window, lamp and fire light.
+  - **Clean:** a faint sheen in bands across the floor. **Normal** shows neither.
+  - **Cold:** breath puffs in front of each person's face (not while asleep); in storybook rooms
+    frost on an open window and a pale draught creeping over the floor from it.
+  - **Cold or dark:** dusk-blue shadow gathering in the floor and ceiling corners (with the
+    room's warmth).
+  - **Fire out:** embers glowing in the grate and fading over about 25 s, plus the smoke curl.
+  - Broken objects keep their own state drawings (stove smoke, computer crack).
+  Everything eases in and out (about a second) when the room changes.
 
 ## 5. Draw order — APPROVED (as built)
 

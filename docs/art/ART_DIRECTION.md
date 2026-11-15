@@ -96,7 +96,7 @@ Starve* block in §13.4 (proposed in `proposals/PHASE0_REVIEW.md` §2, not appli
 | Cozy and haunted states | Same room, same positions; light sources and a colour grade, never only a flat blue overlay | APPROVED | `environments/ENVIRONMENT_GUIDELINES.md` |
 | Ghost draw order | Depth-sorted together with furniture and people (the ghost can be behind furniture) — important for stealth and hiding | **APPROVED** (2026-11-15) | `environments/ENVIRONMENT_GUIDELINES.md` |
 | Foreground occluders | Large furniture in front of the camera, cut by the frame | OPEN — deferred to a later phase | `environments/ENVIRONMENT_GUIDELINES.md` |
-| Living room — in-game art test | The built room, cozy and haunted | APPROVED (baseline) | `environments/LIVING_ROOM.md` |
+| Living room — in-game art test | The built room, cozy and haunted, with the Phase 1 refinement | APPROVED | `environments/LIVING_ROOM.md` |
 | Living room — concept image | **The visual target for Phase 1** (not its perspective or geometry) | APPROVED (as target) | `environments/LIVING_ROOM.md` |
 | Living room — haunted concept | Full-size matching image | OPEN | `environments/LIVING_ROOM.md` |
 | Other ten rooms | Placeholder look until restyled room by room | PROVISIONAL (planned) | `environments/ENVIRONMENT_GUIDELINES.md` |
@@ -105,7 +105,7 @@ Starve* block in §13.4 (proposed in `proposals/PHASE0_REVIEW.md` §2, not appli
 | Ghost silhouette | Round sheet (built) vs. wispy tail (concepts) | OPEN — deferred | §6 |
 | UI style | Dark wood, parchment, brass (primary moodboard) | EXPERIMENTAL | §6 |
 | Painted assets | Props replaceable by images per state; gameplay never depends on image size | APPROVED (mechanism); spec PROVISIONAL | `SPRITE_SPEC.md` |
-| Room-state visuals (dirt, breakage, cold) | GDD §13.3 visual language | OPEN — dirt is not drawn yet | `environments/ENVIRONMENT_GUIDELINES.md` |
+| Room-state visuals (dirt, polish, cold, embers) | GDD §13.3 visual language, every room | PROVISIONAL — built in art Phase 2, awaiting review | `environments/ENVIRONMENT_GUIDELINES.md` §4 |
 
 ## 6. Characters, ghost, UI
 
