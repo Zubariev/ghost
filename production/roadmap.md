@@ -2,7 +2,7 @@
 
 Planning document. Last updated 2026-11-15.
 Sources of truth: `ghost_house_game_design_document_uk.md` (GDD v0.8),
-`demo_specification_ghost_house_uk.md` (Demo Specification v0.10). Summary: `design/game-brief.md`.
+`demo_specification_ghost_house_uk.md` (Demo Specification v0.11). Summary: `design/game-brief.md`.
 Repository: https://github.com/Zubariev/ghost (branch `main`).
 
 ## Done
@@ -64,7 +64,12 @@ Decided: W + Space up, S + Space down; pause moved from Space to Esc (Demo Spec 
 Original note:
 Recorded as open in Demo Spec §8.7. Options noted: stairs only, mouse wheel, Shift + W/S.
 
-### 4. Tuning after play — *next*
+### 4. Tuning after play — *in progress*
+Round 1 (2026-11-15, Demo Spec §8.11, built): slower walking with per-person pace,
+room condition slows people and the ghost, slower ghost, run-down start, head turns, hold E,
+search and loot (inventory, lore journal). Awaiting play: `bash tools/play.sh`, capture
+`bash tools/play.sh capture` → `production/qa/evidence/playtest-2026-11-15/` (23–25 loot).
+
 Art: the living room style is approved (2026-11-15). Paused by choice for gameplay; later art
 steps: redraw the six family members (still recoloured placeholder figures), then roll the style
 out to the other ten rooms (`design/art-direction.md`).
