@@ -88,6 +88,7 @@ var _prompt: Label
 var _map: Control
 var _banner: PanelContainer
 var _banner_text: Label
+var _banner_title: Label
 var _family_bar: Control
 var _family_hover: bool = false
 var _family_last: float = -1.0
@@ -121,6 +122,7 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_loot_panel.visible = false
 	_note = _panel(Vector2(340, 200), Vector2(600, 0))
 	_note_text = _label(_note, 18, Color(0.95, 0.9, 0.78))
+	UiFonts.use(_note_text, "story")
 	_note_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_note_text.custom_minimum_size = Vector2(580, 0)
 	_note.visible = false
@@ -129,7 +131,8 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
 			_note.visible = false)
 	_journal = _panel(Vector2(240, 110), Vector2(800, 0))
-	_journal_text = _label(_journal, 15, Color(0.95, 0.9, 0.78))
+	_journal_text = _label(_journal, 16, Color(0.95, 0.9, 0.78))
+	UiFonts.use(_journal_text, "story")
 	_journal_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_journal_text.custom_minimum_size = Vector2(780, 0)
 	_journal.visible = false
@@ -193,12 +196,17 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_place_family()
 	_day_card = _panel(Vector2(390, 230), Vector2(500, 0))
 	_day_card_title = _label(_day_card, 44, Palette.SB_CANDLELIGHT)
+	UiFonts.use(_day_card_title, "title")
 	_day_card_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_day_card_sub = _label(_day_card, 17, Palette.SB_CREAM)
 	_day_card_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_day_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_day_card.visible = false
 	_banner = _panel(Vector2(240, 90), Vector2(800, 0))
+	_banner_title = _label(_banner, 28, Palette.SB_CANDLELIGHT)
+	UiFonts.use(_banner_title, "title")
+	_banner_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_banner_title.custom_minimum_size = Vector2(780, 0)
 	_banner_text = _label(_banner, 17, Color(1, 0.95, 0.85))
 	_banner_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_banner_text.custom_minimum_size = Vector2(780, 0)
@@ -532,7 +540,8 @@ func show_outcome(won: bool, key_events: Array[String], stats: GhostStats) -> vo
 	var title: String = tr("WIN_TITLE") if won else tr("LOSS_TITLE") % _sim.morale.scenario_days()
 	var day: int = mini(clock.day_number(), _sim.morale.scenario_days())
 	var time_text: String = GameClock.format_time(clock.minute_of_day()) if won else "24:00"
-	var lines: Array[String] = [title, tr("SUMMARY_WHEN") % [tr("DAY_N") % day, time_text],
+	_banner_title.text = title
+	var lines: Array[String] = [tr("SUMMARY_WHEN") % [tr("DAY_N") % day, time_text],
 		tr("SUMMARY_FAMILY") % [roundi(_sim.morale.family_average()), _sim.morale.leave_threshold()], ""]
 	lines.append(tr("SUMMARY_GHOST"))
 	var kinds: Array[String] = []

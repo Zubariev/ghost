@@ -71,6 +71,7 @@ var _keep_day_card: bool = false
 func _ready() -> void:
 	get_window().content_scale_size = Vector2i(1280, 720)
 	Localization.load_csv(STRINGS_PATH, LOCALE)
+	UiFonts.apply()
 	_setup_input()
 	_sim = HouseSim.from_data_files()
 	_sim.start()

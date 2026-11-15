@@ -129,6 +129,20 @@ The game keeps its code-drawn placeholder figures until a set is chosen.
 never horror. The colour grade spares the ghost. OPEN: the silhouette (built: round sheet with a
 scalloped hem, as in the primary moodboard; other concepts: wispy with arms and a tail).
 
+**Typography — APPROVED** (user decision 2026-11-15; trial at 1280 × 720 with the game's
+Ukrainian text, `production/qa/evidence/font-trial/specimen.png`). Every font must draw the full
+Ukrainian alphabet (a test checks it):
+- **Yeseva One** — titles: the game title, title-screen headings, the day card, pause, the
+  end-summary title.
+- **PT Sans** — the interface and the default for everything else: HUD, numbers, slots, messages,
+  floating morale texts, help, buttons, the end-summary details.
+- **Alegreya** — story text: the premise and goal, family introductions, lore notes, the journal.
+All SIL OFL 1.1 (commercial use allowed; licences ship with the fonts). Files, roles and credits:
+`assets/fonts/README.md`; code: `UiFonts`. Rejected: Atkinson Hyperlegible Next and IM Fell English
+(no Cyrillic), Alegreya Sans (word spaces collapse at small sizes), Rubik, Kurale.
+
+**Main menu — PROVISIONAL** (built 2026-11-15, awaiting review): `ui/MAIN_MENU.md`.
+
 **UI — EXPERIMENTAL.** The primary moodboard's "UI Style": dark wooden frames with brass corners,
 a ghost portrait beside the energy bar, icon slot buttons, a parchment map, a clock dial with the
 day and ×1/×2/×4. The HUD is still plain dark panels; any restyle keeps every element and its
