@@ -2,7 +2,7 @@
 
 | | Status |
 |---|---|
-| In-game art test (as built) | **APPROVED baseline** — built and approved 2026-11-15 (`6bfc25b`, `5f1a966`, evidence `d7e26aa`) |
+| In-game art test (as built) | **APPROVED baseline** — built and approved 2026-11-15 (`6bfc25b`, `5f1a966`, evidence `d7e26aa`); Phase 1 refinement built 2026-11-15, awaiting the user's sign-off |
 | Concept `living_room_cozy.jpeg` | **APPROVED as the Phase 1 visual target** (user decision 2026-11-15) — its look, not its perspective or geometry |
 | Full-size haunted concept | OPEN — none yet |
 
@@ -40,24 +40,38 @@ From `assets/data/house/furniture.json` → `living_room` (u, v floor coordinate
 Decor pieces are drawn only and stand off every family route (a test checks). Doors are where the
 house plan puts them (side walls).
 
-## 3. Built vs. target (what Phase 1 should close)
+## 3. Built vs. target
 
-All visual; no position, footprint or size in data changes.
+Phase 1 (2026-11-15, evidence `production/qa/evidence/art-phase1-living-room/`) moved the room
+toward the concept. All visual; no position, footprint or size in data changed.
 
-| Element | Target (concept) | Built now |
-|---|---|---|
-| Fireplace | Large fieldstone fireplace, chimney breast rising to the ceiling, heavy wooden mantel | Small grey plaster fireplace with a thin mantel |
-| Window | Tall arched window, heavy **green** velvet curtains, tiebacks | Rectangular window, terracotta curtains, rose valance |
-| Sofa | Dusty-rose camelback | **Faded green (olive-toned)** camelback with dusty-rose cushions |
-| Rug | Rectangular, blue and orange pattern | Oval, dusty rose with a gold ring |
-| Walls | Walnut wainscot panels below cream plaster on all walls | Panelled wainscot on the back wall; side walls have a plain walnut band without panels |
-| Portraits | Several framed portraits and photos | Two paintings (portrait, landscape) |
-| Mantel | Clock, framed photos, vase | Small items |
-| Side lamps | Table lamps on small tables | One floor lamp (the interactive one) |
-| Fire | Log fire (cozy concept) / candles (base concept) | Log fire, out when cold |
-| Characters | Painted people | Code-drawn placeholders (deferred to the character phase) |
+| Element | Target (concept) | Before Phase 1 | After Phase 1 |
+|---|---|---|---|
+| Fireplace | Large fieldstone fireplace, chimney to the ceiling, heavy mantel | Small grey plaster fireplace | Fieldstone chimney breast to the ceiling, narrowing above a heavy walnut mantel on corbels; stone-arched firebox with andirons; stone hearth |
+| Window | Tall arched, heavy **green** curtains, tiebacks | Rectangular, terracotta curtains, rose valance | Tall arched window with small panes and a fanlight; green curtains to the floor on a rod with gold finials; gold tiebacks with tassels |
+| Sofa | Dusty-rose camelback | Faded green, rose cushions | **Dusty rose**, walnut base rail, olive and cream throw pillows |
+| Rug | Rectangular, blue and orange pattern | Oval, rose with a gold ring | Rectangle laid in floor perspective (u ±0.20, v ±0.12): muted terracotta border, dusk-blue field, parchment medallion and corner motifs, cream fringe |
+| Walls | Walnut wainscot panels on all walls | Panels on the back wall, plain band on the sides | Panel mouldings on the side walls too |
+| Portraits | Several framed portraits and photos | Two paintings | Two paintings + three framed family photos on the mantel |
+| Mantel | Clock, framed photos, vase | Small items | Candle, three framed photos, vase with a sprig (the pendulum clock stays on the wall) |
+| Side lamps | Table lamps on small tables | One floor lamp | Unchanged — a decorative lit lamp would mislead when the ghost has put the real lamp out |
+| Characters | Painted people | Code-drawn placeholders | Unchanged (character phase) |
 
-Perspective and room shape stay as built (the box); the concept's free perspective is not copied.
+Still different, by design or pending a decision: the room box instead of the concept's free
+perspective; no extra wall portraits (the back wall is full; side-wall pictures would be new
+decor entries in `furniture.json` — a data change to decide); the fireplace is smaller than the
+concept's (its width is set by the wall space between the room's left edge and the window).
+
+### Phase 1 review result (2026-11-15)
+
+| Check | Result |
+|---|---|
+| Family readable against furniture and background (cozy, haunted) | Pass |
+| Interactive props readable, states visible | Pass |
+| Ghost visibility and depth sorting (behind / in front of the sofa, hidden glint) | Pass — glint in the rose sofa is faint (follow-up, gameplay feedback) |
+| Walkable floor readable | Pass — rug muted after the first capture so it stays below people and props |
+| Cozy and haunted consistent | Pass |
+| Gameplay preserved | Pass — 240 tests; no change to `assets/data`, `src/sim`, room geometry, layout or paths |
 
 ## 4. Open production questions (from the package), answered for the built room
 

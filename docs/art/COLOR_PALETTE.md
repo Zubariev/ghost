@@ -32,13 +32,13 @@ blue `#59677A`, ghost cyan `#A8D5D9` are labelled there) and the palette strips 
 | Walnut wood | `#79503C` | `SB_WALNUT` | Furniture, floors, doors, wainscot |
 | Terracotta | `#A94F42` | `SB_TERRACOTTA` | Restrained warm accent; grandma's armchair |
 | Dusk blue | `#59677A` | `SB_DUSK_BLUE` | Cool ambient shadow; the ghost's contour |
-| Muted olive | `#777C65` | `SB_OLIVE` | Upholstery (the built olive fireside chair), plants |
+| Muted olive | `#777C65` | `SB_OLIVE` | Upholstery (the olive fireside chair, a sofa pillow), plants |
 | Candlelight | `#D9B878` | `SB_CANDLELIGHT` | Fire, lamps, warm highlights — around real light sources |
 | Night charcoal | `#343747` | `SB_CHARCOAL` | Deep cool shadow, night, UI backgrounds |
 | Ghost cyan | `#A8D5D9` | `SB_GHOST` | The ghost and supernatural effects only |
 | Aged cream | `#E6D7B8` | `SB_CREAM` | Walls, curtains, paper, light fabric, body text |
-| Dusty rose | `#B77C75` | `SB_ROSE` | Decorative textiles: sofa cushions, rug, valance, wallpaper motif |
-| Faded green | `#687B68` | `SB_GREEN` | Interior details; the built sofa's upholstery |
+| Dusty rose | `#B77C75` | `SB_ROSE` | The camelback sofa (Phase 1), mantel vase, wallpaper motif |
+| Faded green | `#687B68` | `SB_GREEN` | The living-room window curtains (Phase 1), interior details |
 | Antique gold | `#B58A50` | `SB_GOLD` | Brass, frames, handles, ornaments, UI borders |
 | Muted brown-grey | `#62564D` | `SB_BROWN_GREY` | Soft and background contours, secondary shadows |
 
@@ -48,7 +48,9 @@ contours use brown-grey (`SB_CONTOUR_SOFT`, from `#62564D`). The Gemini research
 interactive objects so they stand out. PROVISIONAL with the palette.
 
 Derived tones (lighter/darker walnut, wall, floor, fire core, ember, ash, glass by day and night,
-moon, skin, shadow) live in `palette.gd` next to the core set; they are mixes of it, not new hues.
+moon, skin, shadow, and since Phase 1 fieldstone `SB_STONE #8A8379`, `SB_STONE_DARK #6A645C`,
+`SB_STONE_LIGHT #A49D90`) live in `palette.gd` next to the core set; they are mixes of it, not new
+hues. The rug uses darkened core colours so it stays below people and props in the hierarchy.
 
 ## 3. Cozy and haunted
 

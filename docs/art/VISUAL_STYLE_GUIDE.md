@@ -46,7 +46,7 @@ variable-weight contours").
 | Material | Treatment | In code |
 |---|---|---|
 | Wood (walnut) | Warm, aged, painted; simplified grain along the length, darker ends, imperfect edges | `Ink.wood_grain`, `SB_WALNUT*` |
-| Stone | Irregular rounded blocks with mortar gaps; restrained mottling and value variation | not yet (Phase 1: fireplace) |
+| Stone | Irregular rounded blocks with mortar gaps; restrained mottling and value variation | `StorybookArt._stones`, `SB_STONE*` (fireplace) |
 | Fabric (velvet, wool) | Soft painted folds, woven texture, soft highlights on curves; muted patterns | `Ink.weave` |
 | Plaster / wallpaper | Aged cream; subtle repeating pattern (faded damask), lower contrast than props | `StorybookShell` |
 | Wainscot | Walnut panels with mouldings below the plaster | `StorybookShell` (panels on the back wall; plain band on the side walls) |
