@@ -7,6 +7,8 @@
 ##   cost meanwhile (the ghost was noticed), or the object was already put in that state, it
 ##   fails and nothing is paid.
 ## [br]- Floating off, hiding, changing floor or contact cancels it: nothing is paid.
+## [br]- Hold to act (user decision 2026-11-15): the key must stay held; letting go cancels it
+##   ([method hold]).
 ##
 ## [codeblock]
 ## var casting := GhostCasting.new(house, energy)
@@ -83,6 +85,12 @@ func update(minutes: float) -> void:
 	_elapsed += minutes
 	if _elapsed >= _total:
 		_finish()
+
+
+## Reports whether the action key is held this frame; letting go cancels the running action.
+func hold(held: bool) -> void:
+	if not held:
+		cancel()
 
 
 ## Stops the running action; nothing is paid.

@@ -58,7 +58,7 @@ func test_every_work_window_has_a_role_and_known_idle_room() -> void:
 
 func test_undisturbed_day_nobody_skips_an_activity() -> void:
 	# Arrange
-	var sim: HouseSim = HouseSim.from_data_files()
+	var sim: HouseSim = HouseSim.from_data_files(false)
 	var skipped: Array[String] = []
 	for routine: NpcRoutine in sim.routines:
 		routine.activity_skipped.connect(func(a: Activity, _d: int) -> void: skipped.append(a.id))
@@ -73,7 +73,7 @@ func test_undisturbed_day_nobody_skips_an_activity() -> void:
 
 func test_father_repairs_the_stove_before_the_lamp() -> void:
 	# Arrange: both broken at 08:30, before his 09:00 repair window
-	var sim: HouseSim = HouseSim.from_data_files()
+	var sim: HouseSim = HouseSim.from_data_files(false)
 	var repaired: Array[String] = []
 	sim.routines[0].task_completed.connect(func(t: HouseTask) -> void: repaired.append(t.target_id))
 	sim.start()
@@ -100,7 +100,7 @@ func test_morale_data_has_every_rule_value() -> void:
 
 func test_undisturbed_first_day_nobody_goes_broken() -> void:
 	# The balance target (decision 5): no one Broken before the first evening.
-	var sim: HouseSim = HouseSim.from_data_files()
+	var sim: HouseSim = HouseSim.from_data_files(false)
 	var broke: Array[String] = []
 	sim.morale.npc_broke.connect(func(npc: String) -> void: broke.append(npc))
 	sim.start()
@@ -113,7 +113,7 @@ func test_undisturbed_first_day_nobody_goes_broken() -> void:
 
 
 func test_simulation_stops_when_the_family_leaves() -> void:
-	var sim: HouseSim = HouseSim.from_data_files()
+	var sim: HouseSim = HouseSim.from_data_files(false)
 	sim.start()
 	for routine: NpcRoutine in sim.routines:
 		sim.morale.set_morale(routine.schedule.npc_id, 10)
@@ -162,7 +162,7 @@ func test_every_room_has_a_lamp_and_windows_only_where_daylight_enters() -> void
 func test_sleep_already_running_when_the_game_starts_is_not_late() -> void:
 	# Regression: the game starts at 06:00 inside the children's 22:00–07:00 sleep window;
 	# that sleep must not count as started 8 hours late.
-	var sim: HouseSim = HouseSim.from_data_files()
+	var sim: HouseSim = HouseSim.from_data_files(false)
 	var reasons: Array[String] = []
 	sim.morale.morale_changed.connect(func(_n: String, _v: int, _d: int, reason: String) -> void: reasons.append(reason))
 	sim.start()
@@ -173,7 +173,7 @@ func test_sleep_already_running_when_the_game_starts_is_not_late() -> void:
 
 func test_ghost_breaks_the_computer_son_waits_and_father_repairs_it_first() -> void:
 	# Arrange: break the son's computer at 07:30, before his 08:00 play and father's 09:00 window
-	var sim: HouseSim = HouseSim.from_data_files()
+	var sim: HouseSim = HouseSim.from_data_files(false)
 	var repaired: Array[String] = []
 	sim.routines[0].task_completed.connect(func(t: HouseTask) -> void: repaired.append(t.target_id))
 	sim.start()
@@ -193,3 +193,45 @@ func test_ghost_breaks_the_computer_son_waits_and_father_repairs_it_first() -> v
 	assert_array(repaired).contains(["computer"])
 	assert_str(String(sim.house.get_object_state("computer"))).is_equal("working")
 	assert_int(son.state).is_equal(NpcRoutine.State.PERFORMING)
+
+
+# Scenario start (user decision 2026-11-15): the family moves into a run-down house.
+
+func test_the_game_starts_in_a_run_down_but_livable_house() -> void:
+	var sim: HouseSim = HouseSim.from_data_files()
+	for room: RoomState in sim.house.rooms.values():
+		assert_int(room.cleanliness).override_failure_message(room.id).is_equal(RoomState.Cleanliness.DIRTY)
+	for obj: ObjectState in sim.house.objects.values():
+		if obj.kind == "lamp":
+			assert_str(String(obj.state)).override_failure_message(obj.id).is_equal("out")
+		elif obj.kind == "window":
+			assert_str(String(obj.state)).override_failure_message(obj.id).is_equal("open")
+	assert_str(String(sim.house.get_object_state("computer"))).is_equal("broken")
+	# Livable: meals can be cooked
+	assert_str(String(sim.house.get_object_state("stove"))).is_equal("working")
+	assert_str(String(sim.house.get_object_state("grocery_basket"))).is_equal("available")
+
+
+func test_the_family_restores_the_house_on_the_first_day() -> void:
+	# Arrange
+	var sim: HouseSim = HouseSim.from_data_files()
+	sim.start()
+	# Act
+	for i: int in GameClock.MINUTES_PER_DAY:
+		sim.advance(1.0)
+	# Assert
+	for obj: ObjectState in sim.house.objects.values():
+		assert_bool(obj.needs_repair()).override_failure_message(obj.id + " still needs repair").is_false()
+	for room: RoomState in sim.house.rooms.values():
+		assert_int(room.cleanliness).override_failure_message(room.id + " still dirty").is_not_equal(RoomState.Cleanliness.DIRTY)
+
+
+func test_run_down_first_day_nobody_goes_broken() -> void:
+	# Balance target (decision 5) still holds with the harder start.
+	var sim: HouseSim = HouseSim.from_data_files()
+	var broke: Array[String] = []
+	sim.morale.npc_broke.connect(func(npc: String) -> void: broke.append(npc))
+	sim.start()
+	for i: int in GameClock.MINUTES_PER_DAY:
+		sim.advance(1.0)
+	assert_array(broke).is_empty()

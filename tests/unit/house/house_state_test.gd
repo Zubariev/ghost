@@ -43,3 +43,35 @@ func test_effects_set_object_states() -> void:
 	var effects: Array[Dictionary] = [{"object": "food", "set": "ready"}]
 	house.apply_effects(effects)
 	assert_str(String(house.get_object_state("food"))).is_equal("ready")
+
+
+# Scenario start (user decision 2026-11-15): the house starts run-down.
+
+func test_start_state_sets_every_room_kinds_and_single_objects() -> void:
+	# Arrange
+	var house: HouseState = Fx.house()
+	# Act
+	house.apply_start_state({
+		"all_rooms": {"cleanliness": "dirty"},
+		"objects_by_kind": {"lamp": "out", "window": "open"},
+		"objects": {"stove": "broken"},
+	})
+	# Assert
+	for room: RoomState in house.rooms.values():
+		assert_int(room.cleanliness).is_equal(RoomState.Cleanliness.DIRTY)
+	assert_str(String(house.get_object_state("kitchen_lamp"))).is_equal("out")
+	assert_str(String(house.get_object_state("bedroom_lamp"))).is_equal("out")
+	assert_str(String(house.get_object_state("kitchen_window"))).is_equal("open")
+	assert_str(String(house.get_object_state("stove"))).is_equal("broken")
+	# Room conditions follow the objects: the open window makes the kitchen cold
+	assert_int(house.rooms["kitchen"].temperature).is_equal(RoomState.Temperature.COLD)
+
+
+func test_an_empty_start_state_changes_nothing() -> void:
+	# Arrange
+	var house: HouseState = Fx.house()
+	# Act
+	house.apply_start_state({})
+	# Assert
+	assert_str(String(house.get_object_state("kitchen_lamp"))).is_equal("lit")
+	assert_int(house.rooms["kitchen"].cleanliness).is_equal(RoomState.Cleanliness.NORMAL)

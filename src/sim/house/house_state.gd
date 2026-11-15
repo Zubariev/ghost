@@ -126,6 +126,25 @@ func set_room_cleanliness(room_id: String, cleanliness: RoomState.Cleanliness) -
 	return true
 
 
+## Puts the house in a scenario's starting state (user decision 2026-11-15: the family moves
+## into a run-down house). [param start]: [code]all_rooms[/code] {cleanliness},
+## [code]objects_by_kind[/code] {kind: state}, [code]objects[/code] {id: state}. Goes through
+## the normal setters, so room light and temperature follow.
+func apply_start_state(start: Dictionary) -> void:
+	var all_rooms: Dictionary = start.get("all_rooms", {})
+	if all_rooms.has("cleanliness"):
+		var level: int = RoomState._enum_value(RoomState.Cleanliness, all_rooms["cleanliness"], RoomState.Cleanliness.NORMAL)
+		for room_id: String in rooms:
+			set_room_cleanliness(room_id, level as RoomState.Cleanliness)
+	var by_kind: Dictionary = start.get("objects_by_kind", {})
+	for obj: ObjectState in objects.values():
+		if by_kind.has(obj.kind):
+			set_object_state(obj.id, StringName(by_kind[obj.kind]))
+	var single: Dictionary = start.get("objects", {})
+	for object_id: String in single:
+		set_object_state(object_id, StringName(single[object_id]))
+
+
 ## Sets a room's temperature; returns false for an unknown room.
 func set_room_temperature(room_id: String, temperature: RoomState.Temperature) -> bool:
 	if not rooms.has(room_id):

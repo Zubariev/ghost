@@ -3,11 +3,17 @@
 ## Stage 5d: the ghost's energy bar under the room name — the number shows while the mouse is
 ## over it; it flashes red with the amount when energy is lost to being seen, flashes when an
 ## action cannot be afforded, and pulses red while energy is low.
+## Loot (2026-11-15): the searched spot's grid (click a slot to take it), the inventory line
+## under the energy bar, a lore note when one is found, and the journal of finds (J).
 ## All text goes through tr() (assets/i18n/strings.csv). Reads the simulation; never changes it.
 class_name GameHud
 extends CanvasLayer
 
+## A loot grid slot was clicked.
+signal slot_clicked(index: int)
+
 const LOG_LINES: int = 3
+const SLOT_SIZE := Vector2(52, 52)
 const ENERGY_BAR_SIZE := Vector2(232, 16)
 const ENERGY_FLASH_SECONDS: float = 1.2
 const ENERGY_COLOR := Color(0.62, 0.86, 1.0)
@@ -30,6 +36,15 @@ var _lost_amount: float = 0.0
 ## Seconds left of the "cannot afford" flash.
 var _short_flash: float = 0.0
 var _time: float = 0.0
+var _inventory_label: Label
+var _loot_panel: PanelContainer
+var _loot_grid: GridContainer
+var _loot_slots: Array[String] = []
+var _loot_icons: Dictionary = {}
+var _note: PanelContainer
+var _note_text: Label
+var _journal: PanelContainer
+var _journal_text: Label
 var _paused: Label
 var _prompt: Label
 var _log: Label
@@ -54,9 +69,40 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_energy_bar.draw.connect(_draw_energy)
 	_energy_bar.visible = false
 	top.get_child(0).add_child(_energy_bar)
-	var help := _label(self, 14, Color(1, 1, 1, 0.7))
+	_inventory_label = Label.new()
+	_inventory_label.add_theme_font_size_override(&"font_size", 12)
+	_inventory_label.add_theme_color_override(&"font_color", Color(0.9, 0.85, 0.72))
+	_inventory_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_inventory_label.custom_minimum_size = Vector2(232, 0)
+	_inventory_label.visible = false
+	top.get_child(0).add_child(_inventory_label)
+	_loot_panel = _panel(Vector2.ZERO, Vector2.ZERO)
+	_loot_grid = GridContainer.new()
+	_loot_grid.add_theme_constant_override(&"h_separation", 4)
+	_loot_grid.add_theme_constant_override(&"v_separation", 4)
+	_loot_panel.add_child(_loot_grid)
+	_loot_panel.visible = false
+	_note = _panel(Vector2(340, 200), Vector2(600, 0))
+	_note_text = _label(_note, 18, Color(0.95, 0.9, 0.78))
+	_note_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_note_text.custom_minimum_size = Vector2(580, 0)
+	_note.visible = false
+	_note.mouse_filter = Control.MOUSE_FILTER_STOP
+	_note.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+			_note.visible = false)
+	_journal = _panel(Vector2(240, 110), Vector2(800, 0))
+	_journal_text = _label(_journal, 15, Color(0.95, 0.9, 0.78))
+	_journal_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_journal_text.custom_minimum_size = Vector2(780, 0)
+	_journal.visible = false
+	var help := _label(self, 13, Color(1, 1, 1, 0.7))
 	help.text = tr("HELP_LINE")
-	help.position = Vector2(300, 14)
+	help.position = Vector2(300, 10)
+	# Wraps before the house map (top right) instead of running under it.
+	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	help.custom_minimum_size = Vector2(720, 0)
+	help.size = Vector2(720, 0)
 	help.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
 	help.add_theme_constant_override(&"outline_size", 4)
 	_paused = _label(self, 40, Color(1, 0.85, 0.5))
@@ -118,6 +164,79 @@ func set_energy(energy: GhostEnergy) -> void:
 		if reason == "peripheral" or reason == "deep":
 			_lost_flash = ENERGY_FLASH_SECONDS
 			_lost_amount = amount)
+
+
+## Shows the searched spot's grid above [param screen_point]: [param slots] item ids ("" =
+## empty), [param icons] / [param names] look-ups by item id. Clicking a slot emits
+## [signal slot_clicked].
+func show_loot_grid(slots: Array[String], screen_point: Vector2, icons: Dictionary, names: Dictionary) -> void:
+	_loot_slots = slots
+	_loot_icons = icons
+	_loot_grid.columns = 3 if slots.size() > 4 else 2
+	for child: Node in _loot_grid.get_children():
+		_loot_grid.remove_child(child)
+		child.queue_free()
+	for i: int in slots.size():
+		var slot := Control.new()
+		slot.custom_minimum_size = SLOT_SIZE
+		slot.mouse_filter = Control.MOUSE_FILTER_STOP
+		slot.tooltip_text = String(names.get(slots[i], ""))
+		slot.draw.connect(_draw_slot.bind(slot, i))
+		slot.gui_input.connect(func(event: InputEvent) -> void:
+			var click := event as InputEventMouseButton
+			if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
+				slot_clicked.emit(i))
+		_loot_grid.add_child(slot)
+	var columns: int = _loot_grid.columns
+	var size := Vector2(columns * (SLOT_SIZE.x + 4) + 16, ceili(float(slots.size()) / columns) * (SLOT_SIZE.y + 4) + 16)
+	_loot_panel.reset_size()
+	_loot_panel.position = screen_point - Vector2(size.x * 0.5, size.y)
+	_loot_panel.visible = true
+
+
+## Updates the open grid after a slot was emptied.
+func update_loot_grid(slots: Array[String]) -> void:
+	_loot_slots = slots
+	for child: Node in _loot_grid.get_children():
+		(child as Control).queue_redraw()
+
+
+func hide_loot_grid() -> void:
+	_loot_panel.visible = false
+	_loot_slots = []
+
+
+func is_loot_grid_open() -> bool:
+	return _loot_panel.visible
+
+
+## The inventory line under the energy bar: [param lines] "name ×count" entries.
+func set_inventory(lines: Array[String]) -> void:
+	_inventory_label.visible = not lines.is_empty()
+	_inventory_label.text = "%s: %s" % [tr("INVENTORY_LABEL"), " · ".join(lines)]
+
+
+## Shows a found lore note until clicked.
+func show_note(title: String, text: String) -> void:
+	_note_text.text = "%s\n\n%s\n\n%s" % [title, text, tr("NOTE_CLOSE")]
+	_note.reset_size()
+	_note.visible = true
+
+
+## Opens or closes the journal of finds: [param entries] "title\ntext" per lore note.
+func toggle_journal(entries: Array[String]) -> void:
+	_journal.visible = not _journal.visible
+	if _journal.visible:
+		_journal_text.text = tr("JOURNAL_TITLE") + "\n\n" + ("\n\n".join(entries) if not entries.is_empty() else tr("JOURNAL_EMPTY"))
+		_journal.reset_size()
+
+
+func _draw_slot(slot: Control, index: int) -> void:
+	var rect := Rect2(Vector2.ZERO, slot.size)
+	slot.draw_rect(rect, Color(0.12, 0.1, 0.13, 0.9))
+	slot.draw_rect(rect, Color(Palette.SB_GOLD, 0.7), false, 1.5)
+	if index < _loot_slots.size() and not _loot_slots[index].is_empty():
+		ItemArt.draw(slot, String(_loot_icons.get(_loot_slots[index], "")), rect.get_center(), rect.size.x * 0.8)
 
 
 ## Flashes the bar: an action could not be afforded.

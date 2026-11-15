@@ -32,6 +32,8 @@ var stealth: StealthSystem
 var motion: FamilyMotion
 ## The ghost action in progress (stage 5d); may be null.
 var casting: GhostCasting
+## Searching hiding spots (2026-11-15); may be null.
+var loot: GhostLoot
 ## Sight zones are drawn on the floor (Q, after the monocle is found).
 var show_cones: bool = false
 ## The monocle has been taken from the dresser.
@@ -170,6 +172,10 @@ func _draw() -> void:
 		(item[1] as Callable).call()
 	if hidden:
 		_draw_hidden_glint(ghost_uv)
+		if loot != null and loot.is_searching():
+			for spot: Dictionary in layout.hiding_spots(room_id):
+				if String(spot["id"]) == loot.searching_spot():
+					_draw_ring(spot["uv"], loot.search_progress())
 	if harm_uv.x > -1.0:
 		_draw_wisps(ghost_uv, harm_uv, effort)
 		_draw_ring(harm_uv, effort)

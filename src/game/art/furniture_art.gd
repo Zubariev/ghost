@@ -211,7 +211,7 @@ static func _parts(kind: String, uv: Vector2, state: StringName, is_day: bool) -
 				[_rect(-30, -86, 30, -80), Palette.IRON_TOP],
 			]
 			if state == &"broken":
-				parts.append([PackedVector2Array([Vector2(-20, -140), Vector2(4, -120), Vector2(-6, -112), Vector2(18, -102), Vector2(-12, -118), Vector2(-2, -126)]), Color("e0735f")])
+				parts.append([PackedVector2Array([Vector2(-20, -140), Vector2(-4, -126), Vector2(-10, -122), Vector2(18, -102), Vector2(0, -118), Vector2(6, -121)]), Color("e0735f")])
 			return parts
 		"easel":
 			return [

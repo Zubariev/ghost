@@ -1,5 +1,5 @@
 {
-	"_source": "Demo Specification §4.2 / GDD §9.2; stage 3 rooms. walk_minutes are [TBD] tuning. plan_rect is for the debug view only; stage 5a: per-floor grid (col, row; row 0 = back), windows, a lamp per room (Demo Specification §8.7).",
+	"_source": "Demo Specification §4.2 / GDD §9.2; stage 3 rooms. walk_minutes: an adult (pace 1) in a room in perfect order, measured from the walking routes on screen by tools/measure_walks.gd (2026-11-15); slower people and run-down rooms take longer. plan_rect is for the debug view only; stage 5a: per-floor grid (col, row; row 0 = back), windows, a lamp per room (Demo Specification §8.7).",
 	"rooms": [
 		{
 			"id": "parents_bedroom",
@@ -182,47 +182,47 @@
 		{
 			"a": "parents_bedroom",
 			"b": "upper_corridor",
-			"walk_minutes": 1
+			"walk_minutes": 2
 		},
 		{
 			"a": "grandparents_bedroom",
 			"b": "upper_corridor",
-			"walk_minutes": 1
+			"walk_minutes": 2
 		},
 		{
 			"a": "children_bedroom",
 			"b": "upper_corridor",
-			"walk_minutes": 1
+			"walk_minutes": 2
 		},
 		{
 			"a": "upper_bathroom",
 			"b": "upper_corridor",
-			"walk_minutes": 1
+			"walk_minutes": 2
 		},
 		{
 			"a": "upper_corridor",
 			"b": "hall",
-			"walk_minutes": 3
+			"walk_minutes": 4
 		},
 		{
 			"a": "hall",
 			"b": "living_room",
-			"walk_minutes": 1
+			"walk_minutes": 2
 		},
 		{
 			"a": "living_room",
 			"b": "workshop",
-			"walk_minutes": 1
+			"walk_minutes": 2
 		},
 		{
 			"a": "hall",
 			"b": "dining_room",
-			"walk_minutes": 1
+			"walk_minutes": 3
 		},
 		{
 			"a": "dining_room",
 			"b": "kitchen",
-			"walk_minutes": 1
+			"walk_minutes": 3
 		},
 		{
 			"a": "hall",

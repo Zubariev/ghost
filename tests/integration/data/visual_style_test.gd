@@ -112,3 +112,40 @@ func test_storybook_rooms_exist_and_sprite_files_exist() -> void:
 		for path: String in all:
 			if not path.is_empty():
 				assert_bool(ResourceLoader.exists(path)).override_failure_message("missing sprite " + path).is_true()
+
+
+func test_every_placeholder_shape_can_be_filled_in_every_state() -> void:
+	# Regression: the broken computer's crack crossed itself ("triangulation failed"); it
+	# showed once the house started run-down with the computer broken (2026-11-15).
+	var house: HouseState = _house()
+	var rooms: Dictionary = JsonData.read(FURNITURE_PATH)["rooms"]
+	for room_id: String in rooms:
+		for piece: Dictionary in rooms[room_id]:
+			if bool(piece.get("decor", false)):
+				continue
+			var kind: String = String(piece["kind"])
+			var states: Array = [""]
+			var object_id: String = String(piece.get("object", ""))
+			if not object_id.is_empty():
+				states = Array(house.objects[object_id].allowed_states)
+			if piece.has("pickup"):
+				states = ["", "taken"]
+			for state: Variant in states:
+				for day: bool in [true, false]:
+					var parts: Array = FurnitureArt._parts(kind, Vector2(float(piece["u"]), float(piece["v"])), StringName(state), day)
+					for i: int in parts.size():
+						var poly: PackedVector2Array = FurnitureArt._place(parts[i][0], Vector2(600, 400), 0.9, kind == "window")
+						assert_bool(Geometry2D.triangulate_polygon(poly).is_empty()).override_failure_message(
+							"%s %s (%s) part %d cannot be filled" % [room_id, kind, state, i]).is_false()
+
+
+func test_every_room_has_at_least_two_hiding_spots() -> void:
+	# User decision 2026-11-15: with one spot, a searcher checks it first and a glimpsed
+	# ghost that hid there was always caught.
+	var rooms: Dictionary = JsonData.read(FURNITURE_PATH)["rooms"]
+	for room_id: String in rooms:
+		var spots: int = 0
+		for piece: Dictionary in rooms[room_id]:
+			if piece.has("hide_id"):
+				spots += 1
+		assert_int(spots).override_failure_message("%s has %d hiding spot(s)" % [room_id, spots]).is_greater_equal(2)

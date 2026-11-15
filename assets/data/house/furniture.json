@@ -1,5 +1,5 @@
 {
-	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take. decor = drawn only (Whimsical Gothic Storybook art test, 2026-11-15): never an obstacle, hiding spot, sight blocker or object; variant picks a look (e.g. armchair olive, painting portrait/landscape).",
+	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take. decor = drawn only (Whimsical Gothic Storybook art test, 2026-11-15): never an obstacle, hiding spot, sight blocker or object; variant picks a look (e.g. armchair olive, painting portrait/landscape). Every room has at least two hiding spots (user decision 2026-11-15).",
 	"rooms": {
 		"workshop": [
 			{
@@ -20,7 +20,8 @@
 			{
 				"kind": "workbench",
 				"u": 0.45,
-				"v": 0.3
+				"v": 0.3,
+				"hide_id": "hide_workshop_workbench"
 			},
 			{
 				"kind": "crate",
@@ -125,7 +126,8 @@
 				"blocks_sight": [
 					0.12,
 					0.06
-				]
+				],
+				"hide_id": "hide_hall_stairs"
 			},
 			{
 				"kind": "door_front",
@@ -181,7 +183,8 @@
 				"kind": "dining_table",
 				"u": 0.5,
 				"v": 0.58,
-				"object": "meal_food"
+				"object": "meal_food",
+				"hide_id": "hide_dining_room_table"
 			},
 			{
 				"kind": "chair",
@@ -228,7 +231,8 @@
 			{
 				"kind": "kitchen_table",
 				"u": 0.52,
-				"v": 0.72
+				"v": 0.72,
+				"hide_id": "hide_kitchen_table"
 			},
 			{
 				"kind": "floor_lamp",
@@ -263,7 +267,8 @@
 				"blocks_sight": [
 					0.1,
 					0.05
-				]
+				],
+				"hide_id": "hide_library_bookshelf"
 			},
 			{
 				"kind": "reading_chair",
@@ -293,7 +298,8 @@
 			{
 				"kind": "double_bed",
 				"u": 0.38,
-				"v": 0.3
+				"v": 0.3,
+				"hide_id": "hide_parents_bedroom_bed"
 			},
 			{
 				"kind": "wardrobe",
@@ -328,7 +334,8 @@
 				"kind": "double_bed",
 				"u": 0.55,
 				"v": 0.3,
-				"object": "grandparents_bed"
+				"object": "grandparents_bed",
+				"hide_id": "hide_grandparents_bedroom_bed"
 			},
 			{
 				"kind": "wardrobe",
@@ -366,7 +373,8 @@
 				"blocks_sight": [
 					0.12,
 					0.06
-				]
+				],
+				"hide_id": "hide_upper_corridor_stairs"
 			},
 			{
 				"kind": "rug",
@@ -401,7 +409,8 @@
 			{
 				"kind": "bed",
 				"u": 0.42,
-				"v": 0.3
+				"v": 0.3,
+				"hide_id": "hide_children_bedroom_bed"
 			},
 			{
 				"kind": "computer_desk",
@@ -437,7 +446,8 @@
 			{
 				"kind": "sink",
 				"u": 0.78,
-				"v": 0.08
+				"v": 0.08,
+				"hide_id": "hide_upper_bathroom_sink"
 			},
 			{
 				"kind": "rug",

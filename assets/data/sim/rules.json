@@ -1,4 +1,5 @@
 {
-	"_source": "Demo Specification §5.6 [УЗГОДЖЕНО]: work runs in 15-minute steps",
-	"work_step_minutes": 15
+	"_source": "Demo Specification §5.6 [УЗГОДЖЕНО]: work runs in 15-minute steps. people_slowest (user decision 2026-11-15): walking pace in a fully run-down room (dark, cold, dirty, something broken), 1 in a room in perfect order, in between by RoomCondition; scales walking time between rooms and on screen.",
+	"work_step_minutes": 15,
+	"people_slowest": 0.75
 }

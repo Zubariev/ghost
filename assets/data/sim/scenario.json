@@ -1,0 +1,8 @@
+{
+	"_source": "Demo scenario start (user decision 2026-11-15: 'run-down but livable'). The family moves into a house that stood empty for years. Applied once when the game starts (HouseSim.from_data_files). all_rooms: state every room starts in. objects_by_kind: start state for every object of that kind. objects: start state for single objects. Everything else keeps its default from rooms.json. The stove and the groceries work, so day-1 meals happen.",
+	"start_state": {
+		"all_rooms": {"cleanliness": "dirty"},
+		"objects_by_kind": {"lamp": "out", "window": "open"},
+		"objects": {"computer": "broken"}
+	}
+}

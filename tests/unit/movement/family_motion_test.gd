@@ -201,3 +201,143 @@ func test_people_leaving_together_walk_one_after_another_not_stacked() -> void:
 	# Assert: whenever both are on their way in the same room, they are apart
 	assert_int(both_walking).is_greater(0)
 	assert_float(closest).is_greater(0.03)
+
+
+# Speeds (user decision 2026-11-15): each person has their own pace, and run-down rooms slow
+# everyone; a person's whole walk (pace and how far they may trail) scales with it.
+
+func test_a_slow_person_covers_proportionally_less_ground() -> void:
+	# Arrange: the same walk at full and at half pace
+	_routine.schedule.pace = 0.5
+	var slow := FamilyMotion.new(_routines, _house, _layout, _paths, Mx.config())
+	var fast_house: HouseState = Mx.house()
+	var fast_routine: NpcRoutine = Fx.routine(fast_house)
+	fast_routine.begin(Fx.COOK_START - 1)
+	var fast_layout := RoomLayout.new(Mx.furniture(), fast_house)
+	var fast := FamilyMotion.new([fast_routine] as Array[NpcRoutine], fast_house, fast_layout, RoomPaths.new(fast_layout, Mx.config()), Mx.config())
+	_routine.step(Fx.COOK_START - 1)
+	fast_routine.step(Fx.COOK_START - 1)
+	_routine.step(Fx.COOK_START)
+	fast_routine.step(Fx.COOK_START)
+	# A tiny step plans the routes (planning happens on update).
+	slow.update(0.000001)
+	fast.update(0.000001)
+	var slow_start: float = slow.remaining(0)
+	var fast_start: float = fast.remaining(0)
+	# Act: one frame
+	slow.update(Mx.FRAME_MINUTES)
+	fast.update(Mx.FRAME_MINUTES)
+	# Assert: the same route, half the ground covered
+	assert_float(slow_start).is_equal_approx(fast_start, 0.0001)
+	assert_float(slow_start - slow.remaining(0)).is_equal_approx((fast_start - fast.remaining(0)) * 0.5, 0.0005)
+
+
+func test_a_run_down_room_slows_walking() -> void:
+	# Arrange: the bedroom in perfect order, then fully run down
+	_routine.people_slowest = 0.75
+	var motion := FamilyMotion.new(_routines, _house, _layout, _paths, Mx.config())
+	_house.set_room_cleanliness("bedroom", RoomState.Cleanliness.CLEAN)
+	var tidy: float = motion.pace(0)
+	_house.set_room_cleanliness("bedroom", RoomState.Cleanliness.DIRTY)
+	_house.rooms["bedroom"].light = RoomState.Light.DARK
+	_house.rooms["bedroom"].temperature = RoomState.Temperature.COLD
+	_house.set_object_state("lamp", &"broken")
+	# Act
+	var ruined: float = motion.pace(0)
+	# Assert
+	assert_float(ruined).is_equal_approx(tidy * 0.75, 0.0001)
+
+
+# Head turns (user decision 2026-11-15): resting people glance around now and then, so a
+# single room is no longer safe to cross behind someone's back.
+
+func _glances(every: Array = [3.0, 7.0], focused: Array = []) -> Dictionary:
+	return {"every_minutes": every, "duration_minutes": [1.0, 2.0], "max_angle_deg": 110.0,
+		"focused_activities": focused, "focused_factor": 0.4, "seed": 11}
+
+
+## Runs the cook at the stove for [param minutes] and returns how many frames their gaze was
+## away from the stove.
+func _frames_looking_away(minutes: int) -> int:
+	_run(Fx.COOK_START - 1, Fx.COOK_START + Fx.WALK + 6)   # arrive and settle at the stove
+	var spot: Vector2 = _layout.spot(_routine, 0, "kitchen")
+	var at_stove: Vector2 = (_layout.object_uv("kitchen", "stove") - spot).normalized()
+	var away: int = 0
+	for minute: int in range(Fx.COOK_START + Fx.WALK + 6, Fx.COOK_START + Fx.WALK + 6 + minutes):
+		_routine.step(minute)
+		for frame: int in FRAMES_PER_MINUTE:
+			_motion.update(Mx.FRAME_MINUTES)
+			if Vector2(_motion.person(0, "kitchen")["facing"]).dot(at_stove) < 0.97:
+				away += 1
+	return away
+
+
+func test_a_resting_person_glances_away_and_back() -> void:
+	# Arrange
+	_motion.set_glances(_glances())
+	# Act: 20 minutes at the stove
+	var away: int = _frames_looking_away(20)
+	# Assert: sometimes away, mostly at work
+	assert_int(away).is_greater(0)
+	assert_int(away).is_less(20 * FRAMES_PER_MINUTE / 2)
+
+
+func test_without_glances_the_gaze_stays_on_the_work() -> void:
+	assert_int(_frames_looking_away(20)).is_equal(0)
+
+
+func test_focused_work_means_fewer_glances() -> void:
+	# Arrange: the same cook, once with cooking counted as focused work
+	_motion.set_glances(_glances())
+	var normal: int = _frames_looking_away(30)
+	before_test()
+	_motion.set_glances(_glances([3.0, 7.0], ["cook"]))   # the fixture cook has no animation: its id counts
+	# Act
+	var focused: int = _frames_looking_away(30)
+	# Assert
+	assert_int(focused).is_less(normal)
+
+
+func test_more_anxious_people_glance_more_often() -> void:
+	# Arrange: calm (anxiety 0.5) vs anxious (anxiety 1.5), same seed
+	_routine.schedule.anxiety = 0.5
+	_motion.set_glances(_glances())
+	var calm: int = _frames_looking_away(40)
+	before_test()
+	_routine.schedule.anxiety = 1.5
+	_motion.set_glances(_glances())
+	# Act
+	var anxious: int = _frames_looking_away(40)
+	# Assert
+	assert_int(anxious).is_greater(calm)
+
+
+func test_glances_are_the_same_every_run() -> void:
+	_motion.set_glances(_glances())
+	var first: int = _frames_looking_away(20)
+	before_test()
+	_motion.set_glances(_glances())
+	assert_int(_frames_looking_away(20)).is_equal(first)
+
+
+func test_nobody_rushes_faster_than_the_cap_even_far_behind() -> void:
+	# Arrange: a cap of 1.5x pace; the walk down to the stove is long
+	var config: Dictionary = Mx.config()
+	config["max_rush"] = 1.5
+	_motion = FamilyMotion.new(_routines, _house, _layout, _paths, config)
+	var fastest: float = 0.0
+	var last: Vector2 = _motion.person(0, _motion.room_of(0))["uv"]
+	var last_room: String = _motion.room_of(0)
+	# Act
+	for minute: int in range(Fx.COOK_START - 1, Fx.COOK_START + Fx.WALK + 6):
+		_routine.step(minute)
+		for frame: int in FRAMES_PER_MINUTE:
+			_motion.update(Mx.FRAME_MINUTES)
+			var room: String = _motion.room_of(0)
+			var uv: Vector2 = _motion.person(0, room)["uv"]
+			if room == last_room:
+				fastest = maxf(fastest, uv.distance_to(last) / Mx.FRAME_MINUTES)
+			last = uv
+			last_room = room
+	# Assert
+	assert_float(fastest).is_less_equal(float(config["walk_speed"]) * 1.5 + 0.0001)

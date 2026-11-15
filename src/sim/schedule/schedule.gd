@@ -9,6 +9,9 @@ var start_room: String = ""
 var activities: Array[Activity] = []
 ## How jumpy the person is: a longer search after a sighting (Demo Specification §8.8).
 var anxiety: float = 1.0
+## Walking pace (user decision 2026-11-15): 1 = an adult; grandparents slower, children faster.
+## Scales walking time between rooms and on screen.
+var pace: float = 1.0
 
 
 static func from_dict(data: Dictionary) -> Schedule:
@@ -17,6 +20,7 @@ static func from_dict(data: Dictionary) -> Schedule:
 	schedule.display_name = String(data.get("name", schedule.npc_id))
 	schedule.start_room = String(data.get("start_room", ""))
 	schedule.anxiety = float(data.get("anxiety", 1.0))
+	schedule.pace = maxf(0.05, float(data.get("pace", 1.0)))
 	for entry: Variant in data.get("activities", []):
 		if entry is Dictionary:
 			schedule.activities.append(Activity.from_dict(entry))

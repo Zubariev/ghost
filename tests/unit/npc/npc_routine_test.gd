@@ -170,3 +170,36 @@ func test_unreachable_room_waits_in_place() -> void:
 	# Assert: she never picks a different room
 	assert_int(routine.state).is_equal(NpcRoutine.State.WAITING)
 	assert_str(routine.room_id).is_equal("bedroom")
+
+
+# Walking takes as long as it looks (user decision 2026-11-15): a leg lasts the door's
+# minutes divided by the walker's pace and the room's condition.
+
+func test_a_half_pace_walker_takes_twice_as_long_between_rooms() -> void:
+	# Arrange (restart, so the walk is timed with the new pace)
+	_routine.schedule.pace = 0.5
+	_routine = Fx.routine(_house)
+	_routine.schedule.pace = 0.5
+	_routine.begin(Fx.COOK_START)
+	# Act: the full adult walk, and one minute short of the slow walk
+	Fx.run(_routine, Fx.COOK_START, Fx.COOK_START + Fx.WALK * 2 - 1)
+	var still_walking: bool = _routine.state == NpcRoutine.State.MOVING
+	Fx.run(_routine, Fx.COOK_START + Fx.WALK * 2 - 1, Fx.COOK_START + Fx.WALK * 2)
+	# Assert
+	assert_bool(still_walking).is_true()
+	assert_str(_routine.room_id).is_equal("kitchen")
+
+
+func test_a_run_down_room_slows_the_walk_out_of_it() -> void:
+	# Arrange: the bedroom fully run-down; slowest pace there is half
+	_routine.people_slowest = 0.5
+	_house.set_room_cleanliness("bedroom", RoomState.Cleanliness.DIRTY)
+	_house.rooms["bedroom"].light = RoomState.Light.DARK
+	_house.rooms["bedroom"].temperature = RoomState.Temperature.COLD
+	_house.set_object_state("lamp", &"broken")
+	_routine.begin(Fx.COOK_START)   # restart, so the walk is timed in the run-down room
+	# Act
+	Fx.run(_routine, Fx.COOK_START, Fx.COOK_START + Fx.WALK * 2 - 1)
+	# Assert: still on the way after the adult time
+	assert_int(_routine.state).is_equal(NpcRoutine.State.MOVING)
+	assert_float(_routine.pace_in("bedroom")).is_equal_approx(0.5, 0.0001)

@@ -8,7 +8,16 @@
 ##   the matching door (the stairs between floors). The room someone is shown in changes only
 ##   there.
 ## [br]- The view may trail the simulation. When the route left is longer than
-##   [code]walk_speed × catch_up_minutes[/code], they walk faster to catch up in that time.
+##   [code]walk_speed × catch_up_minutes[/code], they walk faster to catch up in that time, but
+##   never faster than [code]max_rush[/code] times their pace.
+## [br]- Pace (user decision 2026-11-15): each person's pace in the room they are in
+##   ([method NpcRoutine.pace_in]: their own pace, slower in a run-down room). The simulation
+##   times walks between rooms with the same pace, so the picture rarely needs to catch up.
+##   Pace scales the whole walk: speed and how far behind the simulation they may trail.
+## [br]- Head turns (user decision 2026-11-15): someone resting (standing or sitting, not
+##   asleep, Broken or in an incident) glances to a random side now and then and looks back
+##   ([method set_glances]); more often when anxious, less during focused work. Sight follows
+##   the glance. Seeded, so the same day gives the same glances.
 ## [br]- People who set off on the same room-to-room route in the same frame leave one after
 ##   another, [code]stagger_minutes[/code] apart, instead of walking stacked on one spot.
 ## [br]- Stealth incidents: a searcher walks to the spot being searched; someone inspecting or
@@ -35,6 +44,11 @@ var _speed: float
 var _catch_up: float
 var _door_inset: float
 var _stagger: float
+## Nobody moves faster than this many times their own pace, even when far behind.
+var _max_rush: float = INF
+## Head-turn rules (empty = no glances) and their random source.
+var _glance: Dictionary = {}
+var _glance_rng := RandomNumberGenerator.new()
 ## One per routine: {room, uv, facing, pose, marker, route, goal_room, goal_uv}.
 ## route: Array of {room, start, targets: PackedVector2Array}.
 var _walkers: Array[Dictionary] = []
@@ -50,10 +64,25 @@ func _init(routines: Array[NpcRoutine], house: HouseState, layout: RoomLayout, p
 	_catch_up = maxf(0.01, float(config.get("catch_up_minutes", 1.0)))
 	_door_inset = float(config.get("door_inset", 0.12))
 	_stagger = maxf(0.0, float(config.get("stagger_minutes", 0.15)))
+	_max_rush = maxf(1.0, float(config.get("max_rush", INF)))
 	for i: int in routines.size():
 		_walkers.append({"room": routines[i].room_id, "uv": Vector2(0.5, 0.6), "facing": Vector2(0, 1),
-			"pose": "stand", "marker": "", "route": [], "goal_room": "", "goal_uv": Vector2(-1, -1), "wait": 0.0})
+			"pose": "stand", "marker": "", "route": [], "goal_room": "", "goal_uv": Vector2(-1, -1), "wait": 0.0,
+			"glance_next": 0.0, "glance_left": 0.0, "glance_angle": 0.0})
 	settle()
+
+
+## Turns on head turns. [param config]: every_minutes [min, max] between glances,
+## duration_minutes [min, max], max_angle_deg either side, focused_activities (animation or
+## activity id) and focused_factor (how much less often during them), seed. The interval is
+## divided by the person's anxiety.
+func set_glances(config: Dictionary) -> void:
+	_glance = config
+	_glance_rng.seed = int(config.get("seed", 1))
+	for i: int in _walkers.size():
+		_walkers[i]["glance_left"] = 0.0
+		_walkers[i]["glance_angle"] = 0.0
+		_walkers[i]["glance_next"] = _next_glance_in(i)
 
 
 ## Puts everyone straight at where they should be, with no walking (game start, captures).
@@ -94,9 +123,13 @@ func update(minutes: float) -> void:
 			walker["wait"] = float(walker["wait"]) - minutes
 			continue   # about to set off; keeps the pose it had
 		var left: float = remaining(i)
-		_advance(i, walker, maxf(_speed, left / _catch_up) * minutes)
+		# Pace scales both the speed and the catch-up time, so the whole walk scales with it.
+		# ...capped at max_rush times their pace, so nobody ever rushes (2026-11-15).
+		var rate: float = minf(maxf(_speed, left / _catch_up), _speed * _max_rush)
+		_advance(i, walker, pace(i) * rate * minutes)
 		if (walker["route"] as Array).is_empty():
 			_rest(walker, goal)
+			_look_around(i, walker, minutes)
 		else:
 			walker["pose"] = "walk"
 			walker["marker"] = String(goal.get("marker", ""))
@@ -112,6 +145,11 @@ func person(index: int, room_id: String) -> Dictionary:
 	if not String(walker["marker"]).is_empty():
 		placed["marker"] = walker["marker"]
 	return placed
+
+
+## Person [param index]'s pace right now: their own pace times the room they are in.
+func pace(index: int) -> float:
+	return _routines[index].pace_in(String(_walkers[index]["room"]))
 
 
 ## The room person [param index] is shown in.
@@ -255,6 +293,46 @@ func _advance(index: int, walker: Dictionary, distance: float) -> void:
 			walker["uv"] = at + (to - at) / gap * distance
 			distance = 0.0
 	walker["route"] = route
+
+
+# Head turns while resting: count down to the next glance, hold it, look back.
+func _look_around(index: int, walker: Dictionary, minutes: float) -> void:
+	if _glance.is_empty():
+		return
+	var pose: String = String(walker["pose"])
+	if pose != "stand" and pose != "sit":
+		walker["glance_left"] = 0.0
+		return
+	if float(walker["glance_left"]) > 0.0:
+		walker["glance_left"] = float(walker["glance_left"]) - minutes
+		if float(walker["glance_left"]) <= 0.0:
+			walker["glance_next"] = _next_glance_in(index)
+	else:
+		walker["glance_next"] = float(walker["glance_next"]) - minutes
+		if float(walker["glance_next"]) <= 0.0:
+			var duration: Array = _glance.get("duration_minutes", [1.0, 2.0])
+			var reach: float = float(_glance.get("max_angle_deg", 90.0))
+			walker["glance_left"] = _glance_rng.randf_range(float(duration[0]), float(duration[1]))
+			walker["glance_angle"] = _glance_rng.randf_range(-reach, reach)
+	if float(walker["glance_left"]) > 0.0:
+		walker["facing"] = Vector2(walker["facing"]).rotated(deg_to_rad(float(walker["glance_angle"])))
+
+
+# Game minutes until person [param index]'s next glance.
+func _next_glance_in(index: int) -> float:
+	var every: Array = _glance.get("every_minutes", [3.0, 7.0])
+	var wait: float = _glance_rng.randf_range(float(every[0]), float(every[1]))
+	var routine: NpcRoutine = _routines[index]
+	wait /= maxf(0.1, routine.schedule.anxiety)
+	var activity: Activity = routine.current
+	if routine.current_task != null or (activity != null and _is_focused(activity)):
+		wait /= maxf(0.01, float(_glance.get("focused_factor", 1.0)))
+	return wait
+
+
+func _is_focused(activity: Activity) -> bool:
+	var focused: Array = _glance.get("focused_activities", [])
+	return focused.has(activity.animation if not activity.animation.is_empty() else activity.id)
 
 
 func _rest(walker: Dictionary, goal: Dictionary) -> void:

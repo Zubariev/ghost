@@ -73,6 +73,9 @@ var _next_room: String = ""
 var _leg_minutes: int = 0
 var _leg_left: int = 0
 
+## Pace in a fully run-down room (1 = no slowdown); set from rules.json (2026-11-15).
+var people_slowest: float = 1.0
+
 
 ## [param board] is needed only by schedules with work windows.
 func _init(npc_schedule: Schedule, house: HouseState, work_step_minutes: int, board: TaskBoard = null) -> void:
@@ -337,9 +340,20 @@ func _wait(unmet: Array[Dictionary]) -> void:
 		activity_waiting.emit(current, unmet)
 
 
+## This person's pace in [param in_room]: their own pace times the room's condition
+## ([RoomCondition]); 1 = an adult in a room in perfect order.
+func pace_in(in_room: String) -> float:
+	var factor: float = 1.0
+	if _house.rooms.has(in_room):
+		factor = RoomCondition.people_factor(RoomCondition.run_down(_house, in_room), people_slowest)
+	return schedule.pace * factor
+
+
 func _begin_leg() -> void:
 	_next_room = _path[0]
-	_leg_minutes = _house.walk_minutes(room_id, _next_room)
+	# Walking takes as long as it looks (2026-11-15): the door's minutes are an adult's in a
+	# room in perfect order; slower walkers and run-down rooms take longer.
+	_leg_minutes = maxi(1, roundi(float(_house.walk_minutes(room_id, _next_room)) / maxf(0.05, pace_in(room_id))))
 	_leg_left = _leg_minutes
 
 

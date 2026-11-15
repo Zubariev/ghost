@@ -121,3 +121,33 @@ func test_one_action_at_a_time() -> void:
 	_casting.start("basket")
 	# Act / Assert
 	assert_str(_casting.start("bedroom_lamp")).is_equal(GhostCasting.BUSY)
+
+
+# Hold E (user decision 2026-11-15): harm runs only while the key is held.
+
+func test_releasing_the_key_cancels_the_harm_at_no_cost() -> void:
+	# Arrange
+	_setup()
+	_casting.start("basket")
+	_casting.hold(true)
+	_casting.update(Ex.DEAR_MINUTES * 0.5)
+	# Act
+	_casting.hold(false)
+	_casting.update(Ex.DEAR_MINUTES)
+	# Assert
+	assert_bool(_casting.is_casting()).is_false()
+	assert_str(String(_house.get_object_state("basket"))).is_equal("available")
+	assert_float(_energy.value).is_equal(Ex.MAX)
+	assert_array(_events).contains_exactly(["cancelled basket"])
+
+
+func test_holding_the_key_lets_the_harm_land() -> void:
+	# Arrange
+	_setup()
+	_casting.start("basket")
+	# Act
+	for i: int in 10:
+		_casting.hold(true)
+		_casting.update(Ex.DEAR_MINUTES / 10.0)
+	# Assert
+	assert_str(String(_house.get_object_state("basket"))).is_equal("hidden")

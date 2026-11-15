@@ -30,7 +30,7 @@ const HUD_LAYER: int = 2
 const KEYS: Dictionary = {
 	&"ghost_left": KEY_A, &"ghost_right": KEY_D, &"ghost_up": KEY_W, &"ghost_down": KEY_S,
 	&"interact": KEY_E, &"change_floor": KEY_SPACE, &"hide": KEY_F, &"sight_view": KEY_Q,
-	&"pause": KEY_ESCAPE, &"speed_1": KEY_1, &"speed_2": KEY_2, &"speed_3": KEY_3,
+	&"pause": KEY_ESCAPE, &"journal": KEY_J, &"speed_1": KEY_1, &"speed_2": KEY_2, &"speed_3": KEY_3,
 }
 
 var _sim: HouseSim
@@ -45,9 +45,12 @@ var _stealth: StealthSystem
 var _motion: FamilyMotion
 var _energy: GhostEnergy
 var _casting: GhostCasting
+var _loot: GhostLoot
 var _hide_range: float = 0.16
 var _has_monocle: bool = false
 var _ghost_speed: float = 0.5
+## Ghost speed factor in a room in perfect order (1 when fully run-down).
+var _ghost_slowest: float = 1.0
 var _interact_range: float = 0.16
 var _target: String = ""
 var _key_events: Array[String] = []
@@ -62,6 +65,7 @@ func _ready() -> void:
 	_sim.start()
 	var ghost_cfg: Dictionary = JsonData.read(GHOST_PATH)
 	_ghost_speed = float(ghost_cfg.get("speed", 0.5))
+	_ghost_slowest = float(ghost_cfg.get("slowest_in_order", 1.0))
 	_interact_range = float(ghost_cfg.get("interact_range", 0.16))
 	var start_uv: Array = ghost_cfg.get("start_uv", [0.5, 0.7])
 	_navigator = GhostNavigator.new(_sim.house)
@@ -85,9 +89,12 @@ func _ready() -> void:
 	var movement_cfg: Dictionary = JsonData.read(MOVEMENT_PATH)
 	_motion = FamilyMotion.new(_sim.routines, _sim.house, _stage.layout, RoomPaths.new(_stage.layout, movement_cfg), movement_cfg)
 	_motion.stealth = _stealth
+	_motion.set_glances(stealth_cfg.get("glance", {}))
 	_stealth.person_source = _motion.person
 	_stage.motion = _motion
 	_stage.casting = _casting
+	_loot = GhostLoot.new(JsonData.read(GhostLoot.LOOT_PATH))
+	_stage.loot = _loot
 	_stage.sight_config = stealth_cfg
 	_stage.visuals = PropVisuals.new(JsonData.read(PropVisuals.STYLE_PATH))
 	_sim.clock.minute_advanced.connect(func(total: int) -> void:
@@ -124,6 +131,7 @@ func _process(delta: float) -> void:
 		_hud.refresh()
 	_motion.update(minutes)
 	_update_energy(minutes)
+	_update_loot(minutes)
 	_hud.tick(delta)
 	if not _sim.clock.paused and not _sim.is_over():
 		var direction: Vector2 = Input.get_vector(&"ghost_left", &"ghost_right", &"ghost_up", &"ghost_down")
@@ -132,7 +140,9 @@ func _process(delta: float) -> void:
 			_hud.add_log(tr("LOG_UNHIDDEN"))
 		if direction != Vector2.ZERO:
 			_casting.cancel()   # floating off interrupts harm
-		_navigator.move(direction * _ghost_speed * delta)
+		_casting.hold(Input.is_action_pressed(&"interact"))   # hold E to act (2026-11-15)
+		var room_factor: float = RoomCondition.ghost_factor(RoomCondition.run_down(_sim.house, _navigator.room_id), _ghost_slowest)
+		_navigator.move(direction * _ghost_speed * room_factor * delta)
 		_stealth.observe()
 	_update_view()
 	if _sim.is_over() and not _outcome_shown:
@@ -145,6 +155,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_sim.clock.paused = not _sim.clock.paused
 	elif event.is_action_pressed(&"interact"):
 		_act()
+	elif event.is_action_pressed(&"journal"):
+		_hud.toggle_journal(_journal_entries())
 	elif event.is_action_pressed(&"hide"):
 		_toggle_hide()
 	elif event.is_action_pressed(&"sight_view"):
@@ -201,7 +213,16 @@ func _update_view() -> void:
 	_stage.target_object = best.trim_prefix("pickup:")
 	_stage.monocle_taken = _has_monocle
 	var hide_spot: String = _nearest_hiding_spot()
-	if best.is_empty() and not hide_spot.is_empty() and _stealth.hidden_in.is_empty():
+	if not _stealth.hidden_in.is_empty():
+		var hidden_uv := Vector2(0.5, 0.5)
+		for spot: Dictionary in _stage.layout.hiding_spots(room_id):
+			if String(spot["id"]) == _stealth.hidden_in:
+				hidden_uv = spot["uv"]
+		if _loot.is_open():
+			_hud.set_prompt("", Vector2.ZERO, false)
+		else:
+			_hud.set_prompt(tr("GHOST_SEARCH"), RoomGeometry.to_screen(hidden_uv) - Vector2(0, 150), true)
+	elif best.is_empty() and not hide_spot.is_empty() and _stealth.hidden_in.is_empty():
 		var spot_uv := Vector2(0.5, 0.5)
 		for spot: Dictionary in _stage.layout.hiding_spots(room_id):
 			if String(spot["id"]) == hide_spot:
@@ -278,7 +299,12 @@ func _toggle_hide() -> void:
 
 
 func _act() -> void:
-	if _target.is_empty() or _sim.is_over():
+	if _sim.is_over():
+		return
+	if not _stealth.hidden_in.is_empty():
+		_loot.start_search(_stealth.hidden_in)   # hold E while hidden: search the spot
+		return
+	if _target.is_empty():
 		return
 	if _target.begins_with("pickup:"):
 		_has_monocle = true
@@ -291,6 +317,53 @@ func _act() -> void:
 	if _casting.start(_target) == GhostCasting.NOT_ENOUGH_ENERGY:
 		_hud.flash_not_enough_energy()
 		_hud.add_log(tr("LOG_NO_ENERGY") % [roundi(_energy.action_cost(key)), floori(_energy.value)])
+
+
+## Searching hiding spots (2026-11-15): runs while E is held; leaving or losing the spot
+## closes it.
+func _update_loot(minutes: float) -> void:
+	if _stealth.hidden_in.is_empty() or (_loot.is_open() and _loot.open_spot() != _stealth.hidden_in):
+		if _loot.is_open() or _loot.is_searching():
+			_loot.close()
+			_hud.hide_loot_grid()
+		return
+	_loot.hold(Input.is_action_pressed(&"interact"))
+	_loot.update(minutes, _sim.clock.total_minutes)
+
+
+func _show_loot_grid(spot_id: String, slots: Array[String]) -> void:
+	var icons: Dictionary = {}
+	var names: Dictionary = {}
+	for item: String in slots:
+		if not item.is_empty():
+			icons[item] = _loot.icon(item)
+			names[item] = tr(_loot.name_key(item))
+	var spot_uv := Vector2(0.5, 0.5)
+	for spot: Dictionary in _stage.layout.hiding_spots(_navigator.room_id):
+		if String(spot["id"]) == spot_id:
+			spot_uv = spot["uv"]
+	_hud.show_loot_grid(slots, RoomGeometry.to_screen(spot_uv) - Vector2(0, 90), icons, names)
+
+
+func _take_loot(slot: int) -> void:
+	var item: String = _loot.take(slot, _sim.clock.total_minutes)
+	if item.is_empty():
+		return
+	_hud.update_loot_grid(_loot.grid())
+	_hud.add_log(tr("LOG_FOUND") % tr(_loot.name_key(item)))
+	var lines: Array[String] = []
+	for id: String in _loot.inventory:
+		lines.append("%s ×%d" % [tr(_loot.name_key(id)), _loot.count(id)])
+	_hud.set_inventory(lines)
+	if _loot.kind_of(item) == "lore":
+		_hud.show_note(tr(_loot.name_key(item)), tr(_loot.text_key(item)))
+
+
+func _journal_entries() -> Array[String]:
+	var entries: Array[String] = []
+	for item: String in _loot.lore_found:
+		entries.append("%s\n%s" % [tr(_loot.name_key(item)), tr(_loot.text_key(item))])
+	return entries
 
 
 ## Energy refills (stage 5d): faster hidden, in a dark or cold room; not while acting. The
@@ -330,6 +403,9 @@ func _connect_events() -> void:
 	_stealth.contact.connect(func(_npc: String, _how: String) -> void: _casting.cancel())
 	_stealth.ghost_returned.connect(func() -> void: _casting.cancel())
 	_energy.low_warning.connect(func() -> void: _hud.add_log(tr("LOG_LOW_ENERGY")))
+	# Loot (2026-11-15)
+	_loot.searched.connect(_show_loot_grid)
+	_hud.slot_clicked.connect(_take_loot)
 	_casting.completed.connect(func(object_id: String) -> void:
 		var obj: ObjectState = _sim.house.objects[object_id]
 		var what: String = tr("ACT_" + GhostEnergy.action_key(obj))
@@ -418,6 +494,19 @@ func _run_capture(dir: String) -> void:
 	_goto("08:42", "kitchen", Vector2(0.80, 0.42))
 	_act()
 	await _show(dir, "22-not-enough-energy-for-stove", "08:42", "kitchen", Vector2(0.80, 0.42))
+	# Search and loot (2026-11-15): hidden in the living-room sofa, searched; the photo taken.
+	_energy.value = _energy.max_value()
+	_goto("09:30", "living_room", Vector2(0.38, 0.36))
+	_toggle_hide()
+	_act()
+	_loot.hold(true)
+	_loot.update(9999.0, _sim.clock.total_minutes)
+	await _show(dir, "23-sofa-searched-grid", "09:30", "living_room", Vector2(0.38, 0.36))
+	_take_loot(_loot.grid().find("lore_photo"))
+	await _show(dir, "24-photo-note", "09:30", "living_room", Vector2(0.38, 0.36))
+	_hud._note.visible = false
+	_hud.toggle_journal(_journal_entries())
+	await _show(dir, "25-journal", "09:30", "living_room", Vector2(0.38, 0.36))
 	get_tree().quit()
 
 

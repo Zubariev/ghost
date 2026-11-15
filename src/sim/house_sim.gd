@@ -15,6 +15,8 @@ const RULES_PATH: String = "res://assets/data/sim/rules.json"
 const HOUSE_PATH: String = "res://assets/data/house/rooms.json"
 const TASKS_PATH: String = "res://assets/data/sim/tasks.json"
 const MORALE_PATH: String = "res://assets/data/sim/morale.json"
+## The demo scenario's starting state (run-down house, user decision 2026-11-15).
+const SCENARIO_PATH: String = "res://assets/data/sim/scenario.json"
 const SCHEDULE_PATHS: Array[String] = [
 	"res://assets/data/schedules/father.json",
 	"res://assets/data/schedules/mother.json",
@@ -42,15 +44,22 @@ func _init(game_clock: GameClock, house_state: HouseState, task_board: TaskBoard
 	clock.minute_advanced.connect(_on_minute_advanced)
 
 
-## Builds the simulation from the game's data files.
-static func from_data_files() -> HouseSim:
+## Builds the simulation from the game's data files. [param scenario_start]: start in the
+## scenario's run-down state (the game); false keeps the house as rooms.json defines it
+## (tests of the schedule rules on an undisturbed house).
+static func from_data_files(scenario_start: bool = true) -> HouseSim:
 	var game_clock: GameClock = GameClock.from_config(JsonData.read(CLOCK_PATH))
 	var house_state: HouseState = HouseState.from_dict(JsonData.read(HOUSE_PATH))
+	if scenario_start:
+		house_state.apply_start_state(JsonData.read(SCENARIO_PATH).get("start_state", {}))
 	var task_board := TaskBoard.new(house_state, JsonData.read(TASKS_PATH))
-	var step_minutes: int = int(JsonData.read(RULES_PATH).get("work_step_minutes", 15))
+	var rules: Dictionary = JsonData.read(RULES_PATH)
+	var step_minutes: int = int(rules.get("work_step_minutes", 15))
 	var npc_routines: Array[NpcRoutine] = []
 	for path: String in SCHEDULE_PATHS:
-		npc_routines.append(NpcRoutine.new(Schedule.from_dict(JsonData.read(path)), house_state, step_minutes, task_board))
+		var routine := NpcRoutine.new(Schedule.from_dict(JsonData.read(path)), house_state, step_minutes, task_board)
+		routine.people_slowest = float(rules.get("people_slowest", 1.0))
+		npc_routines.append(routine)
 	return HouseSim.new(game_clock, house_state, task_board, npc_routines, JsonData.read(MORALE_PATH))
 
 

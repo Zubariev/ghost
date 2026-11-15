@@ -1,6 +1,7 @@
 {
-	"_source": "Stage 5a ghost movement (Demo Specification §8.7). Provisional tuning.",
-	"speed": 0.55,
+	"_source": "Stage 5a ghost movement (Demo Specification §8.7). Provisional tuning. speed: floor units per real second (0.55 -> 0.35, user 2026-11-15). slowest_in_order: speed factor in a room in perfect order (clean, lit, warm, nothing broken); 1 in a fully run-down room, in between by RoomCondition (user decision 2026-11-15).",
+	"speed": 0.35,
+	"slowest_in_order": 0.7,
 	"interact_range": 0.16,
 	"start_room": "hall",
 	"start_uv": [0.5, 0.75]
