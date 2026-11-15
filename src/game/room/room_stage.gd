@@ -71,6 +71,14 @@ var _wear: RoomWear
 ## room id -> seconds (of _time) when its fire went out while on screen; absent = no embers.
 var _fire_out_at: Dictionary = {}
 var _fire_was_burning: Dictionary = {}
+## Short texts floating above people (HUD decision 2026-11-15: a person's morale change shows
+## above them for a moment instead of in a log): {npc, text, color, born}.
+var _floats: Array[Dictionary] = []
+
+## How long a floating text stays, in real seconds; it rises and fades out.
+const FLOAT_SECONDS: float = 1.6
+const FLOAT_RISE: float = 22.0
+const FLOATS_PER_PERSON: int = 2
 
 
 ## True when the room on screen is drawn in the storybook style.
@@ -111,6 +119,7 @@ func track_fire() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	_floats.assign(_floats.filter(func(f: Dictionary) -> bool: return _time - float(f["born"]) < FLOAT_SECONDS))
 	_walk_phase += delta * 9.0
 	if _mood_room != navigator.room_id:
 		settle_mood()
@@ -228,6 +237,7 @@ func _draw() -> void:
 			var placed: Dictionary = motion.person(i, room_id)
 			if not placed.is_empty() and String(placed["pose"]) != "sleep":
 				_draw_breath(i, sim.routines[i].schedule.npc_id, placed)
+	_draw_floats()
 	for marker: Array in markers:
 		draw_string(ThemeDB.fallback_font, marker[0], marker[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 30,
 			Color("e0735f") if marker[1] == "!" else Color("f0c36a"))
@@ -365,6 +375,47 @@ func _draw_motes(room_id: String) -> void:
 		for i: int in offsets.size():
 			var twinkle: float = 0.55 + 0.45 * sin(_time * 1.3 + float(i) * 2.1)
 			draw_circle(centre + offsets[i] * radius, 1.4, Color(Palette.SB_CREAM, alpha * twinkle), true, -1.0, true)
+
+
+## Shows [param text] above [param npc_id] for FLOAT_SECONDS (drawn only while they are in
+## the room on screen).
+## At most FLOATS_PER_PERSON show above one person; a new one pushes out the oldest (fast
+## game speeds would otherwise stack them into a column).
+func float_text(npc_id: String, text: String, color: Color) -> void:
+	var mine: Array = _floats.filter(func(f: Dictionary) -> bool: return f["npc"] == npc_id)
+	while mine.size() >= FLOATS_PER_PERSON:
+		_floats.erase(mine.pop_front())
+	_floats.append({"npc": npc_id, "text": text, "color": color, "born": _time})
+
+
+func _draw_floats() -> void:
+	if _floats.is_empty():
+		return
+	var room_id: String = navigator.room_id
+	var font: Font = ThemeDB.fallback_font
+	var stacked: Dictionary = {}
+	for k: int in range(_floats.size() - 1, -1, -1):
+		var f: Dictionary = _floats[k]
+		for i: int in sim.routines.size():
+			if sim.routines[i].schedule.npc_id != String(f["npc"]):
+				continue
+			var placed: Dictionary = motion.person(i, room_id)
+			if placed.is_empty():
+				break
+			var uv: Vector2 = placed["uv"]
+			var s: float = RoomGeometry.scale_at(uv.y)
+			var t: float = clampf((_time - float(f["born"])) / FLOAT_SECONDS, 0.0, 1.0)
+			var row: int = int(stacked.get(f["npc"], 0))
+			stacked[f["npc"]] = row + 1
+			var head: Vector2 = FamilyArt.head_point(String(f["npc"]), RoomGeometry.to_screen(uv), s, String(placed["pose"]))
+			var text: String = String(f["text"])
+			var size: int = 15
+			var at: Vector2 = head + Vector2(-font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x * 0.5,
+				-30.0 * s - FLOAT_RISE * t - 16.0 * float(row))
+			var alpha: float = 1.0 - maxf(0.0, t - 0.6) / 0.4
+			draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 4, Color(0, 0, 0, 0.85 * alpha))
+			draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(f["color"], alpha))
+			break
 
 
 ## Small puffs of breath in front of a person's face in a cold room.

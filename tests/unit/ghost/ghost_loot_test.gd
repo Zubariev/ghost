@@ -24,6 +24,7 @@ func _config() -> Dictionary:
 			"dust": {"name": "ITEM_dust", "kind": "material", "respawn_minutes": RESPAWN},
 			"thread": {"name": "ITEM_thread", "kind": "material", "respawn_minutes": RESPAWN},
 			"letter": {"name": "ITEM_letter", "kind": "lore", "text": "LORE_letter"},
+			"map": {"name": "ITEM_map", "kind": "map", "text": "LORE_map"},
 		},
 	}
 
@@ -160,3 +161,45 @@ func test_a_spot_without_loot_data_opens_an_empty_small_grid() -> void:
 	_search("unknown_spot", 0)
 	assert_int(_loot.grid().size()).is_equal(4)
 	assert_int(_loot.grid().filter(func(id: String) -> bool: return not id.is_empty()).size()).is_equal(0)
+
+
+func test_materials_stack_in_slots_and_a_new_kind_is_refused_when_all_slots_are_used() -> void:
+	# Arrange: one slot, a large spot holding dust and thread
+	var cfg: Dictionary = _config()
+	cfg["inventory_slots"] = 1
+	_loot = GhostLoot.new(cfg)
+	_search(BIG_SPOT, 0)
+	# Act
+	var first: String = _loot.take(0, 0)        # dust: takes the only slot
+	var refused: bool = _loot.can_take(1)       # thread: a new kind, no slot left
+	var nothing: String = _loot.take(1, 0)
+	_loot.close()
+	_search(BIG_SPOT, RESPAWN)                  # dust is back
+	var stacked: String = _loot.take(0, RESPAWN)
+	# Assert
+	assert_str(first).is_equal("dust")
+	assert_bool(refused).is_false()
+	assert_str(nothing).is_equal("")
+	assert_array(_loot.grid()).contains(["thread"])   # left in the spot
+	assert_str(stacked).is_equal("dust")
+	assert_int(_loot.count("dust")).is_equal(2)
+	assert_array(_loot.slot_items()).is_equal(["dust"])
+
+
+func test_lore_and_the_map_never_use_a_slot_and_the_map_is_known_once_taken() -> void:
+	# Arrange: no free slot at all
+	var cfg: Dictionary = _config()
+	cfg["inventory_slots"] = 0
+	cfg["spots"][SPOT]["unique"] = ["letter", "map"]
+	_loot = GhostLoot.new(cfg)
+	_search(SPOT, 0)
+	var before: bool = _loot.has_map()
+	# Act
+	var letter: String = _loot.take(0, 0)
+	var map: String = _loot.take(1, 0)
+	# Assert
+	assert_bool(before).is_false()
+	assert_str(letter).is_equal("letter")
+	assert_str(map).is_equal("map")
+	assert_bool(_loot.has_map()).is_true()
+	assert_array(_loot.slot_items()).is_empty()

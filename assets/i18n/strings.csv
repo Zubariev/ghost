@@ -119,3 +119,12 @@ SUMMARY_KIND_computer,Комп'ютер
 SUMMARY_KIND_monocle,Монокль
 REASON_meal_cold,холодна їжа
 KEY_EVENTS_NONE,— жодних: сім'я навіть не помітила привида.
+ITEM_house_map,План будинку
+LORE_house_map,"Пожовклий план будинку, накреслений олівцем. Кімнати, сходи, і хтось позначив, де хто спить. Тепер привид бачить усю родину, хоч би де був. [ЧЕРНЕТКА]"
+HELP_HINT,H — керування
+LOG_SLOTS_FULL,Усі комірки зайняті — нову річ не взяти.
+REASON_meal_good,смачна їжа
+REASON_meal_poor,так собі їжа
+REASON_activity_good,гарний відпочинок
+REASON_activity_poor,відпочинок
+REASON_task_done,справу зроблено

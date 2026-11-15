@@ -1,6 +1,7 @@
 {
-	"_source": "Search and loot in hiding spots (user decision 2026-11-15: collect + inventory + lore; crafting recipes later). search_minutes: game minutes E must be held while hidden to search the spot. grid: slot count by spot size (small 2x2, large 3x3). spots: per hiding spot (hide_id in furniture.json): size, unique (items found once, ever), renewable (materials that come back after their respawn_minutes once taken). items: name (string key), kind (material = for crafting later; lore = a note to read), icon (code-drawn glyph), respawn_minutes (renewable only, game minutes), text (lore only, string key). All values provisional; lore texts are drafts for the author to rewrite.",
+	"_source": "Search and loot in hiding spots (user decision 2026-11-15: collect + inventory + lore; crafting recipes later). search_minutes: game minutes E must be held while hidden to search the spot. grid: slot count by spot size (small 2x2, large 3x3). spots: per hiding spot (hide_id in furniture.json): size, unique (items found once, ever), renewable (materials that come back after their respawn_minutes once taken). items: name (string key), kind (material = for crafting later; lore = a note to read), icon (code-drawn glyph), respawn_minutes (renewable only, game minutes), text (lore only, string key). inventory_slots (user decision 2026-11-15): the HUD slot bar; one material kind per slot, stacking; a new kind cannot be taken while all are in use; lore and the map take no slot. kind map: the house map (library bookshelf); the HUD map shows only once it is found. All values provisional; lore texts are drafts for the author to rewrite.",
 	"search_minutes": 3,
+	"inventory_slots": 10,
 	"grid": {"small": 4, "large": 9},
 	"spots": {
 		"hide_workshop_crate_3": {"size": "small", "unique": ["key_small"], "renewable": ["rusty_nail", "dust"]},
@@ -20,7 +21,7 @@
 		"hide_hall_stairs": {"size": "large", "unique": [], "renewable": ["cobweb", "dust", "rusty_nail"]},
 		"hide_upper_corridor_stairs": {"size": "large", "unique": [], "renewable": ["cobweb", "dust"]},
 		"hide_workshop_workbench": {"size": "small", "unique": [], "renewable": ["rusty_nail", "old_thread"]},
-		"hide_library_bookshelf": {"size": "small", "unique": [], "renewable": ["dust", "cobweb"]},
+		"hide_library_bookshelf": {"size": "small", "unique": ["house_map"], "renewable": ["dust", "cobweb"]},
 		"hide_parents_bedroom_bed": {"size": "large", "unique": [], "renewable": ["dust", "old_thread"]},
 		"hide_grandparents_bedroom_bed": {"size": "large", "unique": [], "renewable": ["dust", "candle_stub"]},
 		"hide_children_bedroom_bed": {"size": "small", "unique": [], "renewable": ["dust", "old_thread"]},
@@ -38,6 +39,7 @@
 		"lore_diary_1": {"name": "ITEM_lore_diary_1", "kind": "lore", "icon": "page", "text": "LORE_diary_1"},
 		"lore_diary_2": {"name": "ITEM_lore_diary_2", "kind": "lore", "icon": "page", "text": "LORE_diary_2"},
 		"lore_diary_3": {"name": "ITEM_lore_diary_3", "kind": "lore", "icon": "page", "text": "LORE_diary_3"},
+		"house_map": {"name": "ITEM_house_map", "kind": "map", "icon": "map", "text": "LORE_house_map"},
 		"lore_toy_horse": {"name": "ITEM_lore_toy_horse", "kind": "lore", "icon": "horse", "text": "LORE_toy_horse"}
 	}
 }

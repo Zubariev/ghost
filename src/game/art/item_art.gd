@@ -54,5 +54,14 @@ static func draw(canvas: CanvasItem, icon: String, c: Vector2, size: float) -> v
 				c + Vector2(14, -10) * s, c + Vector2(12, -6) * s, c + Vector2(10, 8) * s, c + Vector2(6, 8) * s, c + Vector2(5, 2) * s,
 				c + Vector2(-6, 2) * s, c + Vector2(-7, 8) * s])
 			Ink.shape(canvas, horse, Palette.SB_WALNUT_LIGHT, Ink.Tier.INTERACTIVE, 4.0)
+		"map":
+			# A folded house plan: parchment, fold lines, rooms in pencil.
+			var sheet := PackedVector2Array([c + Vector2(-14, -11) * s, c + Vector2(14, -12) * s, c + Vector2(13, 11) * s, c + Vector2(-13, 12) * s])
+			Ink.shape(canvas, sheet, Palette.SB_CREAM.darkened(0.08), Ink.Tier.INTERACTIVE, 2.0)
+			for x: float in [-4.5, 4.5]:
+				canvas.draw_line(c + Vector2(x, -11) * s, c + Vector2(x, 11) * s, Color(Palette.SB_BROWN_GREY, 0.35), 1.0, true)
+			canvas.draw_rect(Rect2(c + Vector2(-9, -6) * s, Vector2(10, 7) * s), Color(Palette.SB_CHARCOAL, 0.75), false, 1.2)
+			canvas.draw_rect(Rect2(c + Vector2(1, -6) * s, Vector2(8, 12) * s), Color(Palette.SB_CHARCOAL, 0.75), false, 1.2)
+			canvas.draw_colored_polygon(Ink.ellipse(c + Vector2(-5, 4) * s, 2 * s, 2 * s, 8), Palette.SB_TERRACOTTA)
 		_:
 			canvas.draw_colored_polygon(Ink.ellipse(c, 9 * s, 9 * s, 14), Palette.SB_GOLD)

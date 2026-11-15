@@ -62,6 +62,22 @@ func test_renewables_come_back_and_lore_has_text_and_every_item_is_named() -> vo
 		assert_str(tr(name_key)).override_failure_message("no text for " + name_key).is_not_equal(name_key)
 		if renewable.has(id):
 			assert_int(int(item.get("respawn_minutes", 0))).override_failure_message(id).is_greater(0)
-		if String(item["kind"]) == "lore":
+		if ["lore", "map"].has(String(item["kind"])):
 			var text_key: String = String(item.get("text", ""))
 			assert_str(tr(text_key)).override_failure_message("no lore text for " + id).is_not_equal(text_key)
+
+
+func test_the_house_map_is_found_in_the_library_and_slots_are_set() -> void:
+	# User decision 2026-11-15: the HUD map shows only after the map is found in the library.
+	var loot: Dictionary = _loot()
+	assert_int(int(loot.get("inventory_slots", 0))).is_greater(0)
+	var maps: Array[String] = []
+	for id: String in loot["items"]:
+		if String(loot["items"][id]["kind"]) == "map":
+			maps.append(id)
+	assert_int(maps.size()).is_equal(1)
+	var holders: Array[String] = []
+	for spot_id: String in loot["spots"]:
+		if (loot["spots"][spot_id]["unique"] as Array).has(maps[0]):
+			holders.append(spot_id)
+	assert_array(holders).is_equal(["hide_library_bookshelf"])

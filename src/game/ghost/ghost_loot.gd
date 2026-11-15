@@ -9,6 +9,11 @@
 ##   come back [code]respawn_minutes[/code] after being taken. Untaken items stay.
 ## [br]- Leaving the spot closes the grid ([method close]); hiding again needs a new search.
 ## [br]- Taken items go to [member inventory]; lore items are also listed in [member lore_found].
+## [br]- HUD slot bar (user decision 2026-11-15): materials fill [code]inventory_slots[/code]
+##   slots, one per kind, stacking; when every slot holds a kind, a new kind cannot be taken
+##   ([method can_take]). Lore notes and the house map never use a slot.
+## [br]- The house map is an item (kind [code]map[/code]); the HUD map shows once it is
+##   taken ([method has_map]).
 ##
 ## [codeblock]
 ## loot.start_search("hide_hall_chest_5")
@@ -32,6 +37,7 @@ var inventory: Dictionary[String, int] = {}
 var lore_found: Array[String] = []
 
 var _search_minutes: float
+var _slots: int
 var _grid_sizes: Dictionary
 var _spots: Dictionary
 var _items: Dictionary
@@ -47,6 +53,7 @@ var _grid: Array[String] = []
 
 func _init(config: Dictionary) -> void:
 	_search_minutes = maxf(0.0, float(config.get("search_minutes", 3)))
+	_slots = int(config.get("inventory_slots", 10))
 	_grid_sizes = config.get("grid", {"small": 4, "large": 9})
 	_spots = config.get("spots", {})
 	_items = config.get("items", {})
@@ -111,9 +118,19 @@ func grid() -> Array[String]:
 	return _grid.duplicate()
 
 
-## Takes the item in [param slot] at total game minute [param now]; returns its id, or "".
-func take(slot: int, now: int) -> String:
+## True when the item in grid [param slot] can be taken now: there is one, and it is not a
+## new material kind while every inventory slot is in use.
+func can_take(slot: int) -> bool:
 	if not is_open() or slot < 0 or slot >= _grid.size() or _grid[slot].is_empty():
+		return false
+	var item: String = _grid[slot]
+	return kind_of(item) != "material" or inventory.has(item) or slot_items().size() < _slots
+
+
+## Takes the item in [param slot] at total game minute [param now]; returns its id, or ""
+## (nothing there, or the inventory slots are full: [method can_take]).
+func take(slot: int, now: int) -> String:
+	if not can_take(slot):
 		return ""
 	var item: String = _grid[slot]
 	_grid[slot] = ""
@@ -135,6 +152,28 @@ func close() -> void:
 	_grid = []
 	_searching_spot = ""
 	_progress = 0.0
+
+
+## How many inventory slots there are.
+func slot_count() -> int:
+	return _slots
+
+
+## The materials held, one per slot, in the order first taken.
+func slot_items() -> Array[String]:
+	var out: Array[String] = []
+	for id: String in inventory:
+		if kind_of(id) == "material":
+			out.append(id)
+	return out
+
+
+## True once the house map has been taken.
+func has_map() -> bool:
+	for id: String in inventory:
+		if kind_of(id) == "map":
+			return true
+	return false
 
 
 func count(item_id: String) -> int:

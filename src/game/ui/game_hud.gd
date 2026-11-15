@@ -9,6 +9,12 @@
 ## leaving threshold; the number while the mouse is over it; it flashes when it drops), the
 ## day card at each dawn, and the end summary (outcome, when, the ghost's stats, key events,
 ## Play again / To title).
+## HUD layout (user decision 2026-11-15): energy top left (under the clock); the family-resolve
+## bar top right, left of the house map; the map only once the ghost has found it (library);
+## collected materials in a bottom-centre slot bar (count badges; flashes red when full); no
+## per-person morale and no event log at the bottom: ghost messages show briefly above the slot
+## bar, per-person morale changes float above that person in the room (RoomStage). The controls
+## help shows for the first HELP_FIRST_SECONDS, while H is held and while paused.
 ## All text goes through tr() (assets/i18n/strings.csv). Reads the simulation; never changes it.
 class_name GameHud
 extends CanvasLayer
@@ -19,7 +25,13 @@ signal slot_clicked(index: int)
 signal restart_requested()
 signal title_requested()
 
-const LOG_LINES: int = 3
+const TOAST_SECONDS: float = 3.0
+const HELP_FIRST_SECONDS: float = 20.0
+const BAR_SLOT_SIZE := Vector2(46, 46)
+const BAR_SLOT_GAP: float = 6.0
+const SCREEN_RIGHT: float = 1266.0
+const MAP_POS := Vector2(1036, 8)
+const MAP_SIZE := Vector2(236, 120)
 const SLOT_SIZE := Vector2(52, 52)
 const ENERGY_BAR_SIZE := Vector2(232, 16)
 const ENERGY_FLASH_SECONDS: float = 1.2
@@ -48,7 +60,18 @@ var _lost_amount: float = 0.0
 ## Seconds left of the "cannot afford" flash.
 var _short_flash: float = 0.0
 var _time: float = 0.0
-var _inventory_label: Label
+var _slot_panel: PanelContainer
+var _slot_row: HBoxContainer
+## Per bar slot: [icon, count, name]; empty array = empty slot.
+var _slot_entries: Array = []
+## Seconds left of the "slots full" flash.
+var _slots_full_flash: float = 0.0
+var _toast: Label
+var _toast_left: float = 0.0
+var _help: Label
+var _help_hint: Label
+var _help_held: bool = false
+var _family_panel: PanelContainer
 var _loot_panel: PanelContainer
 var _loot_grid: GridContainer
 var _loot_slots: Array[String] = []
@@ -59,9 +82,6 @@ var _journal: PanelContainer
 var _journal_text: Label
 var _paused: Label
 var _prompt: Label
-var _log: Label
-var _log_lines: Array[String] = []
-var _chips: Dictionary[String, Label] = {}
 var _map: Control
 var _banner: PanelContainer
 var _banner_text: Label
@@ -90,13 +110,6 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_energy_bar.draw.connect(_draw_energy)
 	_energy_bar.visible = false
 	top.get_child(0).add_child(_energy_bar)
-	_inventory_label = Label.new()
-	_inventory_label.add_theme_font_size_override(&"font_size", 12)
-	_inventory_label.add_theme_color_override(&"font_color", Color(0.9, 0.85, 0.72))
-	_inventory_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inventory_label.custom_minimum_size = Vector2(232, 0)
-	_inventory_label.visible = false
-	top.get_child(0).add_child(_inventory_label)
 	_loot_panel = _panel(Vector2.ZERO, Vector2.ZERO)
 	_loot_grid = GridContainer.new()
 	_loot_grid.add_theme_constant_override(&"h_separation", 4)
@@ -117,15 +130,23 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_journal_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_journal_text.custom_minimum_size = Vector2(780, 0)
 	_journal.visible = false
-	var help := _label(self, 13, Color(1, 1, 1, 0.7))
-	help.text = tr("HELP_LINE")
-	help.position = Vector2(300, 10)
-	# Wraps before the house map (top right) instead of running under it.
-	help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	help.custom_minimum_size = Vector2(720, 0)
-	help.size = Vector2(720, 0)
-	help.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
-	help.add_theme_constant_override(&"outline_size", 4)
+	# Controls help: centred under the top bars; shown at the start, while H is held or paused.
+	_help = _label(self, 14, Color(1, 1, 1, 0.85))
+	_help.text = tr("HELP_LINE")
+	_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_help.custom_minimum_size = Vector2(760, 0)
+	_help.size = Vector2(760, 0)
+	_help.position = Vector2(260, 140)
+	_help.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
+	_help.add_theme_constant_override(&"outline_size", 5)
+	_help_hint = _label(self, 12, Color(1, 1, 1, 0.55))
+	_help_hint.text = tr("HELP_HINT")
+	_help_hint.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
+	_help_hint.add_theme_constant_override(&"outline_size", 4)
+	_help_hint.reset_size()
+	_help_hint.position = Vector2(SCREEN_RIGHT - _help_hint.size.x, 694)
+	_help_hint.visible = false
 	_paused = _label(self, 40, Color(1, 0.85, 0.5))
 	_paused.text = tr("PAUSED")
 	_paused.position = Vector2(560, 300)
@@ -133,29 +154,24 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_prompt.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
 	_prompt.add_theme_constant_override(&"outline_size", 6)
 	_prompt.visible = false
-	var bottom := _panel(Vector2(14, 650), Vector2(1252, 60))
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override(&"separation", 10)
-	bottom.add_child(row)
-	for routine: NpcRoutine in sim.routines:
-		var chip := Label.new()
-		chip.add_theme_font_size_override(&"font_size", 13)
-		chip.add_theme_color_override(&"font_color", NPC_COLORS.get(routine.schedule.npc_id, Color.WHITE))
-		chip.custom_minimum_size = Vector2(118, 0)
-		row.add_child(chip)
-		_chips[routine.schedule.npc_id] = chip
-	_log = Label.new()
-	_log.add_theme_font_size_override(&"font_size", 12)
-	_log.add_theme_color_override(&"font_color", Color(0.9, 0.88, 0.82))
-	_log.custom_minimum_size = Vector2(500, 0)
-	_log.clip_text = true
-	row.add_child(_log)
+	# Collected materials: bottom-centre slot bar.
+	_slot_panel = _panel(Vector2.ZERO, Vector2.ZERO)
+	_slot_row = HBoxContainer.new()
+	_slot_row.add_theme_constant_override(&"separation", int(BAR_SLOT_GAP))
+	_slot_panel.add_child(_slot_row)
+	set_slots(10, [])
+	_toast = _label(self, 16, Color(0.92, 0.96, 1.0))
+	_toast.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
+	_toast.add_theme_constant_override(&"outline_size", 5)
+	_toast.visible = false
 	_map = Control.new()
-	_map.position = Vector2(1036, 8)
-	_map.size = Vector2(236, 120)
+	_map.position = MAP_POS
+	_map.size = MAP_SIZE
 	_map.draw.connect(_draw_map)
+	_map.visible = false
 	add_child(_map)
-	var family := _panel(Vector2(14, 612), Vector2(0, 0))
+	var family := _panel(Vector2(0, 10), Vector2(0, 0))
+	_family_panel = family
 	_family_bar = Control.new()
 	_family_bar.custom_minimum_size = FAMILY_BAR_SIZE
 	_family_bar.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -164,6 +180,7 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_family_bar.draw.connect(_draw_family)
 	family.add_child(_family_bar)
 	family.mouse_filter = Control.MOUSE_FILTER_PASS
+	_place_family()
 	_day_card = _panel(Vector2(390, 230), Vector2(500, 0))
 	_day_card_title = _label(_day_card, 44, Palette.SB_CANDLELIGHT)
 	_day_card_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -197,12 +214,8 @@ func refresh() -> void:
 	_room.text = _sim.house.rooms[_navigator.room_id].display_name
 	_paused.visible = clock.paused
 	_energy_bar.queue_redraw()
-	for routine: NpcRoutine in _sim.routines:
-		var npc_id: String = routine.schedule.npc_id
-		var value: int = _sim.morale.get_morale(npc_id)
-		var bar: String = "█".repeat(value / 10) + "·".repeat(10 - value / 10)
-		_chips[npc_id].text = "%s%s\n%3d %s" % [routine.schedule.display_name, " ✕" if routine.is_broken() else "", value, bar]
-	_map.queue_redraw()
+	if _map.visible:
+		_map.queue_redraw()
 	var average: float = _sim.morale.family_average()
 	if _family_last >= 0.0 and average < _family_last:
 		_family_flash = ENERGY_FLASH_SECONDS
@@ -264,10 +277,72 @@ func is_loot_grid_open() -> bool:
 	return _loot_panel.visible
 
 
-## The inventory line under the energy bar: [param lines] "name ×count" entries.
-func set_inventory(lines: Array[String]) -> void:
-	_inventory_label.visible = not lines.is_empty()
-	_inventory_label.text = "%s: %s" % [tr("INVENTORY_LABEL"), " · ".join(lines)]
+## The bottom slot bar: [param slot_count] slots; [param entries] fill them from the left,
+## each [icon, count, name].
+func set_slots(slot_count: int, entries: Array) -> void:
+	_slot_entries = entries
+	if _slot_row.get_child_count() != slot_count:
+		for child: Node in _slot_row.get_children():
+			_slot_row.remove_child(child)
+			child.queue_free()
+		for i: int in slot_count:
+			var slot := Control.new()
+			slot.custom_minimum_size = BAR_SLOT_SIZE
+			slot.mouse_filter = Control.MOUSE_FILTER_PASS
+			slot.draw.connect(_draw_bar_slot.bind(slot, i))
+			_slot_row.add_child(slot)
+		_slot_panel.reset_size()
+		var width: float = slot_count * BAR_SLOT_SIZE.x + maxi(0, slot_count - 1) * BAR_SLOT_GAP + 16.0
+		_slot_panel.position = Vector2(640.0 - width * 0.5, 720.0 - BAR_SLOT_SIZE.y - 16.0 - 8.0)
+	for i: int in _slot_row.get_child_count():
+		var slot := _slot_row.get_child(i) as Control
+		slot.tooltip_text = String(entries[i][2]) if i < entries.size() else ""
+		slot.queue_redraw()
+
+
+## Flashes the slot bar red: every slot is in use, a new kind cannot be taken.
+func flash_slots_full() -> void:
+	_slots_full_flash = ENERGY_FLASH_SECONDS
+
+
+## Shows or hides the house map (top right) and moves the family bar beside it.
+func show_map(on: bool) -> void:
+	_map.visible = on
+	_place_family()
+
+
+## True while the house map is shown.
+func is_map_shown() -> bool:
+	return _map.visible
+
+
+## While [param held] (H), the controls help shows.
+func set_help_held(held: bool) -> void:
+	_help_held = held
+
+
+func _place_family() -> void:
+	_family_panel.reset_size()
+	var right: float = MAP_POS.x - 8.0 if _map.visible else SCREEN_RIGHT
+	_family_panel.position = Vector2(right - _family_panel.size.x, 10)
+
+
+func _draw_bar_slot(slot: Control, index: int) -> void:
+	var rect := Rect2(Vector2.ZERO, slot.size)
+	slot.draw_rect(rect, Color(0.12, 0.1, 0.13, 0.92))
+	var border: Color = Color(Palette.SB_GOLD, 0.55)
+	if _slots_full_flash > 0.0:
+		border = border.lerp(ENERGY_LOW_COLOR, _slots_full_flash / ENERGY_FLASH_SECONDS)
+	slot.draw_rect(rect, border, false, 1.5)
+	if index >= _slot_entries.size():
+		return
+	var entry: Array = _slot_entries[index]
+	ItemArt.draw(slot, String(entry[0]), rect.get_center() - Vector2(0, 2), rect.size.x * 0.78)
+	var font: Font = ThemeDB.fallback_font
+	var count: String = str(int(entry[1]))
+	var at := Vector2(rect.size.x - 4.0 - font.get_string_size(count, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x, rect.size.y - 4.0)
+	slot.draw_string_outline(font, at, count, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color(0, 0, 0, 0.9))
+	slot.draw_string(font, at, count, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Palette.SB_CREAM)
 
 
 ## Shows a found lore note until clicked.
@@ -304,6 +379,16 @@ func tick(delta: float) -> void:
 	_lost_flash = maxf(0.0, _lost_flash - delta)
 	_short_flash = maxf(0.0, _short_flash - delta)
 	_energy_bar.queue_redraw()
+	if _slots_full_flash > 0.0:
+		_slots_full_flash = maxf(0.0, _slots_full_flash - delta)
+		for slot: Node in _slot_row.get_children():
+			(slot as Control).queue_redraw()
+	if _toast_left > 0.0:
+		_toast_left = maxf(0.0, _toast_left - delta)
+		_toast.modulate.a = clampf(_toast_left / 0.6, 0.0, 1.0)
+		_toast.visible = _toast_left > 0.0
+	_help.visible = _sim.clock.paused or _help_held or _time < HELP_FIRST_SECONDS
+	_help_hint.visible = not _help.visible
 	if _family_flash > 0.0:
 		_family_flash = maxf(0.0, _family_flash - delta)
 		_family_bar.queue_redraw()
@@ -352,8 +437,9 @@ func _draw_family() -> void:
 	_family_bar.draw_line(Vector2(mark_x, 0), Vector2(mark_x, FAMILY_BAR_SIZE.y), ENERGY_LOW_COLOR, 2.0)
 	_family_bar.draw_rect(bar, Color(0.6, 0.58, 0.5), false, 1.5)
 	if _family_hover:
-		_family_bar.draw_string(font, Vector2(mark_x + 6, 13), tr("FAMILY_RESOLVE_VALUE") % [roundi(average), int(threshold)],
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.05, 0.05, 0.1))
+		var value_text: String = tr("FAMILY_RESOLVE_VALUE") % [roundi(average), int(threshold)]
+		_family_bar.draw_string_outline(font, Vector2(mark_x + 6, 13), value_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, 4, Color(0, 0, 0, 0.9))
+		_family_bar.draw_string(font, Vector2(mark_x + 6, 13), value_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 0.97, 0.9))
 
 
 func _draw_energy() -> void:
@@ -375,8 +461,9 @@ func _draw_energy() -> void:
 	var outline: Color = Color(1, 0.9, 0.5) if _short_flash > 0.0 and fmod(_short_flash, 0.3) > 0.15 else Color(0.6, 0.62, 0.72)
 	_energy_bar.draw_rect(bar, outline, false, 1.5 if _short_flash <= 0.0 else 2.5)
 	if _energy_hover:
-		_energy_bar.draw_string(font, bar.position + Vector2(6, 9), tr("ENERGY_VALUE") % [roundi(_energy.value), roundi(_energy.max_value())],
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.05, 0.05, 0.1))
+		var value_text: String = tr("ENERGY_VALUE") % [roundi(_energy.value), roundi(_energy.max_value())]
+		_energy_bar.draw_string_outline(font, bar.position + Vector2(6, 9), value_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, 4, Color(0, 0, 0, 0.9))
+		_energy_bar.draw_string(font, bar.position + Vector2(6, 9), value_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 0.97, 0.9))
 	if _lost_flash > 0.0:
 		var rise: float = (1.0 - _lost_flash / ENERGY_FLASH_SECONDS) * 10.0
 		_energy_bar.draw_string(font, Vector2(bar.end.x - 30, 12 - rise), "−%d" % roundi(_lost_amount),
@@ -394,11 +481,14 @@ func set_prompt(text: String, screen_point: Vector2, available: bool) -> void:
 	_prompt.position = screen_point - Vector2(_prompt.size.x * 0.5, 40)
 
 
+## A short ghost message above the slot bar; fades after TOAST_SECONDS (no event log).
 func add_log(text: String) -> void:
-	_log_lines.append("%s  %s" % [GameClock.format_time(_sim.clock.minute_of_day()), text])
-	while _log_lines.size() > LOG_LINES:
-		_log_lines.pop_front()
-	_log.text = "\n".join(_log_lines)
+	_toast.text = text
+	_toast.modulate.a = 1.0
+	_toast.visible = true
+	_toast.reset_size()
+	_toast.position = Vector2(640.0 - _toast.size.x * 0.5, _slot_panel.position.y - _toast.size.y - 6.0)
+	_toast_left = TOAST_SECONDS
 
 
 ## The end summary (stage 6): outcome, when it ended, the family's final resolve, what the

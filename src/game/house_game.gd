@@ -5,7 +5,7 @@
 ##
 ## Controls (user decision 3; floor keys and pause changed in stage 5e, 2026-11-15): WASD move ·
 ## W + Space / S + Space float up / down a floor · E act on the highlighted object · F hide /
-## leave a hiding spot · Q sight zones (after the monocle is found, stage 5b) · Esc pause ·
+## leave a hiding spot · Q sight zones (after the monocle is found, stage 5b) · H (hold) controls help · Esc pause ·
 ## 1/2/3 ×1/×2/×4.
 ## Stage 5d (Demo Specification §8.10): E starts harm that takes time and costs energy
 ## ([GhostCasting], [GhostEnergy]); floating off, hiding, changing floor or contact
@@ -35,7 +35,11 @@ const KEYS: Dictionary = {
 	&"ghost_left": KEY_A, &"ghost_right": KEY_D, &"ghost_up": KEY_W, &"ghost_down": KEY_S,
 	&"interact": KEY_E, &"change_floor": KEY_SPACE, &"hide": KEY_F, &"sight_view": KEY_Q,
 	&"pause": KEY_ESCAPE, &"journal": KEY_J, &"speed_1": KEY_1, &"speed_2": KEY_2, &"speed_3": KEY_3,
+	&"help": KEY_H,
 }
+
+const MORALE_DROP_COLOR := Color("f08a78")
+const MORALE_GAIN_COLOR := Color("a8e08c")
 
 var _sim: HouseSim
 var _navigator: GhostNavigator
@@ -140,6 +144,7 @@ func _process(delta: float) -> void:
 	_motion.update(minutes)
 	_update_energy(minutes)
 	_update_loot(minutes)
+	_hud.set_help_held(Input.is_action_pressed(&"help"))
 	_hud.tick(delta)
 	if not _sim.clock.paused and not _sim.is_over():
 		var direction: Vector2 = Input.get_vector(&"ghost_left", &"ghost_right", &"ghost_up", &"ghost_down")
@@ -360,17 +365,29 @@ func _show_loot_grid(spot_id: String, slots: Array[String]) -> void:
 
 
 func _take_loot(slot: int) -> void:
+	if not _loot.can_take(slot):
+		if _loot.is_open() and slot >= 0 and slot < _loot.grid().size() and not _loot.grid()[slot].is_empty():
+			_hud.flash_slots_full()
+			_hud.add_log(tr("LOG_SLOTS_FULL"))
+		return
 	var item: String = _loot.take(slot, _sim.clock.total_minutes)
 	if item.is_empty():
 		return
 	_hud.update_loot_grid(_loot.grid())
 	_hud.add_log(tr("LOG_FOUND") % tr(_loot.name_key(item)))
-	var lines: Array[String] = []
-	for id: String in _loot.inventory:
-		lines.append("%s ×%d" % [tr(_loot.name_key(id)), _loot.count(id)])
-	_hud.set_inventory(lines)
-	if _loot.kind_of(item) == "lore":
+	_refresh_slots()
+	if _loot.kind_of(item) == "map":
+		_hud.show_map(true)
+	if _loot.kind_of(item) == "lore" or _loot.kind_of(item) == "map":
 		_hud.show_note(tr(_loot.name_key(item)), tr(_loot.text_key(item)))
+
+
+## The HUD slot bar from the inventory (materials only, in the order first taken).
+func _refresh_slots() -> void:
+	var entries: Array = []
+	for id: String in _loot.slot_items():
+		entries.append([_loot.icon(id), _loot.count(id), tr(_loot.name_key(id))])
+	_hud.set_slots(_loot.slot_count(), entries)
 
 
 func _journal_entries() -> Array[String]:
@@ -396,16 +413,11 @@ func _connect_events() -> void:
 	for routine: NpcRoutine in _sim.routines:
 		var who: String = routine.schedule.display_name
 		names[routine.schedule.npc_id] = who
-		routine.task_completed.connect(func(task: HouseTask) -> void:
-			_hud.add_log(tr("LOG_TASK_DONE") % [who, _describe_task(task)]))
-		routine.self_fix_started.connect(func(object_id: String) -> void:
-			_hud.add_log(tr("LOG_SEARCHING") % [who, _sim.house.objects[object_id].display_name]))
-	_sim.morale.morale_changed.connect(func(npc: String, value: int, delta: int, reason: String) -> void:
-		if delta < 0 and reason != "set":
-			_hud.add_log(tr("LOG_MORALE_DROP") % [names[npc], delta, tr("REASON_" + reason), value]))
-	_stealth.noticed.connect(func(npc: String) -> void: _hud.add_log(tr("LOG_NOTICED") % names[npc]))
-	_stealth.search_started.connect(func(npc: String) -> void: _hud.add_log(tr("LOG_SEARCH_STARTED") % names[npc]))
-	_stealth.search_ended.connect(func(npc: String) -> void: _hud.add_log(tr("LOG_SEARCH_ENDED") % names[npc]))
+	# HUD decision 2026-11-15: no event log; a person's morale change floats above them for a
+	# moment (their "!" / "?" markers already show noticing and searching).
+	_sim.morale.morale_changed.connect(func(npc: String, _value: int, delta: int, reason: String) -> void:
+		if delta != 0 and reason != "set":
+			_stage.float_text(npc, _morale_float(delta, reason), MORALE_DROP_COLOR if delta < 0 else MORALE_GAIN_COLOR))
 	_stealth.contact.connect(func(npc: String, how: String) -> void: _key_event(tr("LOG_CONTACT_" + how) % names[npc]))
 	_sim.morale.npc_broke.connect(func(npc: String) -> void: _key_event(tr("LOG_BROKEN") % names[npc]))
 	_sim.morale.npc_recovered.connect(func(npc: String) -> void: _key_event(tr("LOG_RECOVERED") % names[npc]))
@@ -443,10 +455,12 @@ func _connect_events() -> void:
 			_hud.add_log(tr("LOG_ACT_FAILED_ENERGY")))
 
 
-func _describe_task(task: HouseTask) -> String:
-	if task.type == HouseTask.Type.CLEAN:
-		return _sim.house.rooms[task.room_id].display_name
-	return "%s (%s)" % [_sim.house.objects[task.target_id].display_name, _sim.house.rooms[task.room_id].display_name]
+## "−3 cold" / "+5 good meal": the change and its reason, when the reason has a text.
+func _morale_float(delta: int, reason: String) -> String:
+	var number: String = ("−%d" if delta < 0 else "+%d") % absi(delta)
+	var key: String = "REASON_" + reason
+	var why: String = tr(key)
+	return number if why == key else "%s %s" % [number, why]
 
 
 func _key_event(text: String) -> void:
@@ -469,6 +483,10 @@ func _run_capture(dir: String) -> void:
 	_hud.hide_day_card()
 	if OS.get_cmdline_user_args().has("--capture-loss"):
 		await _run_loss_capture(dir)
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("--hud-test"):
+		await _run_hud_test(dir)
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("--art-test") or OS.get_cmdline_args().has("--art-test"):
@@ -568,6 +586,46 @@ func _run_loss_capture(dir: String) -> void:
 		_sim.advance(1.0)
 	_show_outcome_if_over()
 	await _show(dir, "29-loss-summary", "00:00", "hall", Vector2(0.5, 0.75))
+
+
+## HUD capture (user decision 2026-11-15): the start (help showing, no map), the help hidden
+## with only the H hint, the house map found in the library bookshelf (note, map appears, the
+## family bar moves beside it), the slot bar with materials and a morale change floating above
+## a person, then the slots full.
+func _run_hud_test(dir: String) -> void:
+	await _show(dir, "30-hud-start-help", "07:00", "hall", Vector2(0.5, 0.75))
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	await _show(dir, "31-hud-no-map-hint", "07:01", "hall", Vector2(0.5, 0.75))
+	_goto("10:00", "library", Vector2(0.78, 0.12))
+	_toggle_hide()
+	_act()
+	_loot.hold(true)
+	_loot.update(9999.0, _sim.clock.total_minutes)
+	await _show(dir, "32-library-bookshelf-map-in-grid", "10:00", "library", _navigator.uv)
+	_take_loot(_loot.grid().find("house_map"))
+	await _show(dir, "33-map-found-note", "10:00", "library", _navigator.uv)
+	_hud._note.visible = false
+	_take_loot(_loot.grid().find("dust"))
+	_take_loot(_loot.grid().find("cobweb"))
+	_loot.close()
+	_hud.hide_loot_grid()
+	_stealth.unhide()
+	for id: String in ["candle_stub", "rusty_nail", "old_thread", "dust", "dust"]:
+		_loot.inventory[id] = _loot.count(id) + 1
+	_refresh_slots()
+	_hud.add_log(tr("LOG_FOUND") % tr(_loot.name_key("old_thread")))
+	_goto("21:30", "living_room", Vector2(0.5, 0.93))
+	for routine: NpcRoutine in _sim.routines:
+		_stage.float_text(routine.schedule.npc_id, _morale_float(-3, "cold"), MORALE_DROP_COLOR)
+	_stage.float_text(_sim.routines[0].schedule.npc_id, _morale_float(5, "meal_good"), MORALE_GAIN_COLOR)
+	await _show(dir, "34-slots-map-family-bar-floats", "21:30", "living_room", Vector2(0.5, 0.93))
+	for id: String in ["a", "b", "c", "d", "e"]:
+		_loot.inventory["extra_" + id] = 1
+	_refresh_slots()
+	_hud.flash_slots_full()
+	_hud.add_log(tr("LOG_SLOTS_FULL"))
+	await _show(dir, "35-slots-full", "21:31", "living_room", Vector2(0.5, 0.93))
 
 
 ## Art test capture (2026-11-15): the living room at night, cozy (lamp lit, window shut,
