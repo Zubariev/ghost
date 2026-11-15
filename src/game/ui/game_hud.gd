@@ -83,7 +83,6 @@ var _note: PanelContainer
 var _note_text: Label
 var _journal: PanelContainer
 var _journal_text: Label
-var _paused: Label
 var _prompt: Label
 var _map: Control
 var _banner: PanelContainer
@@ -154,9 +153,6 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_help_hint.reset_size()
 	_help_hint.position = Vector2(SCREEN_RIGHT - _help_hint.size.x, 694)
 	_help_hint.visible = false
-	_paused = _label(self, 40, Color(1, 0.85, 0.5))
-	_paused.text = tr("PAUSED")
-	_paused.position = Vector2(560, 300)
 	_prompt = _label(self, 19, Color(0.85, 0.97, 1))
 	_prompt.add_theme_color_override(&"font_outline_color", Color(0, 0, 0, 0.9))
 	_prompt.add_theme_constant_override(&"outline_size", 6)
@@ -230,7 +226,6 @@ func refresh() -> void:
 	_clock.text = "%s  %s · %s   %s" % [tr("DAY_N") % clock.day_number(), GameClock.format_time(clock.minute_of_day()),
 		tr("PHASE_DAY") if clock.is_day() else tr("PHASE_NIGHT"), tr("SPEED_X") % clock.get_speed()]
 	_room.text = _sim.house.rooms[_navigator.room_id].display_name
-	_paused.visible = clock.paused
 	_energy_bar.queue_redraw()
 	if _map.visible:
 		_map.queue_redraw()
@@ -321,6 +316,7 @@ func set_slots(slot_count: int, entries: Array) -> void:
 ## Where the floating texts come from: a Callable returning RoomStage.visible_floats().
 func set_float_source(source: Callable) -> void:
 	_float_source = source
+	_float_layer.queue_redraw()   # clear what was drawn when the source is removed
 
 
 func _process(_delta: float) -> void:

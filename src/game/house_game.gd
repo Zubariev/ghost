@@ -42,6 +42,8 @@ const MORALE_DROP_COLOR := Color("f08a78")
 const MORALE_GAIN_COLOR := Color("a8e08c")
 
 var _sim: HouseSim
+## The in-game pause menu (Esc).
+var _pause_menu: PauseMenu
 var _navigator: GhostNavigator
 var _stage: RoomStage
 var _tint: CanvasModulate
@@ -174,8 +176,13 @@ func _show_outcome_if_over() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _pause_menu.is_open():
+		return   # the pause menu has the keys (it resumes the clock when it closes)
 	if event.is_action_pressed(&"pause"):
-		_sim.clock.paused = not _sim.clock.paused
+		if not _sim.is_over():
+			_sim.clock.paused = true
+			_pause_menu.open()
+			get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"interact"):
 		_act()
 	elif event.is_action_pressed(&"journal"):
@@ -428,10 +435,15 @@ func _connect_events() -> void:
 	# Player settings (main menu): the floating morale texts and the controls help at the start.
 	# Captures always use the defaults.
 	var settings: GameSettings = GameSettings.load_saved() if _capture_dir().is_empty() else GameSettings.defaults()
-	if settings.show_morale_floats:
-		_hud.set_float_source(_stage.visible_floats)
+	_apply_game_settings(settings)
 	if not settings.show_help_at_start:
 		_hud.skip_help_at_start()
+	_pause_menu = PauseMenu.new()
+	add_child(_pause_menu)
+	_pause_menu.resumed.connect(func() -> void:
+		_sim.clock.paused = false
+		_hud.refresh())
+	_pause_menu.settings_applied.connect(_apply_game_settings)
 	_sim.morale.morale_changed.connect(func(npc: String, _value: int, delta: int, reason: String) -> void:
 		if delta != 0 and reason != "set":
 			_stage.float_text(npc, _morale_float(delta, reason), MORALE_DROP_COLOR if delta < 0 else MORALE_GAIN_COLOR))
@@ -478,6 +490,12 @@ func _morale_float(delta: int, reason: String) -> String:
 	var key: String = "REASON_" + reason
 	var why: String = tr(key)
 	return number if why == key else "%s %s" % [number, why]
+
+
+## The player settings that act inside a game (the floating morale texts); display settings are
+## applied by the settings screen itself.
+func _apply_game_settings(settings: GameSettings) -> void:
+	_hud.set_float_source(_stage.visible_floats if settings.show_morale_floats else Callable())
 
 
 func _key_event(text: String) -> void:
@@ -643,6 +661,15 @@ func _run_hud_test(dir: String) -> void:
 	_hud.flash_slots_full()
 	_hud.add_log(tr("LOG_SLOTS_FULL"))
 	await _show(dir, "35-slots-full", "21:31", "living_room", Vector2(0.5, 0.93))
+	# Pause menu (2026-11-15): the menu, its Settings, the main-menu question.
+	_sim.clock.paused = true
+	_pause_menu.open()
+	await _show(dir, "36-pause-menu", "21:31", "living_room", Vector2(0.5, 0.93))
+	(_pause_menu._main.body.get_child(1) as Button).pressed.emit()
+	await _show(dir, "37-pause-settings", "21:31", "living_room", Vector2(0.5, 0.93))
+	_pause_menu._close_sub()
+	(_pause_menu._main.body.get_child(2) as Button).pressed.emit()
+	await _show(dir, "38-pause-main-menu-question", "21:31", "living_room", Vector2(0.5, 0.93))
 
 
 ## Art test capture (2026-11-15): the living room at night, cozy (lamp lit, window shut,
