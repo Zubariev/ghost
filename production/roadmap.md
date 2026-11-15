@@ -65,10 +65,15 @@ Original note:
 Recorded as open in Demo Spec §8.7. Options noted: stairs only, mouse wheel, Shift + W/S.
 
 ### 4. Tuning after play — *in progress*
-Round 1 (2026-11-15, Demo Spec §8.11, built): slower walking with per-person pace,
+Round 1 (2026-11-15, Demo Spec §8.11, done and played): slower walking with per-person pace,
 room condition slows people and the ghost, slower ghost, run-down start, head turns, hold E,
 search and loot (inventory, lore journal). Awaiting play: `bash tools/play.sh`, capture
 `bash tools/play.sh capture` → `production/qa/evidence/playtest-2026-11-15/` (23–25 loot).
+
+Round 2 (2026-11-15, Demo Spec v0.12): morale probe (3 days headless, scripted ghost) showed the
+win was out of reach and the family healed to 100 by day 2. Win = family average ≤ 20; bonuses
+halved; late food makes a poor meal; no natural decay. Re-probe: casual ghost takes the average
+70 → 38 in 3 days, perfect ghost wins on day 2 morning.
 
 Art: the living room style is approved (2026-11-15). Paused by choice for gameplay; later art
 steps: redraw the six family members (still recoloured placeholder figures), then roll the style
@@ -93,8 +98,9 @@ scenarios.
 | In-room walking costs simulation time? | step 1 | decided: no (visual only) |
 | Energy rules | GDD §12.2, Demo Spec P0 #7 | decided 2026-11-14 (§8.10); values provisional |
 | Floor-change controls | Demo Spec §8.7 | decided 2026-11-15: W/S + Space; pause Esc |
-| Natural decay (rooms getting dirty without the ghost) | GDD §9.5 | not decided; not built |
-| Food cooked after its meal window | Demo Spec §5.6–5.7 | not decided (stays ready) |
+| Natural decay (rooms getting dirty without the ghost) | GDD §9.5 | decided 2026-11-15: none (ghost-only) |
+| Food cooked after its meal window | Demo Spec §7.6 | decided 2026-11-15: stays, eaten as a poor meal (`meal_cold`) |
+| Win condition | Demo Spec §7.4 | decided 2026-11-15: family average morale ≤ 20 (all-six-at-once was out of reach) |
 | Win/loss presentation beyond the banner | GDD §1.4 | open |
 
 ## How we work
