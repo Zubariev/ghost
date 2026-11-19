@@ -53,6 +53,8 @@ var _stage: RoomStage
 var _tint: CanvasModulate
 ## Colour grade for storybook rooms (full-screen, under the HUD).
 var _grade_layer: CanvasLayer
+## Rooms of different sizes on one zoom (user decision 2026-11-20).
+var _room_view: RoomView
 var _grade: ColorRect
 var _hud: GameHud
 var _stealth: StealthSystem
@@ -93,6 +95,7 @@ func _ready() -> void:
 	_stage.navigator = _navigator
 	_stage.layout = RoomLayout.new(JsonData.read(FURNITURE_PATH).get("rooms", {}), _sim.house)
 	add_child(_stage)
+	_room_view = RoomView.new(JsonData.read(RoomView.CONFIG_PATH))
 	var stealth_cfg: Dictionary = JsonData.read(STEALTH_PATH)
 	_hide_range = float(stealth_cfg.get("hide_range", 0.16))
 	# Stage 5d: detection penalties live with the rest of the energy numbers.
@@ -150,6 +153,10 @@ func _ready() -> void:
 	var capture_dir: String = _capture_dir()
 	if not capture_dir.is_empty():
 		_run_capture(capture_dir)
+
+
+func _exit_tree() -> void:
+	RoomView.reset()   # the room geometry is shared (static): leave the full box for whatever runs next
 
 
 func _process(delta: float) -> void:
@@ -233,6 +240,7 @@ func _setup_input() -> void:
 ## prompt; sets the room's light tint.
 func _update_view() -> void:
 	var room_id: String = _navigator.room_id
+	_room_view.apply(room_id, _stage)
 	var best: String = ""
 	var best_distance: float = _interact_range
 	for piece: Dictionary in _stage.layout.pieces(room_id):
@@ -260,21 +268,21 @@ func _update_view() -> void:
 		if _loot.is_open():
 			_hud.set_prompt("", Vector2.ZERO, false)
 		else:
-			_hud.set_prompt(tr("GHOST_SEARCH"), RoomGeometry.to_screen(hidden_uv) - Vector2(0, 150), true)
+			_hud.set_prompt(tr("GHOST_SEARCH"), RoomGeometry.to_display(RoomGeometry.to_screen(hidden_uv) - Vector2(0, 150)), true)
 	elif best.is_empty() and not hide_spot.is_empty() and _stealth.hidden_in.is_empty():
 		var spot_uv := Vector2(0.5, 0.5)
 		for spot: Dictionary in _stage.layout.hiding_spots(room_id):
 			if String(spot["id"]) == hide_spot:
 				spot_uv = spot["uv"]
-		_hud.set_prompt(tr("GHOST_HIDE"), RoomGeometry.to_screen(spot_uv) - Vector2(0, 150), true)
+		_hud.set_prompt(tr("GHOST_HIDE"), RoomGeometry.to_display(RoomGeometry.to_screen(spot_uv) - Vector2(0, 150)), true)
 	elif best.begins_with("pickup:"):
 		var pickup_uv: Vector2 = _stage.layout.kind_uv(room_id, "dresser")
-		_hud.set_prompt(tr("GHOST_TAKE_MONOCLE"), RoomGeometry.to_screen(pickup_uv) - Vector2(0, 150), true)
+		_hud.set_prompt(tr("GHOST_TAKE_MONOCLE"), RoomGeometry.to_display(RoomGeometry.to_screen(pickup_uv) - Vector2(0, 150)), true)
 	elif best.is_empty():
 		_hud.set_prompt("", Vector2.ZERO, false)
 	else:
 		var obj: ObjectState = _sim.house.objects[best]
-		var at_screen: Vector2 = RoomGeometry.to_screen(_stage.layout.object_uv(room_id, best)) - Vector2(0, 150)
+		var at_screen: Vector2 = RoomGeometry.to_display(RoomGeometry.to_screen(_stage.layout.object_uv(room_id, best)) - Vector2(0, 150))
 		var action: String = tr(String(obj.ghost.get("prompt", "")))
 		var key: String = GhostEnergy.action_key(obj)
 		var cost: int = roundi(_energy.action_cost(key))
@@ -387,7 +395,7 @@ func _show_loot_grid(spot_id: String, slots: Array[String]) -> void:
 	for spot: Dictionary in _stage.layout.hiding_spots(_navigator.room_id):
 		if String(spot["id"]) == spot_id:
 			spot_uv = spot["uv"]
-	_hud.show_loot_grid(slots, RoomGeometry.to_screen(spot_uv) - Vector2(0, 90), icons, names)
+	_hud.show_loot_grid(slots, RoomGeometry.to_display(RoomGeometry.to_screen(spot_uv) - Vector2(0, 90)), icons, names)
 
 
 func _take_loot(slot: int) -> void:
@@ -581,6 +589,10 @@ func _run_capture(dir: String) -> void:
 		await _run_hud_test(dir)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("--props-test"):
+		await _run_props_test(dir)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--art-test") or OS.get_cmdline_args().has("--art-test"):
 		await _run_art_test(dir)
 		get_tree().quit()
@@ -770,6 +782,30 @@ func _run_art_test(dir: String) -> void:
 	_haunt_living_room()
 	_stage.track_fire()
 	await _show(dir, "10-haunted-night-ghost-at-hearth", "22:11", "living_room", Vector2(0.2, 0.06))
+
+
+## Painted props in every room (art Phase 4, 2026-11-20): each room by day with everything in
+## its cozy state (lamps lit, windows shut, stove working, groceries in, computer on, the meal
+## laid), then at night with every object in its haunted state.
+func _run_props_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	const COZY: Dictionary = {"lamp": &"lit", "window": &"closed", "stove": &"working", "grocery_basket": &"available",
+		"computer": &"working", "meal_food": &"ready"}
+	const HAUNTED: Dictionary = {"lamp": &"out", "window": &"open", "stove": &"broken", "grocery_basket": &"hidden",
+		"computer": &"broken", "meal_food": &"none"}
+	var rooms: Array = _sim.house.rooms.keys()
+	rooms.sort()
+	for pass_states: Array in [[COZY, "10:00", "day"], [HAUNTED, "22:10", "night"]]:
+		var target: int = GameClock.parse_time(pass_states[1])
+		while _sim.clock.minute_of_day() != target and not _sim.is_over():
+			_sim.advance(1.0)   # first, so the family cannot undo the states set below
+		for i: int in rooms.size():
+			for object: ObjectState in _sim.house.objects.values():
+				var key: String = object.kind if (pass_states[0] as Dictionary).has(object.kind) else object.id
+				if (pass_states[0] as Dictionary).has(key):
+					_sim.house.set_object_state(object.id, pass_states[0][key])
+			await _show(dir, "%s-%02d-%s" % [pass_states[2], i + 1, rooms[i]], pass_states[1], rooms[i], Vector2(0.5, 0.95))
 
 
 ## Art test only: lamp out and window open, through the ghost's own rules.

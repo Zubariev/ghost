@@ -254,6 +254,7 @@
 			{
 				"kind": "bookshelf",
 				"u": 0.5,
+				"variant": "books",
 				"v": 0.02,
 				"blocks_sight": [
 					0.1,
@@ -263,6 +264,7 @@
 			{
 				"kind": "bookshelf",
 				"u": 0.78,
+				"variant": "curios",
 				"v": 0.02,
 				"blocks_sight": [
 					0.1,
@@ -409,6 +411,7 @@
 			{
 				"kind": "bed",
 				"u": 0.42,
+				"variant": "starry",
 				"v": 0.3,
 				"hide_id": "hide_children_bedroom_bed"
 			},

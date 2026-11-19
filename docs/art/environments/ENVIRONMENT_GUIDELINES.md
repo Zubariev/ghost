@@ -124,7 +124,7 @@ user review. Characters come after the rooms, from generated images kept in the 
 
 - [ ] The room reads as a specific functional space.
 - [ ] Floor and walking routes read clearly.
-- [ ] Camera and room box unchanged; compatible with the GDD and the code.
+- [ ] Camera and room box unchanged; compatible with the GDD and the code (room sizes: §9, OPEN).
 - [ ] Family members do not merge with furniture or background (cozy and haunted, day and night).
 - [ ] Interactive props and hiding spots are distinguishable from decor; their states read.
 - [ ] The ghost is visible where it should be and hidden by furniture in front of it as before.
@@ -157,4 +157,20 @@ library), `chair`. A room gets its own painting with a key `"<room id>/<kind>"` 
 `room/kind:variant`, `room/kind`, `kind:variant`, then `kind`, so a house-wide `"<kind>"` image
 still serves every room without its own. `furniture.json` is not touched. A test checks that a
 room-scoped key names a real room that has that kind.
+
+## 9. Real-size props, footprints and room size — OPEN (user review 2026-11-20)
+
+All 11 rooms now have painted props (`../SPRITE_SPEC.md` §2), sized at a real-world scale
+(75 px per metre, the family's own scale). Three consequences, each a **gameplay** decision:
+
+1. **Footprints wider than the furniture.** Most pieces are narrower than their walking
+   footprint (`movement.json`): people walk around invisible space beside them. Shrinking the
+   footprints to the paintings changes routes, sight and hiding tests. OPEN.
+2. **Rooms look empty.** Every room is about 10.6 m wide at this scale, with a handful of pieces.
+   **User decision 2026-11-20: more decor** — non-blocking pieces (decor entries, drawn only,
+   kept off family routes as the decor test requires).
+3. **Room sizes.** **User decision 2026-11-20: smaller rooms, of different sizes like a real
+   house** — fewer overlapping sprites. The one room box is fixed by the GDD and Demo Spec
+   (camera, projection, room geometry), so this needs a design change there first, then the
+   room view and the data; a plan goes to the user for approval before any change.
 

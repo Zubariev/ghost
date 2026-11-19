@@ -4,7 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/kitchen/`) |
-| Painted props | OPEN — none yet (§6) |
+| Painted props | **Built 2026-11-20, awaiting user review** — cast-iron range (`working` / `broken`), grocery basket (`available` / `hidden`), counter, table, window (closed / open, gingham); tulip floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
 Room id `kitchen` · in-game name «Кухня» · ground floor · has a window.
@@ -67,24 +67,39 @@ its room box (`ENVIRONMENT_GUIDELINES.md` §2).
 
 > Whimsical gothic storybook illustration of an old farmhouse kitchen: a black cast-iron cooking range with a glowing fire door and a kettle, a long wooden counter with jars, crocks and copper pots, a wicker basket of vegetables and bread, a scrubbed pine kitchen table, white glazed wall tiles below pale yellow walls, copper pans on a shelf, strings of onions and herbs, red quarry-tile floor, a window, a brass floor lamp. Hand-inked dark-brown outlines, painted textures, warm amber light. No people.
 
-## 6. Props to paint
+## 6. Props to paint — generation list (2026-11-16)
 
-Every brief starts with the shared preamble (`ENVIRONMENT_GUIDELINES.md` §8). On-screen height is a guide at
-the back wall (depth 1); paint at 2× (SPRITE_SPEC §2). Cut out with `tools/sprite_cutout.gd`.
+Order of work: the stove first (the most important piece, and it settles the glow question in §7), then
+the list top to bottom. Every prompt is the shared preamble (`ENVIRONMENT_GUIDELINES.md` §8) followed by
+the prop text below.
 
-| Kind | Images | Height guide | Subject (after the preamble) |
-|---|---|---|---|
-| window | Wall piece. Two images: `closed`, `open` (sash swung in, curtains drawn aside). Frost, draught and curtain sway are code. | ~150 px | a sash window with checked gingham curtains |
-| counter | One image; pots and jars on it are part of the painting. | ~100 px | a long wooden counter with jars, crocks, a bread board and copper pots |
-| stove | Two images: `working`, `broken` (door hanging, dented). Fire glow and smoke are code. | ~115 px | a black cast-iron cooking range with a fire door, a chimney pipe and a kettle on top; second image: broken — fire door hanging off, dented, cold |
-| basket | Two images: `available` (full of groceries), `hidden` (empty basket). | ~45 px | a wicker basket full of vegetables and a loaf; second image: the same basket empty |
-| kitchen_table | One image. | ~65 px | a scrubbed pine table with a bowl and a rolling pin |
-| floor_lamp | One image, shade unlit and neutral; the lit glow is code (`effects`), so lit and out share it. | ~170 px | shared brass floor lamp |
+**How to generate**
+- Any size the generator gives; keep the shape (w : h). The image is cut out and scaled with
+  `tools/sprite_cutout.gd` to the final size (2× the on-screen size at depth 1.0, `scale` 0.5;
+  SPRITE_SPEC §2).
+- A prop with two images: make the second by **editing the first**, so framing and outline match and
+  the prop does not jump when its state changes.
+- White background, PNG if possible. Keep the sources in `art/concepts/props/<kind>/`
+  (e.g. `art/concepts/props/stove/`). Game files go to `assets/art/props/` (`<kind>_<state>.png`, SPRITE_SPEC §4).
+
+| # | Kind | Images (game files) | Shape (w : h) | Final size (2×) | Prop text (after the preamble) |
+|---|---|---|---|---|---|
+| 1 | `stove` | `stove_working.png`, then `stove_broken.png` | ~1 : 1 | ~240 × 230 | *A black cast-iron kitchen cooking range with a small closed fire door with dark vent slots, a short chimney pipe rising from the back, a copper kettle on the hotplate, brass rail along the front.* Second, by editing: *the same range broken: fire door hanging off one hinge, the front dented, the kettle knocked askew, cold and dead.* |
+| 2 | `basket` | `basket_available.png`, then `basket_hidden.png` | 1.4 : 1 | ~125 × 90 | *A round wicker basket full of groceries: carrots, onions, potatoes, a round loaf of bread.* Second: *the same wicker basket, empty.* |
+| 3 | `counter` | `counter.png` | 1.5 : 1 | ~290 × 200 | *A long wooden kitchen counter with cupboard doors below; on top, glass jars, stoneware crocks, a bread board and two copper pots.* |
+| 4 | `kitchen_table` | `kitchen_table.png` | 2 : 1 | ~255 × 130 | *A low scrubbed pine kitchen table with turned legs, a mixing bowl and a rolling pin on it.* |
+| 5 | `window` | `window_kitchen_closed.png`, then `window_kitchen_open.png` (key `kitchen/window`) | 1.1 : 1 | ~340 × 300 | *A white-painted wooden sash window with small panes, checked red-and-cream gingham curtains on a rod, a sill with a small herb pot.* Second: *the same window, sash swung open inward, curtains pushed aside.* Frost, draught and curtain sway stay code. |
+| 6 | `floor_lamp` | `floor_lamp.png` (house-wide key, proposed — §7) | ~1 : 2.4 | ~140 × 340 | *A brass floor lamp with a fringed fabric shade, unlit, on a round weighted base.* The lit glow is code (`effects`), so lit and out share the image. |
+
+Final sizes come from the on-screen widths in §2 divided by each piece's depth (`0.78 + 0.34 × v`) and
+the height guides at depth 1 (counter 100, stove 115, basket 45, table 65, lamp 170, window 150 px), ×2.
+Keep the painted width close to the footprint (SPRITE_SPEC §2); the cutout fixes size, not shape.
 
 ## 7. Shared kinds and open points
 
 - **Shared kinds:** `floor_lamp`, `window` also appear in other rooms. Give this room its own painting with a room-scoped key in `visual_style.json` → `sprites`: `"kitchen/<kind>"` (APPROVED 2026-11-15, `ENVIRONMENT_GUIDELINES.md` §8); without one, the house-wide `"<kind>"` image (if any) is used.
-- The stove's fire glow while working: code glow (like the fireplace) or a painted flame layer through the fire door (`effects.states.working`).
+- **OPEN — the stove's fire glow while working:** code glow (like the fireplace) or a painted flame layer through the fire door (`effects.states.working`). *Proposed:* the closed fire door is painted (§6 #1) and the code adds the glow through its vent slots, so nothing burning is painted in and the broken stove simply goes dark; a painted flame layer only if that looks flat in the capture.
+- **OPEN — the floor lamp:** *proposed* one house-wide `floor_lamp` image for all eleven rooms (no `kitchen/floor_lamp` key) instead of one per room. The kitchen window keeps its own (`kitchen/window`, gingham curtains suit the room).
 
 ## 8. Review (when built)
 

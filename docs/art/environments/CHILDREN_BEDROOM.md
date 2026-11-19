@@ -4,7 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/children_bedroom/`) |
-| Painted props | OPEN — none yet (§6) |
+| Painted props | **Built 2026-11-20, awaiting user review** — window (closed / open, starry yellow curtains), two different beds (patchwork; `starry` variant added to `furniture.json`), computer desk (`working` / `broken`, old beige computer — the proposed era), toy box, easel; star floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
 Room id `children_bedroom` · in-game name «Дитяча спальня» · upper floor · has a window.

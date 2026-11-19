@@ -19,7 +19,8 @@ extends RefCounted
 
 const HIGHLIGHT_WIDTH: float = 9.0
 ## The rug's half size in floor units (u, v): drawing only, rugs block nothing.
-const RUG_HALF := Vector2(0.2, 0.12)
+## About 2.5 x 1.8 m at the props' real-world scale (75 px per metre; 2026-11-20, was 0.2 x 0.12).
+const RUG_HALF := Vector2(0.12, 0.075)
 
 ## Kinds drawn on the back wall (sorted behind everything on the floor).
 const WALL_KINDS: Array[String] = ["window", "fireplace", "painting", "wall_clock"]
@@ -83,6 +84,43 @@ static func draw_effects(canvas: CanvasItem, kind: String, state: StringName, fo
 		_draw_smoke(canvas, foot, s, time)
 	if kind == "floor_lamp" and state != &"out":
 		Ink.glow(canvas, foot + Vector2(0, -128) * s, Vector2(40, 30) * s, Color(Palette.SB_CANDLELIGHT, 0.55), 5)
+
+
+## The moving parts of a painted prop that its image leaves out (2026-11-20), at the named
+## screen [param points] from [method PropVisuals.effect_points]: a wall clock's hands
+## ("dial") and pendulum ("pendulum" pivot); a working stove's fire glow or a broken one's thin
+## smoke ("fire"); a working computer's screen glow ("screen"). Nothing for other kinds.
+static func draw_sprite_parts(canvas: CanvasItem, kind: String, state: StringName, points: Dictionary, s: float, time: float) -> void:
+	if kind == "wall_clock":
+		if points.has("pendulum"):
+			var pivot: Vector2 = points["pendulum"]
+			var bob: Vector2 = pivot + Vector2(sin(time * PI) * 7.0, 26.0) * s
+			canvas.draw_line(pivot, bob, Palette.SB_GOLD, 1.6 * s, true)
+			canvas.draw_colored_polygon(Ink.ellipse(bob, 4.0 * s, 4.0 * s, 12), Palette.SB_GOLD)
+		if points.has("dial"):
+			var dial: Vector2 = points["dial"]
+			canvas.draw_line(dial, dial + Vector2(0, -8) * s, Palette.SB_CHARCOAL, 1.6 * s, true)
+			canvas.draw_line(dial, dial + Vector2(5.5, 2.5) * s, Palette.SB_CHARCOAL, 1.6 * s, true)
+	elif kind == "stove" and points.has("fire"):
+		if state == &"broken":
+			_draw_smoke(canvas, points["fire"], s, time)
+		else:
+			var flicker: float = 0.85 + 0.15 * sin(time * 6.0)
+			Ink.glow(canvas, points["fire"], Vector2(22, 12) * s, Color(Palette.SB_CANDLELIGHT, 0.7 * flicker), 5)
+	elif kind == "computer_desk" and points.has("screen") and state != &"broken":
+		Ink.glow(canvas, points["screen"], Vector2(20, 15) * s, Color(Palette.SB_MOON, 0.4), 5)
+
+
+## The sky behind a painted window's panes (2026-11-20): [param mask] (opaque where the panes
+## are, drawn over [param rect]) filled with day glass or the night sky; open, the darker
+## outside with a cold frosty sheen.
+static func draw_painted_glass(canvas: CanvasItem, mask: Texture2D, rect: Rect2, state: StringName, is_day: bool) -> void:
+	var glass: Color = Palette.SB_GLASS_DAY if is_day else Palette.SB_GLASS_NIGHT
+	if state == &"open":
+		canvas.draw_texture_rect(mask, rect, false, glass.darkened(0.3))
+		canvas.draw_texture_rect(mask, rect, false, Color(Palette.SB_MOON, 0.18))
+	else:
+		canvas.draw_texture_rect(mask, rect, false, glass)
 
 
 static func _place(poly: PackedVector2Array, foot: Vector2, s: float) -> PackedVector2Array:

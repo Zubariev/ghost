@@ -4,7 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/dining_room/`) |
-| Painted props | OPEN — none yet (§6) |
+| Painted props | **Built 2026-11-20, awaiting user review** — window (closed / open, plum curtains), sideboard, dining table (meal `none` / `ready`), chairs; standard floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
 Room id `dining_room` · in-game name «Їдальня» · ground floor · has a window.

@@ -24,6 +24,18 @@ How-to steps: `assets/art/props/sprite_guide.md`. Rules: `ART_DIRECTION.md`, `VI
   point *instead of* the code shapes (the code glow stays): `sprite`, `anchor`, `scale`, `flicker`
   (strength of a stretch and sway about the anchor). Used for the fireplace's burning logs and flames.
   Paint such a layer isolated, hard-edged, no glow (the game adds it).
+- `glass` (2026-11-20): per state, a mask image the size of a painted window's image, opaque
+  where its panes are. The code fills it with the sky behind the painting — day glass, night
+  sky, or, when open, the darker outside with a cold sheen — so the panes follow the time of day.
+  Masks are made from the cut-out window's enclosed see-through pockets (at least 6 px; the
+  closed state's pane area limits the open one's), saved as `<image>_glass.png`.
+- `effects.points` (2026-11-20): named points where the code draws a painted prop's moving
+  parts on top: the working stove's flickering glow and the broken one's smoke (`fire`), the
+  working computer's screen glow (`screen`); a clock could take `dial` and `pendulum`. Screen px
+  at depth 1 from the floor point; a test checks each point lies on the image.
+- Lamps (2026-11-20, user review): **two images**, `lit` (the shade glowing) and `out`; the
+  code's glow is added on top only while lit, at the shade (`effects.offset` with
+  `effects.scale` sized to the lamp, so the glow shrinks with a smaller lamp).
 - A missing file falls back to the code drawing with a warning. The ghost's target highlight is
   added by the code around the image.
 - **Gameplay never reads the image**: position, footprint, sight blocking, hiding spot and
@@ -33,6 +45,18 @@ How-to steps: `assets/art/props/sprite_guide.md`. Rules: `ART_DIRECTION.md`, `VI
 ## 2. Authoring size
 
 The game renders at 1280 × 720.
+
+**Real-world scale — PROVISIONAL (user review 2026-11-20).** Every painted prop is sized from its
+real width × height in metres at the family's own scale: people are drawn about 120–140 px tall at
+depth 1, so **75 px per metre**; the back wall (170 px) is about 2.3 m. Art is painted at 2×
+(150 px per metre) with `"scale": 0.5`, and fitted into its real box (e.g. a sofa 2.0 × 0.95 m, a
+double bed 1.7 × 1.2 m, a wardrobe 1.1 × 2.1 m, a floor lamp 0.5 × 1.6 m). Wall pieces also sit at
+their real height: a window on its sill (≈0.7–1.0 m; floor-length curtains from the floor), a
+clock or painting at eye level. The table of every prop's size is in the cut-out script's
+record (`art/prompts/props/README.md` → Sizes). This replaced fitting the image to the walking
+footprint (below), which made windows huge beside small furniture.
+
+*Superseded (kept for history):*
 
 - Paint at **2× the on-screen size at depth 1.0** and set `"scale": 0.5`. This keeps images sharp
   if the window is scaled up and leaves room to re-time scale. (*verify* the look of downscaled
@@ -52,16 +76,17 @@ The game renders at 1280 × 720.
 | Side / tea table | ~55 × 55 | ~110 × 110 |
 
   For floor pieces, divide by the piece's depth (`0.78 + 0.34 × v`) to get the depth-1.0 size.
-- Keep the visual width close to the walking footprint (`movement.json` → `footprints`) so what
-  the player sees matches where people can walk. A painting much wider than its footprint
-  misleads the player; if it is needed, the footprint change is a gameplay decision, not art.
+- ~~Keep the visual width close to the walking footprint~~ — at real-world scale most furniture
+  is **narrower than its footprint** (the sofa ~130 px on screen against ~240 px of blocked
+  floor). Whether the footprints shrink to match is **OPEN**, a gameplay decision
+  (`environments/ENVIRONMENT_GUIDELINES.md` §9); the data is unchanged until it is made.
 
 ## 3. Image format
 
 | Item | Rule |
 |---|---|
 | Format | PNG, RGBA, 8-bit, sRGB. Lossless WebP allowed. No JPEG for props. |
-| Background | Transparent; straight (not premultiplied) alpha. A painting delivered on a plain light background (e.g. a generated JPEG) is cut out with `tools/sprite_cutout.gd` (flood fill from the border, edge un-blend, crop, scale, padding); keep the source in `art/concepts/props/<kind>/`. |
+| Background | Transparent; straight (not premultiplied) alpha. A painting delivered on a plain white background (generated images) is cut out with `tools/sprite_cutout.gd` (flood fill from the border, edge un-blend, crop, scale, padding); keep the source in `art/concepts/props/<room>/`. Options (2026-11-20): `[box]` — one crop box for all of a prop's state images, so they line up and the prop does not jump when its state changes; `[islands] 0` with `[bg_min] 0.9` — for **white objects** (tablecloth, bathtub, sink), whose light areas would otherwise be cleared as background. Ask the generator for a white background, not transparency: models fake transparency with a painted checkerboard. Painted drop shadows do not cut out — have them removed with an edit of the image. |
 | Padding | 4 px of transparent margin at 2× on every side (filter bleed). |
 | View | Front view as the piece stands in the room box, slightly from above (matching the box's floor slope); no free perspective. |
 | Floor contact | The `anchor` point is where the piece meets the floor: bottom centre for floor props; the base line for wall props. |
@@ -69,13 +94,15 @@ The game renders at 1280 × 720.
 | Contours | Painted in, by tier (`VISUAL_STYLE_GUIDE.md` §2), at 2× width: interactive 4.8 px, furniture 3.4 px, background 2.2 px; dark muted brown, never black. |
 | Palette | `COLOR_PALETTE.md`. No ghost cyan in props. |
 | Highlights | Do not paint selection outlines; the game draws them. |
-| Animated or state effects | Do not paint what the code animates or switches: flames, firelight, smoke, a lamp's glow. Paint the empty firebox, the unlit shade; the code draws the rest on top (`effects`). |
+| Animated or state effects | Do not paint what the code animates: flames that flicker, smoke, glow around the object. A state image may show the state on the object itself (a lamp's shade glowing, a stove's fire behind its door); the code adds the moving glow on top (`effects`). |
 | Height | A wall piece must fit the back wall (170 px on screen from its base); a test checks it. |
 
 ## 4. Naming and location
 
 - Folder: `assets/art/props/` (inside the Godot project; `art/` at the root is reference only and
-  is not imported).
+  is not imported); a room's own paintings in `assets/art/props/<room>/`, lamp designs shared by
+  several rooms in `assets/art/props/lamps/`, window glass masks beside their image
+  (`window_closed_glass.png`).
 - File: `<kind>[_<variant>]_<state>.png`, lower case, underscores: `fireplace_burning.png`,
   `fireplace_out.png`, `armchair_olive.png`, `lamp_lit.png` → the `kind` is the one in
   `furniture.json` (`floor_lamp`, so `floor_lamp_lit.png`).
@@ -85,7 +112,7 @@ The game renders at 1280 × 720.
 
 | Kind (furniture.json) | States | Note |
 |---|---|---|
-| `floor_lamp` (and other lamps) | `lit`, `out` | interactive |
+| `floor_lamp` (and other lamps) | `lit`, `out` | interactive; two images (2026-11-20) — five designs: brass (house-wide), standard, tulip, rose, stars, plus the workshop's work lamp |
 | `window` | `closed`, `open` | interactive; open shows a swung sash and billowing curtains |
 | `fireplace` | `burning`, `out` | decor; state follows room cold |
 | `stove` | `working`, `broken` | interactive (kitchen) |
@@ -99,6 +126,8 @@ The game renders at 1280 × 720.
 - Texture filtering and mipmaps for images drawn at 0.39–0.56 of their size (2× art at
   scale 0.5 × depth): check for shimmer or blur; decide import settings and whether a project
   setting change is needed (that change needs approval).
+- Downscaling (*verify*): checked across all rooms in the 2026-11-20 captures (art at 0.1–0.6 of
+  its size): no shimmer or blur seen with Godot's default import.
 - Animated parts: **resolved in the fireplace trial** — code overlays on top of the image
   (`effects`, §1). Frame sequences not needed so far. Curtain sway (window) not yet tried.
 - Walls, floor and doors: feasibility written up in `environments/LIVING_ROOM.md` §8

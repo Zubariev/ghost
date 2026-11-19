@@ -132,8 +132,9 @@ static func _parts(kind: String, uv: Vector2, state: StringName, is_day: bool) -
 			return _box(size[kind].x, size[kind].y, 22, colors[kind], Palette.WOOD_LIGHT)
 		"rug":
 			return [
-				[_ellipse(Vector2.ZERO, 190, 52, 36), Palette.RUG_BORDER],
-				[_ellipse(Vector2.ZERO, 170, 44, 36), Palette.RUG],
+				# ~3 m across at the props' real-world scale (2026-11-20; was 190 x 52)
+				[_ellipse(Vector2.ZERO, 114, 31, 36), Palette.RUG_BORDER],
+				[_ellipse(Vector2.ZERO, 102, 26, 36), Palette.RUG],
 			]
 		"sofa":
 			return [

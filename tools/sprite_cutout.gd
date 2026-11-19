@@ -6,9 +6,13 @@
 ## colour so filtering never bleeds a white fringe. Verification output: the size and the
 ## mapping from source to sprite pixels, to set the anchor.
 ##
-## Run: godot --headless --path . -s res://tools/sprite_cutout.gd -- <in> <out.png> [crop_top] [resize] [bg_min]
+## Run: godot --headless --path . -s res://tools/sprite_cutout.gd -- <in> <out.png> [crop_top] [resize] [bg_min] [box] [islands]
 ## [bg_min] (default 0.86): how light a background pixel is at least; lower it for a painted
 ## grey-and-white checkerboard (menu sheet, 2026-11-15: 0.80).
+## [box] "x,y,w,h" (source px): crop to this box instead of the object's own bounds, so the
+## images of one prop's states share one frame and line up (2026-11-20).
+## [islands] (default 1): 0 keeps enclosed near-white pockets — for white objects (a tablecloth,
+## a bathtub) whose light areas are not background (2026-11-20).
 extends SceneTree
 
 var BG_MIN: float = 0.86          # a background pixel: every channel at least this light…
@@ -29,6 +33,8 @@ func _initialize() -> void:
 	var resize: float = float(args[3]) if args.size() > 3 else 1.0
 	if args.size() > 4:
 		BG_MIN = float(args[4])
+	var fixed_box: PackedStringArray = args[5].split(",") if args.size() > 5 and not args[5].is_empty() else PackedStringArray()
+	var islands: bool = args.size() <= 6 or args[6] != "0"
 	var img := Image.load_from_file(args[0])
 	if img == null:
 		quit(1)
@@ -61,7 +67,7 @@ func _initialize() -> void:
 	for y: int in h:
 		for x: int in w:
 			var c: Color = img.get_pixel(x, y)
-			if bg[y * w + x] == 0 and minf(c.r, minf(c.g, c.b)) >= ISLAND_MIN and maxf(c.r, maxf(c.g, c.b)) - minf(c.r, minf(c.g, c.b)) <= ISLAND_SPREAD:
+			if islands and bg[y * w + x] == 0 and minf(c.r, minf(c.g, c.b)) >= ISLAND_MIN and maxf(c.r, maxf(c.g, c.b)) - minf(c.r, minf(c.g, c.b)) <= ISLAND_SPREAD:
 				bg[y * w + x] = 1
 	var box := Rect2i()
 	var first: bool = true
@@ -80,6 +86,8 @@ func _initialize() -> void:
 			else:
 				box = box.expand(Vector2i(x, y))
 	box.size += Vector2i.ONE
+	if fixed_box.size() == 4:
+		box = Rect2i(int(fixed_box[0]), int(fixed_box[1]), int(fixed_box[2]), int(fixed_box[3])).intersection(Rect2i(0, 0, w, h))
 	var cut: Image = img.get_region(box)
 	var size := Vector2i(roundi(box.size.x * resize), roundi(box.size.y * resize))
 	cut.resize(size.x, size.y, Image.INTERPOLATE_LANCZOS)

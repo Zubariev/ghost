@@ -5,16 +5,60 @@
 class_name RoomGeometry
 extends RefCounted
 
-const BACK_LEFT := Vector2(330, 250)
-const BACK_RIGHT := Vector2(950, 250)
-const FRONT_LEFT := Vector2(110, 625)
-const FRONT_RIGHT := Vector2(1170, 625)
+## The full-size box; [RoomView] shrinks the floor to each room's real width with
+## [method set_floor_scale] (rooms of different sizes, user decision 2026-11-20).
+const FULL_BACK_LEFT := Vector2(330, 250)
+const FULL_BACK_RIGHT := Vector2(950, 250)
+const FULL_FRONT_LEFT := Vector2(110, 625)
+const FULL_FRONT_RIGHT := Vector2(1170, 625)
+const FULL_BACK_SCALE: float = 0.78
+const FULL_FRONT_SCALE: float = 1.12
+static var BACK_LEFT := FULL_BACK_LEFT
+static var BACK_RIGHT := FULL_BACK_RIGHT
+static var FRONT_LEFT := FULL_FRONT_LEFT
+static var FRONT_RIGHT := FULL_FRONT_RIGHT
 const BACK_WALL_HEIGHT: float = 170.0
 const SIDE_WALL_FRONT_HEIGHT: float = 290.0
 const FLOOR_EDGE: float = 18.0
 ## Figures and furniture are drawn this much smaller at the back wall than at the front.
-const BACK_SCALE: float = 0.78
-const FRONT_SCALE: float = 1.12
+static var BACK_SCALE: float = FULL_BACK_SCALE
+static var FRONT_SCALE: float = FULL_FRONT_SCALE
+
+
+## A floor [param f] times the full box's width and depth (a smaller
+## room at the same scale for people and props), about the floor's centre; walls keep their
+## height, and the depth scale narrows with the shallower floor. 1.0 restores the full box.
+static func set_floor_scale(f: float) -> void:
+	var centre: Vector2 = (FULL_BACK_LEFT + FULL_BACK_RIGHT + FULL_FRONT_LEFT + FULL_FRONT_RIGHT) / 4.0
+	BACK_LEFT = centre + (FULL_BACK_LEFT - centre) * f
+	BACK_RIGHT = centre + (FULL_BACK_RIGHT - centre) * f
+	FRONT_LEFT = centre + (FULL_FRONT_LEFT - centre) * f
+	FRONT_RIGHT = centre + (FULL_FRONT_RIGHT - centre) * f
+	var mid: float = (FULL_BACK_SCALE + FULL_FRONT_SCALE) / 2.0
+	BACK_SCALE = mid + (FULL_BACK_SCALE - mid) * f
+	FRONT_SCALE = mid + (FULL_FRONT_SCALE - mid) * f
+
+
+## The room view's zoom and offset ([RoomView]): the stage is drawn scaled by VIEW_ZOOM and moved
+## by VIEW_OFFSET; screen-space UI (the HUD) maps room points with [method to_display].
+static var VIEW_ZOOM: float = 1.0
+static var VIEW_OFFSET := Vector2.ZERO
+
+
+static func set_view(zoom: float, offset: Vector2) -> void:
+	VIEW_ZOOM = zoom
+	VIEW_OFFSET = offset
+
+
+## Where a point of the room drawing appears on the display (for UI drawn outside the stage).
+static func to_display(point: Vector2) -> Vector2:
+	return point * VIEW_ZOOM + VIEW_OFFSET
+
+
+## The screen box the room occupies: walls' tops to the floor's front edge.
+static func bounds() -> Rect2:
+	var top: float = minf(BACK_LEFT.y - BACK_WALL_HEIGHT, FRONT_LEFT.y - SIDE_WALL_FRONT_HEIGHT)
+	return Rect2(FRONT_LEFT.x, top, FRONT_RIGHT.x - FRONT_LEFT.x, FRONT_LEFT.y + FLOOR_EDGE - top)
 
 
 ## Screen point of a floor position.

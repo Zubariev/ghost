@@ -32,7 +32,19 @@ Any prop can be swapped for a painted image without touching gameplay.
      clock) sit on the back wall's base at their `u`.
    - `scale`: image size at the front of the room. Pieces further back are scaled down
      automatically (wall pieces are not).
-3. Run `bash tools/play.sh art-test` and check the screenshots.
+3. Run `bash tools/play.sh art-test` (living room) or `bash tools/play.sh props-test` (every room,
+   cozy by day and haunted at night) and check the screenshots.
+
+## From a generated image (2026-11-20)
+
+Prompts: `art/prompts/props/` (one per image; a second state is an edit of the first image).
+Sources: `art/concepts/props/<room>/`. Cut out to real-world size (`docs/art/SPRITE_SPEC.md` §2):
+
+```
+godot --headless --path . -s res://tools/sprite_cutout.gd -- <source> <out.png> 0 <resize> [bg_min] [x,y,w,h] [islands]
+```
+
+Give both state images of a prop the same `x,y,w,h` crop box; white objects take `0.9 ... 0`.
 
 If the file is missing, the code drawing is used and a warning is printed.
 

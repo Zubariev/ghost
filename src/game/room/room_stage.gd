@@ -257,8 +257,15 @@ func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted:
 		var wall: bool = StorybookArt.is_wall(kind)
 		var depth: float = 1.0 if wall else RoomGeometry.scale_at(uv.y)
 		var room: String = navigator.room_id
+		var glass: Texture2D = visuals.glass_mask(kind, variant, state, room)
+		if glass != null:
+			StorybookArt.draw_painted_glass(self, glass, visuals.sprite_rect(kind, variant, state, hearth, depth, room), state, sim.house.is_day)
 		if visuals.draw_sprite(self, kind, variant, state, hearth, depth, highlighted, room):
 			painted = true
+			var points: Dictionary = visuals.effect_points(kind, variant, room)
+			for name: String in points:
+				points[name] = hearth + Vector2(points[name]) * depth
+			StorybookArt.draw_sprite_parts(self, kind, state, points, depth, _time)
 			hearth += visuals.effects_offset(kind, variant, room) * depth
 			var layer: Dictionary = visuals.effect_layer(kind, variant, state, room)
 			StorybookArt.draw_effects(self, kind, state, hearth, depth * visuals.effects_scale(kind, variant, room), _time, layer.is_empty())
@@ -433,7 +440,7 @@ func visible_floats() -> Array[Dictionary]:
 			var row: int = int(stacked.get(f["npc"], 0))
 			stacked[f["npc"]] = row + 1
 			var head: Vector2 = FamilyArt.head_point(String(f["npc"]), RoomGeometry.to_screen(uv), s, String(placed["pose"]))
-			out.append({"at": head + Vector2(0.0, -30.0 * s - FLOAT_RISE * t - 16.0 * float(row)), "text": f["text"],
+			out.append({"at": RoomGeometry.to_display(head + Vector2(0.0, -30.0 * s - FLOAT_RISE * t - 16.0 * float(row))), "text": f["text"],
 				"color": f["color"], "alpha": 1.0 - maxf(0.0, t - 0.6) / 0.4})
 			break
 	return out

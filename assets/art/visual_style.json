@@ -1,18 +1,677 @@
 {
 	"_source": "Whimsical Gothic Storybook art direction (2026-11-15), living room art test. storybook_rooms: rooms drawn in the new style; others keep the placeholder look until approved. sprites: optional painted images replacing code-drawn props, keyed by furniture kind or kind:variant (variant = the piece's 'variant' in furniture.json). Each entry: sprite (res:// path to a PNG/WebP), states (visual state -> path; e.g. fireplace burning/out, lamp lit/out, window closed/open), anchor ([x, y] of the image, 0..1, that sits on the piece's floor position; default bottom centre [0.5, 1.0]), effects (art Phase 3, 2026-11-15: the code-drawn animation kept on top of a painted prop, e.g. the fire and smoke in a painted fireplace: offset [x, y] in screen px at depth 1 from the anchor point, and scale of that drawing; effects.states: per visual state a painted layer drawn there instead of the code shapes — e.g. the burning logs and flames — with its own sprite, anchor, scale and flicker, the strength of a gentle stretch and sway; the code glow stays), scale (size at the front of the room; depth scaling is applied on top). Empty or missing files fall back to the code drawing. Gameplay data (footprints, sight blockers, hiding spots, interaction range) never depends on these images. See assets/art/props/sprite_guide.md.",
-	"storybook_rooms": ["living_room"],
+	"storybook_rooms": [
+		"living_room"
+	],
 	"sprites": {
 		"fireplace": {
 			"sprite": "res://assets/art/props/fireplace.png",
-			"anchor": [0.5, 0.888],
-			"scale": 0.5,
+			"anchor": [
+				0.5,
+				0.888
+			],
+			"scale": 0.38,
 			"effects": {
-				"offset": [0, -2],
-				"scale": 1.0,
+				"offset": [
+					0,
+					-1.52
+				],
+				"scale": 0.76,
 				"states": {
-					"burning": {"sprite": "res://assets/art/props/fireplace_flames.png", "anchor": [0.5, 0.968], "scale": 0.5, "flicker": 0.06}
+					"burning": {
+						"sprite": "res://assets/art/props/fireplace_flames.png",
+						"anchor": [
+							0.5,
+							0.968
+						],
+						"scale": 0.38,
+						"flicker": 0.06
+					}
 				}
 			}
+		},
+		"children_bedroom/bed": {
+			"sprite": "res://assets/art/props/children_bedroom/bed.png",
+			"anchor": [
+				0.5,
+				0.9623
+			],
+			"scale": 0.5
+		},
+		"children_bedroom/bed:starry": {
+			"sprite": "res://assets/art/props/children_bedroom/bed_starry.png",
+			"anchor": [
+				0.5,
+				0.9672
+			],
+			"scale": 0.5
+		},
+		"children_bedroom/computer_desk": {
+			"sprite": "res://assets/art/props/children_bedroom/computer_desk_working.png",
+			"anchor": [
+				0.5,
+				0.9795
+			],
+			"scale": 0.5,
+			"states": {
+				"working": "res://assets/art/props/children_bedroom/computer_desk_working.png",
+				"broken": "res://assets/art/props/children_bedroom/computer_desk_broken.png"
+			},
+			"effects": {
+				"points": {
+					"screen": [
+						-10.3,
+						-71.1
+					]
+				}
+			}
+		},
+		"children_bedroom/easel": {
+			"sprite": "res://assets/art/props/children_bedroom/easel.png",
+			"anchor": [
+				0.5,
+				0.9808
+			],
+			"scale": 0.5
+		},
+		"children_bedroom/floor_lamp": {
+			"sprite": "res://assets/art/props/lamps/floor_lamp_stars_lit.png",
+			"anchor": [
+				0.5,
+				0.9821
+			],
+			"scale": 0.5,
+			"states": {
+				"lit": "res://assets/art/props/lamps/floor_lamp_stars_lit.png",
+				"out": "res://assets/art/props/lamps/floor_lamp_stars_out.png"
+			},
+			"effects": {
+				"offset": [
+					0.0,
+					0
+				],
+				"scale": 0.751
+			}
+		},
+		"children_bedroom/toy_box": {
+			"sprite": "res://assets/art/props/children_bedroom/toy_box.png",
+			"anchor": [
+				0.5,
+				0.9481
+			],
+			"scale": 0.5
+		},
+		"children_bedroom/window": {
+			"sprite": "res://assets/art/props/children_bedroom/window_closed.png",
+			"anchor": [
+				0.5,
+				1.6084
+			],
+			"scale": 0.5,
+			"states": {
+				"closed": "res://assets/art/props/children_bedroom/window_closed.png",
+				"open": "res://assets/art/props/children_bedroom/window_open.png"
+			},
+			"glass": {
+				"closed": "res://assets/art/props/children_bedroom/window_closed_glass.png",
+				"open": "res://assets/art/props/children_bedroom/window_open_glass.png"
+			}
+		},
+		"dining_room/chair": {
+			"sprite": "res://assets/art/props/dining_room/chair.png",
+			"anchor": [
+				0.5,
+				0.9753
+			],
+			"scale": 0.5
+		},
+		"dining_room/dining_table": {
+			"sprite": "res://assets/art/props/dining_room/dining_table_none.png",
+			"anchor": [
+				0.5,
+				0.9747
+			],
+			"scale": 0.5,
+			"states": {
+				"none": "res://assets/art/props/dining_room/dining_table_none.png",
+				"ready": "res://assets/art/props/dining_room/dining_table_ready.png"
+			}
+		},
+		"dining_room/floor_lamp": {
+			"sprite": "res://assets/art/props/lamps/floor_lamp_standard_lit.png",
+			"anchor": [
+				0.5,
+				0.9836
+			],
+			"scale": 0.5,
+			"states": {
+				"lit": "res://assets/art/props/lamps/floor_lamp_standard_lit.png",
+				"out": "res://assets/art/props/lamps/floor_lamp_standard_out.png"
+			},
+			"effects": {
+				"offset": [
+					0.0,
+					0
+				],
+				"scale": 0.842
+			}
+		},
+		"dining_room/sideboard": {
+			"sprite": "res://assets/art/props/dining_room/sideboard.png",
+			"anchor": [
+				0.5,
+				0.987
+			],
+			"scale": 0.5
+		},
+		"dining_room/window": {
+			"sprite": "res://assets/art/props/dining_room/window_closed.png",
+			"anchor": [
+				0.5,
+				0.9969
+			],
+			"scale": 0.5,
+			"states": {
+				"closed": "res://assets/art/props/dining_room/window_closed.png",
+				"open": "res://assets/art/props/dining_room/window_open.png"
+			},
+			"glass": {
+				"closed": "res://assets/art/props/dining_room/window_closed_glass.png",
+				"open": "res://assets/art/props/dining_room/window_open_glass.png"
+			}
+		},
+		"floor_lamp": {
+			"sprite": "res://assets/art/props/lamps/floor_lamp_brass_lit.png",
+			"anchor": [
+				0.5,
+				0.9803
+			],
+			"scale": 0.5,
+			"states": {
+				"lit": "res://assets/art/props/lamps/floor_lamp_brass_lit.png",
+				"out": "res://assets/art/props/lamps/floor_lamp_brass_out.png"
+			},
+			"effects": {
+				"offset": [
+					0.0,
+					0
+				],
+				"scale": 0.659
+			}
+		},
+		"grandparents_bedroom/double_bed": {
+			"sprite": "res://assets/art/props/grandparents_bedroom/double_bed.png",
+			"anchor": [
+				0.5,
+				0.9796
+			],
+			"scale": 0.5
+		},
+		"grandparents_bedroom/dresser": {
+			"sprite": "res://assets/art/props/grandparents_bedroom/dresser.png",
+			"anchor": [
+				0.5,
+				0.9838
+			],
+			"scale": 0.5
+		},
+		"grandparents_bedroom/floor_lamp": {
+			"sprite": "res://assets/art/props/lamps/floor_lamp_rose_lit.png",
+			"anchor": [
+				0.5,
+				0.98
+			],
+			"scale": 0.5,
+			"states": {
+				"lit": "res://assets/art/props/lamps/floor_lamp_rose_lit.png",
+				"out": "res://assets/art/props/lamps/floor_lamp_rose_out.png"
+			},
+			"effects": {
+				"offset": [
+					0.0,
+					0
+				],
+				"scale": 0.688
+			}
+		},
+		"grandparents_bedroom/rocking_chair": {
+			"sprite": "res://assets/art/props/grandparents_bedroom/rocking_chair.png",
+			"anchor": [
+				0.5,
+				0.9769
+			],
+			"scale": 0.5
+		},
+		"grandparents_bedroom/wardrobe": {
+			"sprite": "res://assets/art/props/grandparents_bedroom/wardrobe.png",
+			"anchor": [
+				0.5,
+				0.9876
+			],
+			"scale": 0.5
+		},
+		"grandparents_bedroom/window": {
+			"sprite": "res://assets/art/props/grandparents_bedroom/window_closed.png",
+			"anchor": [
+				0.5,
+				1.9112
+			],
+			"scale": 0.5,
+			"states": {
+				"closed": "res://assets/art/props/grandparents_bedroom/window_closed.png",
+				"open": "res://assets/art/props/grandparents_bedroom/window_open.png"
+			},
+			"glass": {
+				"closed": "res://assets/art/props/grandparents_bedroom/window_closed_glass.png",
+				"open": "res://assets/art/props/grandparents_bedroom/window_open_glass.png"
+			}
+		},
+		"hall/chest": {
+			"sprite": "res://assets/art/props/hall/chest.png",
+			"anchor": [
+				0.5,
+				0.9619
+			],
+			"scale": 0.5
+		},
+		"hall/coat_stand": {
+			"sprite": "res://assets/art/props/hall/coat_stand.png",
+			"anchor": [
+				0.5,
+				0.9845
+			],
+			"scale": 0.5
+		},
+		"hall/stairs": {
+			"sprite": "res://assets/art/props/hall/stairs.png",
+			"anchor": [
+				0.5,
+				0.9884
+			],
+			"scale": 0.5
+		},
+		"kitchen/basket": {
+			"sprite": "res://assets/art/props/kitchen/basket_available.png",
+			"anchor": [
+				0.5,
+				0.9518
+			],
+			"scale": 0.5,
+			"states": {
+				"available": "res://assets/art/props/kitchen/basket_available.png",
+				"hidden": "res://assets/art/props/kitchen/basket_hidden.png"
+			}
+		},
+		"kitchen/counter": {
+			"sprite": "res://assets/art/props/kitchen/counter.png",
+			"anchor": [
+				0.5,
+				0.9779
+			],
+			"scale": 0.5
+		},
+		"kitchen/floor_lamp": {
+			"sprite": "res://assets/art/props/lamps/floor_lamp_tulip_lit.png",
+			"anchor": [
+				0.5,
+				0.9839
+			],
+			"scale": 0.5,
+			"states": {
+				"lit": "res://assets/art/props/lamps/floor_lamp_tulip_lit.png",
+				"out": "res://assets/art/props/lamps/floor_lamp_tulip_out.png"
+			},
+			"effects": {
+				"offset": [
+					0.0,
+					0
+				],
+				"scale": 0.876
+			}
+		},
+		"kitchen/kitchen_table": {
+			"sprite": "res://assets/art/props/kitchen/kitchen_table.png",
+			"anchor": [
+				0.5,
+				0.972
+			],
+			"scale": 0.5
+		},
+		"kitchen/stove": {
+			"sprite": "res://assets/art/props/kitchen/stove_working.png",
+			"anchor": [
+				0.5,
+				0.9831
+			],
+			"scale": 0.5,
+			"states": {
+				"working": "res://assets/art/props/kitchen/stove_working.png",
+				"broken": "res://assets/art/props/kitchen/stove_broken.png"
+			},
+			"effects": {
+				"points": {
+					"fire": [
+						3.6,
+						-24.0
+					]
+				}
+			}
+		},
+		"kitchen/window": {
+			"sprite": "res://assets/art/props/kitchen/window_closed.png",
+			"anchor": [
+				0.5,
+				1.6569
+			],
+			"scale": 0.5,
+			"states": {
+				"closed": "res://assets/art/props/kitchen/window_closed.png",
+				"open": "res://assets/art/props/kitchen/window_open.png"
+			},
+			"glass": {
+				"closed": "res://assets/art/props/kitchen/window_closed_glass.png",
+				"open": "res://assets/art/props/kitchen/window_open_glass.png"
+			}
+		},
+		"library/bookshelf": {
+			"sprite": "res://assets/art/props/library/bookshelf.png",
+			"anchor": [
+				0.5,
+				0.987
+			],
+			"scale": 0.5
+		},
+		"library/bookshelf:books": {
+			"sprite": "res://assets/art/props/library/bookshelf_books.png",
+			"anchor": [
+				0.5,
+				0.987
+			],
+			"scale": 0.5
+		},
+		"library/bookshelf:curios": {
+			"sprite": "res://assets/art/props/library/bookshelf_curios.png",
+			"anchor": [
+				0.5,
+				0.987
+			],
+			"scale": 0.5
+		},
+		"library/floor_lamp": {
+			"sprite": "res://assets/art/props/lamps/floor_lamp_standard_lit.png",
+			"anchor": [
+				0.5,
+				0.9836
+			],
+			"scale": 0.5,
+			"states": {
+				"lit": "res://assets/art/props/lamps/floor_lamp_standard_lit.png",
+				"out": "res://assets/art/props/lamps/floor_lamp_standard_out.png"
+			},
+			"effects": {
+				"offset": [
+					0.0,
+					0
+				],
+				"scale": 0.842
+			}
+		},
+		"library/reading_chair": {
+			"sprite": "res://assets/art/props/library/reading_chair.png",
+			"anchor": [
+				0.5,
+				0.9769
+			],
+			"scale": 0.5
+		},
+		"living_room/armchair": {
+			"sprite": "res://assets/art/props/living_room/armchair.png",
+			"anchor": [
+				0.5,
+				0.9766
+			],
+			"scale": 0.5
+		},
+		"living_room/armchair:olive": {
+			"sprite": "res://assets/art/props/living_room/armchair_olive.png",
+			"anchor": [
+				0.5,
+				0.9767
+			],
+			"scale": 0.5
+		},
+		"living_room/bookshelf": {
+			"sprite": "res://assets/art/props/living_room/bookshelf.png",
+			"anchor": [
+				0.5,
+				0.9853
+			],
+			"scale": 0.5
+		},
+		"living_room/painting:landscape": {
+			"sprite": "res://assets/art/props/living_room/painting_landscape.png",
+			"anchor": [
+				0.5,
+				3.4177
+			],
+			"scale": 0.5
+		},
+		"living_room/painting:portrait": {
+			"sprite": "res://assets/art/props/living_room/painting_portrait.png",
+			"anchor": [
+				0.5,
+				3.0389
+			],
+			"scale": 0.5
+		},
+		"living_room/side_table": {
+			"sprite": "res://assets/art/props/living_room/side_table.png",
+			"anchor": [
+				0.5,
+				0.9646
+			],
+			"scale": 0.5
+		},
+		"living_room/sofa": {
+			"sprite": "res://assets/art/props/living_room/sofa.png",
+			"anchor": [
+				0.5,
+				0.9733
+			],
+			"scale": 0.5
+		},
+		"living_room/tea_table": {
+			"sprite": "res://assets/art/props/living_room/tea_table.png",
+			"anchor": [
+				0.5,
+				0.9596
+			],
+			"scale": 0.5
+		},
+		"living_room/wall_clock": {
+			"sprite": "res://assets/art/props/living_room/wall_clock.png",
+			"anchor": [
+				0.5,
+				2.239
+			],
+			"scale": 0.5
+		},
+		"living_room/window": {
+			"sprite": "res://assets/art/props/living_room/window_closed.png",
+			"anchor": [
+				0.5,
+				0.9969
+			],
+			"scale": 0.5,
+			"states": {
+				"closed": "res://assets/art/props/living_room/window_closed.png",
+				"open": "res://assets/art/props/living_room/window_open.png"
+			},
+			"glass": {
+				"closed": "res://assets/art/props/living_room/window_closed_glass.png",
+				"open": "res://assets/art/props/living_room/window_open_glass.png"
+			}
+		},
+		"parents_bedroom/double_bed": {
+			"sprite": "res://assets/art/props/parents_bedroom/double_bed.png",
+			"anchor": [
+				0.5,
+				0.9787
+			],
+			"scale": 0.5
+		},
+		"parents_bedroom/floor_lamp": {
+			"sprite": "res://assets/art/props/lamps/floor_lamp_standard_lit.png",
+			"anchor": [
+				0.5,
+				0.9836
+			],
+			"scale": 0.5,
+			"states": {
+				"lit": "res://assets/art/props/lamps/floor_lamp_standard_lit.png",
+				"out": "res://assets/art/props/lamps/floor_lamp_standard_out.png"
+			},
+			"effects": {
+				"offset": [
+					0.0,
+					0
+				],
+				"scale": 0.842
+			}
+		},
+		"parents_bedroom/wardrobe": {
+			"sprite": "res://assets/art/props/parents_bedroom/wardrobe.png",
+			"anchor": [
+				0.5,
+				0.9876
+			],
+			"scale": 0.5
+		},
+		"parents_bedroom/window": {
+			"sprite": "res://assets/art/props/parents_bedroom/window_closed.png",
+			"anchor": [
+				0.5,
+				0.9965
+			],
+			"scale": 0.5,
+			"states": {
+				"closed": "res://assets/art/props/parents_bedroom/window_closed.png",
+				"open": "res://assets/art/props/parents_bedroom/window_open.png"
+			},
+			"glass": {
+				"closed": "res://assets/art/props/parents_bedroom/window_closed_glass.png",
+				"open": "res://assets/art/props/parents_bedroom/window_open_glass.png"
+			}
+		},
+		"upper_bathroom/bathtub": {
+			"sprite": "res://assets/art/props/upper_bathroom/bathtub.png",
+			"anchor": [
+				0.5,
+				0.9759
+			],
+			"scale": 0.5
+		},
+		"upper_bathroom/floor_lamp": {
+			"sprite": "res://assets/art/props/lamps/floor_lamp_tulip_lit.png",
+			"anchor": [
+				0.5,
+				0.9839
+			],
+			"scale": 0.5,
+			"states": {
+				"lit": "res://assets/art/props/lamps/floor_lamp_tulip_lit.png",
+				"out": "res://assets/art/props/lamps/floor_lamp_tulip_out.png"
+			},
+			"effects": {
+				"offset": [
+					0.0,
+					0
+				],
+				"scale": 0.876
+			}
+		},
+		"upper_bathroom/sink": {
+			"sprite": "res://assets/art/props/upper_bathroom/sink.png",
+			"anchor": [
+				0.5,
+				0.9799
+			],
+			"scale": 0.5
+		},
+		"upper_corridor/chest": {
+			"sprite": "res://assets/art/props/upper_corridor/chest.png",
+			"anchor": [
+				0.5,
+				0.9623
+			],
+			"scale": 0.5
+		},
+		"upper_corridor/stairs": {
+			"sprite": "res://assets/art/props/upper_corridor/stairs.png",
+			"anchor": [
+				0.5,
+				0.9884
+			],
+			"scale": 0.5
+		},
+		"workshop/crate": {
+			"sprite": "res://assets/art/props/workshop/crate.png",
+			"anchor": [
+				0.5,
+				0.9506
+			],
+			"scale": 0.5
+		},
+		"workshop/floor_lamp": {
+			"sprite": "res://assets/art/props/lamps/floor_lamp_work_lit.png",
+			"anchor": [
+				0.5,
+				0.9807
+			],
+			"scale": 0.5,
+			"states": {
+				"lit": "res://assets/art/props/lamps/floor_lamp_work_lit.png",
+				"out": "res://assets/art/props/lamps/floor_lamp_work_out.png"
+			},
+			"effects": {
+				"offset": [
+					0.0,
+					0
+				],
+				"scale": 0.728
+			}
+		},
+		"workshop/tool_rack": {
+			"sprite": "res://assets/art/props/workshop/tool_rack.png",
+			"anchor": [
+				0.5,
+				0.9787
+			],
+			"scale": 0.5
+		},
+		"workshop/window": {
+			"sprite": "res://assets/art/props/workshop/window_closed.png",
+			"anchor": [
+				0.5,
+				2.021
+			],
+			"scale": 0.5,
+			"states": {
+				"closed": "res://assets/art/props/workshop/window_closed.png",
+				"open": "res://assets/art/props/workshop/window_open.png"
+			},
+			"glass": {
+				"closed": "res://assets/art/props/workshop/window_closed_glass.png",
+				"open": "res://assets/art/props/workshop/window_open_glass.png"
+			}
+		},
+		"workshop/workbench": {
+			"sprite": "res://assets/art/props/workshop/workbench.png",
+			"anchor": [
+				0.5,
+				0.9733
+			],
+			"scale": 0.5
 		}
 	},
 	"_wall_portraits": "Art Phase 1 (2026-11-15): framed portraits on the side walls, per storybook room. Art config only: not furniture, never an obstacle, not in furniture.json. wall: left/right; v: [from, to] along the wall (0 back .. 1 front; side doors are at 0.39-0.61); h: [from, to] up the wall (0 floor .. 1 top; wainscot up to 0.36); variant: lady / child / gentleman.",
@@ -26,7 +685,16 @@
 		"floor_margin": 0.06,
 		"web_alpha": 0.55,
 		"web_radius": 46,
-		"web_tops": {"bookshelf": [-54, -206], "wardrobe": [-56, -214]},
+		"web_tops": {
+			"bookshelf": [
+				-54,
+				-206
+			],
+			"wardrobe": [
+				-56,
+				-214
+			]
+		},
 		"motes": 12,
 		"mote_alpha": 0.55,
 		"polish_alpha": 0.07,
@@ -37,8 +705,30 @@
 	},
 	"wall_portraits": {
 		"living_room": [
-			{"wall": "left", "v": [0.1, 0.3], "h": [0.46, 0.84], "variant": "lady"},
-			{"wall": "right", "v": [0.12, 0.3], "h": [0.48, 0.82], "variant": "child"}
+			{
+				"wall": "left",
+				"v": [
+					0.14,
+					0.26
+				],
+				"h": [
+					0.54,
+					0.76
+				],
+				"variant": "lady"
+			},
+			{
+				"wall": "right",
+				"v": [
+					0.15,
+					0.27
+				],
+				"h": [
+					0.54,
+					0.76
+				],
+				"variant": "child"
+			}
 		]
 	}
 }

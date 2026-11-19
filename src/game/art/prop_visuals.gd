@@ -118,6 +118,41 @@ func effect_layer(kind: String, variant: String, state: StringName, room: String
 		"scale": float(layer.get("scale", 1.0)), "flicker": float(layer.get("flicker", 0.0))}
 
 
+## Named points of a painted prop where the code draws its moving parts (2026-11-20: a clock's
+## "dial" and "pendulum" pivot, a stove's "fire", a computer's "screen"): screen px at depth 1
+## from the prop's floor point, from [code]effects.points[/code]. Empty when it has none.
+func effect_points(kind: String, variant: String, room: String = "") -> Dictionary:
+	var out: Dictionary = {}
+	var points: Dictionary = (_entry(kind, variant, room).get("effects", {}) as Dictionary).get("points", {})
+	for name: String in points:
+		var p: Array = points[name]
+		out[name] = Vector2(float(p[0]), float(p[1]))
+	return out
+
+
+## The glass mask of a painted window in [param state] (2026-11-20): an image the size of the
+## window's own, opaque where its panes are; the code fills it with the sky behind the painting
+## ([code]glass[/code]: {state: path}). Null when the prop has none.
+func glass_mask(kind: String, variant: String, state: StringName, room: String = "") -> Texture2D:
+	var by_state: Dictionary = _entry(kind, variant, room).get("glass", {})
+	var path: String = String(by_state.get(String(state), ""))
+	if path.is_empty():
+		return null
+	if not _cache.has(path):
+		_cache[path] = _loader.call(path)
+	return _cache[path]
+
+
+## Where the prop's painted image is drawn on screen, foot at [param foot], depth scale
+## [param depth]; empty Rect2 when it has no image.
+func sprite_rect(kind: String, variant: String, state: StringName, foot: Vector2, depth: float, room: String = "") -> Rect2:
+	var tex: Texture2D = texture_for(kind, variant, state, room)
+	if tex == null:
+		return Rect2()
+	var size: Vector2 = tex.get_size() * scale(kind, variant, room) * depth
+	return Rect2(foot - anchor(kind, variant, room) * size, size)
+
+
 ## Image scale at the front of the room (depth scaling is applied on top).
 func scale(kind: String, variant: String, room: String = "") -> float:
 	return float(_entry(kind, variant, room).get("scale", 1.0))
@@ -130,8 +165,7 @@ func draw_sprite(canvas: CanvasItem, kind: String, variant: String, state: Strin
 	var tex: Texture2D = texture_for(kind, variant, state, room)
 	if tex == null:
 		return false
-	var size: Vector2 = tex.get_size() * scale(kind, variant, room) * depth
-	var rect := Rect2(foot - anchor(kind, variant, room) * size, size)
+	var rect: Rect2 = sprite_rect(kind, variant, state, foot, depth, room)
 	if highlighted:
 		Ink.glow(canvas, rect.get_center(), rect.size * 0.62, Color(Palette.SB_HIGHLIGHT, 0.5))
 	canvas.draw_texture_rect(tex, rect, false)

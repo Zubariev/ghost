@@ -5,7 +5,8 @@
 | In-game art test (as built) | **APPROVED baseline** — built and approved 2026-11-15 (`6bfc25b`, `5f1a966`, evidence `d7e26aa`); Phase 1 refinement **APPROVED** 2026-11-15 (user moved on to Phase 2) |
 | Concept `living_room_cozy.jpeg` | **APPROVED as the Phase 1 visual target** (user decision 2026-11-15) — its look, not its perspective or geometry |
 | Full-size haunted concept | OPEN — none yet |
-| Painted fireplace (art Phase 3 trial) | **APPROVED** — built and approved 2026-11-15 (§8) |
+| Painted fireplace (art Phase 3 trial) | **APPROVED** — built and approved 2026-11-15 (§8); shrunk to 76 % (scale 0.38) for the real-world scale, 2026-11-20 |
+| Painted props (art Phase 4) | **Built 2026-11-20, awaiting user review** — window (closed / open), sofa, both armchairs, side and tea tables, wall clock (painted hands: a stopped clock), both paintings, bookshelf; brass floor lamp (lit / out); rug 2.5 × 1.8 m and side-wall portraits ~60 % (still code-drawn); evidence `production/qa/evidence/art-phase4-props/` |
 
 The first and so far only room in the storybook style.
 

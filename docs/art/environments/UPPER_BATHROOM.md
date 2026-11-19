@@ -4,7 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/upper_bathroom/`) |
-| Painted props | OPEN — none yet (§6) |
+| Painted props | **Built 2026-11-20, awaiting user review** — claw-foot bathtub, pedestal sink with mirror; tulip floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
 Room id `upper_bathroom` · in-game name «Ванна (2 поверх)» · upper floor · no window.

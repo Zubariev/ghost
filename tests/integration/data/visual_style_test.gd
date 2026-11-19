@@ -242,4 +242,14 @@ func test_every_shipped_sprite_loads_and_wall_sprites_fit_the_back_wall() -> voi
 		var rect := Rect2(-visuals.anchor(kind, variant, room) * size, size)
 		if StorybookArt.is_wall(kind):
 			assert_float(-rect.position.y).override_failure_message(key + " rises above the ceiling").is_less_equal(RoomGeometry.BACK_WALL_HEIGHT + 2.0)
-		assert_bool(rect.has_point(visuals.effects_offset(kind, variant, room))).override_failure_message(key + " effects point off the image").is_true()
+		if entry.has("effects"):
+			assert_bool(rect.has_point(visuals.effects_offset(kind, variant, room))).override_failure_message(key + " effects point off the image").is_true()
+		# Moving parts drawn by the code (2026-11-20) sit on the image too
+		for name: String in visuals.effect_points(kind, variant, room):
+			assert_bool(rect.grow(1.0).has_point(visuals.effect_points(kind, variant, room)[name])).override_failure_message(key + " point " + name + " off the image").is_true()
+		# A window's glass mask (2026-11-20) matches its state's image in size
+		for state: String in (entry.get("glass", {}) as Dictionary):
+			var mask: Texture2D = visuals.glass_mask(kind, variant, StringName(state), room)
+			assert_object(mask).override_failure_message(key + " glass mask " + state + " does not load").is_not_null()
+			if mask != null:
+				assert_vector(mask.get_size()).override_failure_message(key + " glass mask size").is_equal(visuals.texture_for(kind, variant, StringName(state), room).get_size())

@@ -133,3 +133,27 @@ func test_a_room_scoped_sprite_wins_in_its_room_only() -> void:
 	assert_str(visuals.sprite_path("armchair", "olive", &"", "study")).is_equal("res://fake/study_olive.png")
 	assert_str(visuals.sprite_path("armchair", "olive", &"", "hall")).is_equal("res://fake/olive.png")
 	assert_str(visuals.sprite_path("sofa", "", &"", "kitchen")).is_equal("")
+
+
+func test_a_painted_window_has_a_glass_mask_per_state_and_a_stove_its_fire_point() -> void:
+	# Arrange (2026-11-20): painted props leave out what moves or changes with the light; the code
+	# draws it from a mask or at named points
+	var config: Dictionary = _config()
+	config["sprites"]["window"] = {"sprite": LAMP_PATH, "anchor": [0.5, 1.0], "scale": 0.5,
+		"glass": {"closed": LAMP_OUT_PATH}}
+	config["sprites"]["stove"] = {"sprite": LAMP_PATH, "effects": {"points": {"fire": [4, -30]}}}
+	var visuals := PropVisuals.new(config, func(path: String) -> Texture2D:
+		_loaded.append(path)
+		return ImageTexture.create_from_image(Image.create(40, 20, false, Image.FORMAT_RGBA8)))
+	# Act
+	var closed: Texture2D = visuals.glass_mask("window", "", &"closed", "kitchen")
+	var open: Texture2D = visuals.glass_mask("window", "", &"open", "kitchen")
+	var rect: Rect2 = visuals.sprite_rect("window", "", &"closed", Vector2(100, 200), 1.0, "kitchen")
+	var points: Dictionary = visuals.effect_points("stove", "")
+	# Assert: the image 40x20 at scale 0.5 stands on its foot; the mask is only for its state
+	assert_object(closed).is_not_null()
+	assert_object(open).is_null()
+	assert_bool(_loaded.has(LAMP_OUT_PATH)).is_true()
+	assert_object(rect).is_equal(Rect2(90, 190, 20, 10))
+	assert_vector(points["fire"]).is_equal(Vector2(4, -30))
+	assert_bool(visuals.effect_points("floor_lamp", "").is_empty()).is_true()
