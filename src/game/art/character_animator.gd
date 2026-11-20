@@ -13,6 +13,8 @@
 ##   broken:  pose "broken"                       → "slump" (front)
 ##   sit:     pose "sit", eating, seat faces sideways (a table end) → "sit_side" (painted profile,
 ##            mirrored for left; by the seat's direction, not a glance)
+##   sit:     pose "sit" at the computer or eating, the seat facing away (a desk, the near side of the
+##            table) → "sit_back" (resting in an armchair faces the chair but keeps the front pose)
 ##   sit:     pose "sit" otherwise                → "sit" (painted seated view, facing the camera)
 ##   sleep:   pose "sleep"                        → drawn by the code on the bed (not rigged yet)
 ##   walk:    pose "walk"                         → "walk_side" / "walk_front" / "walk_back" by facing
@@ -68,6 +70,13 @@ func choose(state: Dictionary) -> Array:
 	if pose == "broken" and rig.has_clip("slump"):
 		return ["slump", false]
 	var activity: String = String(state.get("activity", ""))
+	if pose == "sit" and (activity == "computer" or activity == "eat") and rig.has_clip("sit_back"):
+		# seated facing away from the camera (at the computer desk, in front of the dining table)
+		# any seat turned toward the back of the room (the desk, the table behind) — also when it is
+		# off to one side (2026-11-20: his place at the desk faces up and to the left)
+		var sm: Vector2 = Vector2(state.get("seat_facing", Vector2(0, 1))) * Vector2(state.get("room_size", Vector2.ONE))
+		if sm.y < 0.0 and absf(sm.normalized().x) < TABLE_END:
+			return ["sit_back", false]
 	if pose == "sit" and activity == "eat" and rig.has_clip("sit_side"):
 		# eating at a table end, turned toward the table: by where her seat faces, never by a glance
 		# only a seat at a table end faces it squarely sideways; a place behind the table, even off to

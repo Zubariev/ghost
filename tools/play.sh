@@ -28,6 +28,8 @@ elif [[ "${1:-}" == "font-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" -s res://tools/font_specimen.gd -- "$PWD/prototypes/font-trial-2026-11-15/fonts" "$PWD/production/qa/evidence/font-trial/specimen.png"
 elif [[ "${1:-}" == "hud-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-hud-slots-map}" --hud-test
+elif [[ "${1:-}" == "character-test" && "${2:-}" == "son" ]]; then
+	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/character-son" --character-test=son
 elif [[ "${1:-}" == "character-test" && "${2:-}" == "grandpa" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/character-grandpa" --character-test=grandpa
 elif [[ "${1:-}" == "character-test" && "${2:-}" == "mother" ]]; then

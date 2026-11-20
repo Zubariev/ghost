@@ -602,6 +602,10 @@ func _run_capture(dir: String) -> void:
 		await _run_hud_test(dir)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("--character-test=son"):
+		await _run_son_test(dir)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--character-test=grandpa"):
 		await _run_grandpa_test(dir)
 		get_tree().quit()
@@ -1032,6 +1036,62 @@ func _run_grandpa_test(dir: String) -> void:
 	await _frames(dir, "p14-fright", 0.12, 0.002)
 	await _frames(dir, "p15-fright-frame", 0.4, 0.002)
 	await _show(dir, "p16-resting-in-living-room", "13:30", "living_room", Vector2(0.15, 0.95))
+
+
+## The painted son (fifth family member, 2026-11-20): breakfast (from behind, the near side of the
+## table), playing at the computer, walking, reading comics in the library, a glimpse of the ghost
+## (anxious), the fright, sweeping as the second cleaner.
+func _run_son_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	const B: int = 4   # son: fifth in the schedule order
+	await _show(dir, "s01-breakfast", "07:30", "dining_room", Vector2(0.5, 0.95))
+	await _show(dir, "s02-at-the-computer", "08:30", "children_bedroom", Vector2(0.15, 0.95))
+	await _frames(dir, "s03-computer-frame", 0.6, 0.0)
+	await _show(dir, "s04-idle-before-lunch", "11:55", "children_bedroom", Vector2(0.15, 0.95))
+	var guard: int = 0
+	while not _motion.is_walking(B) and guard < 4000:
+		var step: float = _sim.clock.minutes_for(0.05)
+		_sim.advance(0.05)
+		_motion.update(step)
+		guard += 1
+	for i: int in 5:
+		_navigator.place(_motion.room_of(B), Vector2(0.15, 0.95))
+		await _frames(dir, "s%02d-walking-frame" % (i + 5), 0.12, 0.03)
+	await _show(dir, "s10-reading-comics", "13:30", "library", Vector2(0.85, 0.95))
+	await _frames(dir, "s11-reading-frame", 1.0, 0.0)
+	var reading: Dictionary = _motion.person(B, "library")
+	var size: Vector2 = _stage.layout.size("library")
+	var look: Vector2 = (Vector2(reading["facing"]) * size).normalized()
+	_navigator.place("library", Vector2(reading["uv"]) + look * 2.0 / size)
+	_stealth.observe()
+	print("son glimpse: %s" % [_stealth.phase_of("son")])
+	await _frames(dir, "s12-glimpsed-anxious", 0.5, 0.002)
+	await _frames(dir, "s13-anxious-frame", 0.8, 0.002)
+	var waited: int = 0
+	while _stealth.phase_of("son") != StealthSystem.Phase.NONE and waited < 400:
+		var step2: float = _sim.clock.minutes_for(0.25)
+		_sim.advance(0.25)
+		_motion.update(step2)
+		waited += 1
+	var here: Dictionary = _motion.person(B, _motion.room_of(B))
+	var room_size: Vector2 = _stage.layout.size(_motion.room_of(B))
+	_navigator.place(_motion.room_of(B), Vector2(here["uv"]) + (Vector2(here["facing"]) * room_size).normalized() * 0.8 / room_size)
+	_stealth.observe()
+	_navigator.place(_motion.room_of(B), Vector2(0.85, 0.95))
+	await _frames(dir, "s14-fright", 0.12, 0.002)
+	await _frames(dir, "s15-fright-frame", 0.4, 0.002)
+	# 14:00–17:00 he helps as the second cleaner: follow him to a cleaning task once he is working.
+	await _show(dir, "s16-afternoon", "14:05", "hall", Vector2(0.15, 0.95))
+	guard = 0
+	while (_sim.routines[B].current_task == null or _sim.routines[B].current_task.type != HouseTask.Type.CLEAN or _motion.is_walking(B)) and guard < 8000:
+		var step3: float = _sim.clock.minutes_for(0.1)
+		_sim.advance(0.1)
+		_motion.update(step3)
+		guard += 1
+	_navigator.place(_motion.room_of(B), Vector2(0.15, 0.95))
+	await _frames(dir, "s17-sweeping", 0.3, 0.0)
+	await _frames(dir, "s18-sweeping-frame", 0.6, 0.0)
 
 
 ## Capture only: lets [param seconds] of real time pass for the animation (the family walks on by

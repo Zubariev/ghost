@@ -81,6 +81,17 @@ func test_a_family_member_without_an_object_goes_to_their_seat_in_metres() -> vo
 	assert_vector(layout.slot("big", 0)).is_equal(Vector2(0.18, 0.62))
 
 
+func test_a_seat_can_face_its_own_way() -> void:
+	# [x, depth, facing x, facing depth]: father's seat in the small room faces the back wall
+	var house: HouseState = _house()
+	var layout := RoomLayout.new({"small": []}, house, {"small": [[1.0, 0.5, 0.0, -1.0]]})
+	var schedule := Schedule.from_dict({"npc_id": "father", "start_room": "small", "activities": [
+		{"id": "play", "start": "00:00", "end": "23:59", "room": "small", "animation": "computer"}]})
+	var routine := NpcRoutine.new(schedule, house, 15)
+	assert_vector(layout.slot("small", 0)).is_equal(Vector2(0.25, 0.25))
+	assert_vector(layout.facing(routine, "small", Vector2(0.25, 0.25))).is_equal(Vector2(0, -1))
+
+
 func test_people_take_their_own_place_at_an_object_in_metres() -> void:
 	# Arrange: around a "table" object in the small room (4 × 2 m), father's place 1 m across, 1 m deep
 	var layout := RoomLayout.new({"small": [{"kind": "dining_table", "u": 0.5, "v": 0.5, "object": "table"}]}, _house(),

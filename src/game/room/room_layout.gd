@@ -174,7 +174,7 @@ func spot(routine: NpcRoutine, index: int, room_id: String) -> Vector2:
 ## (metres, furniture.json "seats"), else a slot in a row across the front of the room.
 func slot(room_id: String, index: int) -> Vector2:
 	var room_seats: Array = seats.get(room_id, [])
-	if index < room_seats.size() and (room_seats[index] as Array).size() == 2:   # [] = no seat here
+	if index < room_seats.size() and (room_seats[index] as Array).size() >= 2:   # [] = no seat here
 		var seat: Array = room_seats[index]
 		return to_uv(room_id, Vector2(float(seat[0]), float(seat[1])))
 	return Vector2(0.18 + 0.13 * float(index), 0.62 + 0.08 * float(index % 2))
@@ -185,6 +185,12 @@ func facing(routine: NpcRoutine, room_id: String, at: Vector2) -> Vector2:
 	var focus: Vector2 = _focus_object_uv(routine, room_id)
 	if focus.x >= 0.0:
 		return _toward(at, focus, Vector2(0, 1))
+	# a seat may say which way it faces: [x, depth, facing x, facing depth] (2026-11-20: the son's
+	# seat at the computer desk faces the desk, though his activity names no object)
+	for seat: Variant in seats.get(room_id, []):
+		var s: Array = seat
+		if s.size() == 4 and to_uv(room_id, Vector2(float(s[0]), float(s[1]))).distance_to(at) < 0.001:
+			return Vector2(float(s[2]), float(s[3])).normalized()
 	return Vector2(0, 1)
 
 

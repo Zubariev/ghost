@@ -24,6 +24,7 @@ func _rig() -> CharacterRig:
 			"cook": {"view": "front", "length": 1.0, "loop": true, "tracks": {}},
 			"sit": {"view": "front", "length": 1.0, "loop": true, "tracks": {}},
 			"sit_side": {"view": "side", "length": 1.0, "loop": true, "tracks": {}},
+			"sit_back": {"view": "front", "length": 1.0, "loop": true, "tracks": {}},
 			"stride": {"view": "side", "length": 1.0, "loop": true, "ease": "linear", "tracks": {"body": [[0, 0], [1, 10]]}},
 		},
 	})
@@ -60,6 +61,10 @@ func test_the_animator_follows_the_games_states() -> void:
 	assert_array(anim.choose({"pose": "stand", "marker": "?", "room_size": size})).is_equal(["anxious", false])
 	assert_array(anim.choose({"pose": "walk", "marker": "!", "room_size": size})).is_equal(["fright", false])
 	assert_array(anim.choose({"pose": "sit", "room_size": size})).is_equal(["sit", false])
+	# seated with the seat facing away from the camera (a desk, the near side of the table)
+	assert_array(anim.choose({"pose": "sit", "activity": "computer", "seat_facing": Vector2(0, -1), "room_size": size})).is_equal(["sit_back", false])
+	# off to one side of the desk (up and to the left): still from behind, not the front pose
+	assert_array(anim.choose({"pose": "sit", "activity": "computer", "seat_facing": Vector2(-0.64, -0.77), "room_size": size})).is_equal(["sit_back", false])
 	# eating at a table end: turned by the seat, not by a glance; resting while glancing sideways: front
 	assert_array(anim.choose({"pose": "sit", "activity": "eat", "facing": Vector2(0, 1), "seat_facing": Vector2(-1, 0), "room_size": size})).is_equal(["sit_side", true])
 	assert_array(anim.choose({"pose": "sit", "activity": "eat", "facing": Vector2(-1, 0), "seat_facing": Vector2(1, 0), "room_size": size})).is_equal(["sit_side", false])
@@ -93,6 +98,10 @@ func test_mothers_rig_is_complete() -> void:
 
 func test_grandpas_rig_is_complete() -> void:
 	_check_rig("grandpa", ["idle_front", "idle_side", "idle_back", "walk_side", "walk_front", "walk_back", "read", "anxious", "fright", "sit", "sit_side", "slump"])
+
+
+func test_sons_rig_is_complete() -> void:
+	_check_rig("son", ["idle_front", "idle_side", "idle_back", "walk_side", "walk_front", "walk_back", "read", "sit_back", "clean", "anxious", "fright", "slump"])
 
 
 func _check_rig(npc_id: String, required: Array) -> void:

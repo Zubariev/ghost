@@ -1,5 +1,5 @@
 {
-	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). blocks_sight: [half width, half depth] in metres (2026-11-20, rooms of real sizes). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take. decor = drawn only (Whimsical Gothic Storybook art test, 2026-11-15): never an obstacle, hiding spot, sight blocker or object; variant picks a look (e.g. armchair olive, painting portrait/landscape). Every room has at least two hiding spots (user decision 2026-11-15). seats (Phase B, 2026-11-20): per room, where each family member (father, mother, grandma, grandpa, son, daughter) rests or plays when the activity names no object, in METRES [x, depth] on the room's real floor. Living room re-laid in metres (docs/art/environments/LIVING_ROOM.md, Phase B plan). object_seats: per sim object, where each family member stands or sits to use it (metres, e.g. around the dining table). Every room re-laid in metres (Phase B, 2026-11-20); an empty seat [] means that person has none there. object_seats: per sim object, where each family member stands or sits to use it (metres, e.g. around the dining table). Every room re-laid in metres (Phase B, 2026-11-20); an empty seat [] means that person has none there. object_seats: per sim object, where each family member stands or sits to use it (metres, e.g. around the dining table). Every room re-laid in metres (Phase B, 2026-11-20); an empty seat [] means that person has none there. object_seats: per sim object, where each family member stands or sits to use it (metres, e.g. around the dining table). Every room re-laid in metres (Phase B, 2026-11-20); an empty seat [] means that person has none there.",
+	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). blocks_sight: [half width, half depth] in metres (2026-11-20, rooms of real sizes). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take. decor = drawn only (Whimsical Gothic Storybook art test, 2026-11-15): never an obstacle, hiding spot, sight blocker or object; variant picks a look (e.g. armchair olive, painting portrait/landscape). Every room has at least two hiding spots (user decision 2026-11-15). seats (Phase B, 2026-11-20): per room, where each family member (father, mother, grandma, grandpa, son, daughter) rests or plays when the activity names no object, in METRES [x, depth] on the room's real floor. Living room re-laid in metres (docs/art/environments/LIVING_ROOM.md, Phase B plan). object_seats: per sim object, where each family member stands or sits to use it (metres, e.g. around the dining table). Every room re-laid in metres (Phase B, 2026-11-20); an empty seat [] means that person has none there. object_seats: per sim object, where each family member stands or sits to use it (metres, e.g. around the dining table). Every room re-laid in metres (Phase B, 2026-11-20); an empty seat [] means that person has none there. object_seats: per sim object, where each family member stands or sits to use it (metres, e.g. around the dining table). Every room re-laid in metres (Phase B, 2026-11-20); an empty seat [] means that person has none there. object_seats: per sim object, where each family member stands or sits to use it (metres, e.g. around the dining table). Every room re-laid in metres (Phase B, 2026-11-20); an empty seat [] means that person has none there. A seat may also give the way it faces: [x, depth, facing x, facing depth] (the son at the computer desk).",
 	"rooms": {
 		"workshop": [
 			{
@@ -688,7 +688,7 @@
 			],
 			[
 				3.4,
-				2.5
+				2.44
 			]
 		],
 		"parents_bedroom": [
@@ -717,7 +717,9 @@
 			[],
 			[
 				4.4,
-				3.2
+				3.1,
+				0.0,
+				-1.0
 			],
 			[
 				2.5,
