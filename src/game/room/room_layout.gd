@@ -161,7 +161,7 @@ func person(routine: NpcRoutine, index: int, room_id: String, routines: Array[Np
 func spot(routine: NpcRoutine, index: int, room_id: String) -> Vector2:
 	var at: Vector2 = _focus_object_uv(routine, room_id)
 	var places: Array = object_seats.get(_focus_object_id(routine), [])
-	if at.x >= 0.0 and index < places.size():
+	if at.x >= 0.0 and index < places.size() and (places[index] as Array).size() == 2:   # [] = no place of their own
 		var place: Array = places[index]
 		return to_uv(room_id, Vector2(float(place[0]), float(place[1])))
 	if at.x >= 0.0:

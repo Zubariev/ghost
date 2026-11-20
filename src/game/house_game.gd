@@ -128,6 +128,10 @@ func _ready() -> void:
 		style["sprites"] = {}   # comparison captures: every prop drawn in code (art Phase 3)
 	_stage.visuals = PropVisuals.new(style)
 	_stage.surfaces = RoomSurfaces.new(style.get("surfaces", {}))
+	for routine: NpcRoutine in _sim.routines:   # painted family members (character pipeline pilot)
+		var rig: CharacterRig = CharacterRig.load_for(routine.schedule.npc_id)
+		if rig != null:
+			_stage.rigs[routine.schedule.npc_id] = rig
 	_stage.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR   # painted surfaces tile seamlessly; sprites stay inside 0..1
 	_sim.clock.minute_advanced.connect(func(total: int) -> void:
 		if not _sim.is_over():
@@ -598,6 +602,10 @@ func _run_capture(dir: String) -> void:
 		await _run_hud_test(dir)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("--character-test"):
+		await _run_character_test(dir)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--props-test"):
 		await _run_props_test(dir)
 		get_tree().quit()
@@ -791,6 +799,77 @@ func _run_art_test(dir: String) -> void:
 	_haunt_living_room()
 	_stage.track_fire()
 	await _show(dir, "10-haunted-night-ghost-at-hearth", "22:11", "living_room", Vector2(0.2, 0.06))
+
+
+## The painted family pilot (character pipeline, 2026-11-20): grandma cooking at the stove (three
+## frames of the stir), glimpsing the ghost (anxious), the fright of contact, resting in her
+## armchair, and walking to breakfast (six frames along the walk).
+func _run_character_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	await _show(dir, "c01-cooking", "06:40", "kitchen", Vector2(0.15, 0.95))
+	for i: int in 2:
+		await _frames(dir, "c0%d-cooking-frame" % (i + 2), 0.4, 0.0)
+	# After breakfast is cooked she walks to the dining room: run on until she sets off, then follow her.
+	var guard: int = 0
+	while not _motion.is_walking(2) and guard < 4000:
+		var step: float = _sim.clock.minutes_for(0.05)
+		_sim.advance(0.05)
+		_motion.update(step)
+		guard += 1
+	_navigator.place(_motion.room_of(2), Vector2(0.15, 0.95))
+	await _frames(dir, "c04-walking-to-breakfast", 0.05, 0.03)
+	for i: int in 5:
+		_navigator.place(_motion.room_of(2), Vector2(0.15, 0.95))
+		await _frames(dir, "c%02d-walking-frame" % (i + 5), 0.12, 0.03)
+	_navigator.place("kitchen", Vector2(0.1, 0.95))
+	await _show(dir, "c10-kitchen-before", "09:20", "kitchen", Vector2(0.1, 0.95))
+	var cook: Dictionary = _stage.layout.person(_sim.routines[2], 2, "kitchen", _sim.routines)   # at the stove now
+	# Beside her at the stove, at the edge of her side vision (she faces the wall while cooking).
+	_navigator.place("kitchen", Vector2(cook["uv"]) + Vector2(cook["facing"]).rotated(deg_to_rad(-55.0)) * 0.22 + Vector2(0, 0.08))
+	_stealth.observe()
+	await _frames(dir, "c11-glimpsed-anxious", 0.5, 0.002)
+	await _frames(dir, "c12-anxious-frame", 0.8, 0.002)
+	# Contact: the game sends the ghost back to its start; the capture looks back into the kitchen.
+	var watch := Vector2(0.15, 0.95)
+	_navigator.place("kitchen", Vector2(cook["uv"]) + Vector2(cook["facing"]) * 0.12)
+	_stealth.observe()
+	_navigator.place("kitchen", watch)
+	await _frames(dir, "c13-fright", 0.12, 0.002)
+	await _frames(dir, "c13b-fright-frame", 0.4, 0.002)
+	await _show(dir, "c14-resting-in-armchair", "14:00", "living_room", Vector2(0.15, 0.95))
+	await _frames(dir, "c15-resting-frame", 1.5, 0.0)
+	# Glimpsed while resting, by the game's own rules, during her morning rest (08:00–09:00), when she
+	# is alone in the living room: a resting person faces what they use (her armchair) and glances
+	# aside now and then; the ghost waits 1.8 m to her side and the game runs on until a glance catches
+	# it (no sight or detection change; at most 30 game minutes, and only while the ghost is there).
+	await _show(dir, "c16a-alone-resting", "08:20", "living_room", Vector2(0.15, 0.95))
+	_navigator.place("living_room", Vector2(3.65 / 7.0, 2.99 / 5.0))
+	var waited: int = 0
+	while _stealth.phase_of("grandma") == StealthSystem.Phase.NONE and waited < 120 and _navigator.room_id == "living_room":
+		var step: float = _sim.clock.minutes_for(0.25)
+		_sim.advance(0.25)
+		_motion.update(step)
+		_stealth.observe()
+		waited += 1
+	print("glimpse after %.1f game minutes" % (waited * 0.25))
+	await _frames(dir, "c16-glimpsed-anxious", 0.5, 0.002)
+	await _frames(dir, "c17-anxious-frame", 0.8, 0.002)
+
+
+## Capture only: lets [param seconds] of real time pass for the animation (the family walks on by
+## [param minutes_per_frame] game minutes each frame when walking), then saves a screenshot.
+func _frames(dir: String, shot_name: String, seconds: float, minutes_per_frame: float) -> void:
+	var left: float = seconds
+	while left > 0.0:
+		if minutes_per_frame > 0.0:
+			_motion.update(minutes_per_frame)
+		await get_tree().process_frame
+		left -= get_process_delta_time()
+	_update_view()
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join(shot_name + ".png"))
+	print("captured ", shot_name)
 
 
 ## Painted props in every room (art Phase 4, 2026-11-20): each room by day with everything in

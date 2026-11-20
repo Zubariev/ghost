@@ -91,7 +91,7 @@ func test_no_family_route_in_any_room_crosses_decor() -> void:
 				var at := Vector2(float(piece["u"]), float(piece["v"]))
 				var seats: Array = object_seats.get(String(piece["object"]), [])
 				for index: int in 6:
-					if index < seats.size():
+					if index < seats.size() and (seats[index] as Array).size() == 2:   # [] = no place of their own
 						places.append(layout.to_uv(room_id, Vector2(float(seats[index][0]), float(seats[index][1]))))
 					else:
 						var spread: float = (float(index) - 2.5) * 0.06

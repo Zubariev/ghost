@@ -100,7 +100,7 @@ Starve* block in §13.4 (proposed in `proposals/PHASE0_REVIEW.md` §2, not appli
 | Living room — concept image | **The visual target for Phase 1** (not its perspective or geometry) | APPROVED (as target) | `environments/LIVING_ROOM.md` |
 | Living room — haunted concept | Full-size matching image | OPEN | `environments/LIVING_ROOM.md` |
 | Other ten rooms | Placeholder look until restyled room by room | PROVISIONAL (planned) | `environments/ENVIRONMENT_GUIDELINES.md` |
-| Family character designs | Three concept sets disagree | OPEN — deferred to the character phase | §6 |
+| Family character designs | Late 1990s / early 2000s family in an older house (user brief 2026-11-20); pilot: grandma | EXPERIMENTAL — pilot awaiting review | `characters/CHARACTER_PIPELINE.md`, `characters/GRANDMA.md` |
 | Ghost colour and glow | Ghost cyan, faint glow, dusk-blue contour, simple and playful | APPROVED | §6 |
 | Ghost silhouette | Round sheet (built) vs. wispy tail (concepts) | OPEN — deferred | §6 |
 | UI style | Dark wood, parchment, brass (primary moodboard) | EXPERIMENTAL | §6 |
@@ -112,7 +112,7 @@ Starve* block in §13.4 (proposed in `proposals/PHASE0_REVIEW.md` §2, not appli
 
 ## 6. Characters, ghost, UI
 
-**Family — OPEN (deferred).** The six must stay readable at game size: distinct silhouettes, one
+**Family — EXPERIMENTAL (character pipeline pilot, 2026-11-20).** Set in the late 1990s / early 2000s (user brief): the period-dressed concept sets below are kept for silhouettes only. Pipeline and pilot: `characters/CHARACTER_PIPELINE.md`, `characters/GRANDMA.md`. Earlier note: The six must stay readable at game size: distinct silhouettes, one
 identity colour each (`GameHud.NPC_COLORS`), the traits of GDD §5.1/§5.4. Concepts disagree:
 
 - `art/moodboards/primary_moodboard.png` — father (moustache, waistcoat), mother (apron), grandma

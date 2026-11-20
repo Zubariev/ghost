@@ -50,6 +50,11 @@ var sight_config: Dictionary = {}
 var visuals: PropVisuals
 ## Painted walls, floors, rugs and cobwebs (2026-11-20); may be null.
 var surfaces: RoomSurfaces
+## Painted cutout rigs by family member id (character pipeline pilot, 2026-11-20); people without
+## one are drawn in code.
+var rigs: Dictionary = {}
+## person index -> CharacterAnimator (visual only: never saved, never read by gameplay)
+var _animators: Dictionary = {}
 ## Paper grain material used in storybook rooms; may be null.
 var paper_material: Material
 
@@ -123,6 +128,7 @@ func _process(delta: float) -> void:
 	_time += delta
 	_floats.assign(_floats.filter(func(f: Dictionary) -> bool: return _time - float(f["born"]) < FLOAT_SECONDS))
 	_walk_phase += delta * 9.0
+	_update_animators(delta)
 	if _mood_room != navigator.room_id:
 		settle_mood()
 	_warmth = RoomMood.approach(_warmth, RoomMood.warmth(sim.house.rooms[navigator.room_id]), delta)
@@ -214,8 +220,11 @@ func _draw() -> void:
 			continue
 		var uv: Vector2 = placed["uv"]
 		var facing_left: bool = Vector2(placed["facing"]).x < 0.0
-		items.append([RoomGeometry.to_screen(uv).y, FamilyArt.draw_person.bind(self, routine.schedule.npc_id,
-			RoomGeometry.to_screen(uv), RoomGeometry.scale_at(uv.y), String(placed["pose"]), _walk_phase, facing_left)])
+		if _animators.has(i) and String(placed["pose"]) != "sleep":
+			items.append([RoomGeometry.to_screen(uv).y, _draw_rigged.bind(i, RoomGeometry.to_screen(uv), RoomGeometry.scale_at(uv.y))])
+		else:
+			items.append([RoomGeometry.to_screen(uv).y, FamilyArt.draw_person.bind(self, routine.schedule.npc_id,
+				RoomGeometry.to_screen(uv), RoomGeometry.scale_at(uv.y), String(placed["pose"]), _walk_phase, facing_left)])
 		if placed.has("marker"):
 			markers.append([RoomGeometry.to_screen(uv) + Vector2(-6, -150 * RoomGeometry.scale_at(uv.y)), String(placed["marker"])])
 	var ghost_uv: Vector2 = navigator.uv
@@ -293,6 +302,47 @@ func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted:
 			FurnitureArt.draw(self, kind, uv, state, highlighted, sim.house.is_day)
 	if kind == "fireplace" and state == &"out" and _fire_out_at.has(navigator.room_id):
 		_draw_embers(hearth, _wear_model().ember_glow(_time - float(_fire_out_at[navigator.room_id])))
+
+
+# --- Painted family members (character pipeline pilot, 2026-11-20) ---------------------------
+
+## Feeds each painted family member's animator this frame's game state (pose and facing from
+## FamilyMotion, the schedule's activity, the stealth marker). Visual only.
+func _update_animators(delta: float) -> void:
+	if motion == null or sim == null:
+		return
+	var room_id: String = navigator.room_id
+	for i: int in sim.routines.size():
+		var routine: NpcRoutine = sim.routines[i]
+		var npc_id: String = routine.schedule.npc_id
+		if not rigs.has(npc_id):
+			continue
+		var placed: Dictionary = motion.person(i, room_id)
+		if placed.is_empty():
+			_animators.erase(i)   # out of sight: start afresh when seen again
+			continue
+		if not _animators.has(i):
+			_animators[i] = CharacterAnimator.new(rigs[npc_id], (rigs[npc_id] as CharacterRig).stride_m)
+		var activity: String = ""
+		if routine.state == NpcRoutine.State.PERFORMING and routine.current != null and routine.current_task == null:
+			activity = routine.current.animation
+		(_animators[i] as CharacterAnimator).update(delta, {"pose": String(placed["pose"]), "uv": placed["uv"],
+			"facing": placed["facing"], "marker": String(placed.get("marker", "")), "activity": activity,
+			"room_size": layout.size(room_id) if layout != null else Vector2.ONE})
+
+
+func _draw_rigged(index: int, foot: Vector2, s: float) -> void:
+	var anim: CharacterAnimator = _animators[index]
+	var shadow := Color(Palette.SB_CONTOUR if FamilyArt.storybook else Palette.INK, 0.22)
+	draw_colored_polygon(Ink.ellipse(foot, 26.0 * s, 7.0 * s, 20), shadow)
+	anim.draw(self, foot, s)
+
+
+## The head of person [param index]: from their rig when painted, else the code figure's.
+func _head_point(index: int, npc_id: String, foot: Vector2, s: float, pose: String) -> Vector2:
+	if _animators.has(index) and pose != "sleep":
+		return (_animators[index] as CharacterAnimator).head_point(foot, s)
+	return FamilyArt.head_point(npc_id, foot, s, pose)
 
 
 ## A painted effects layer (e.g. burning logs and flames) at [param at], with a gentle flicker:
@@ -460,7 +510,7 @@ func visible_floats() -> Array[Dictionary]:
 			var t: float = clampf((_time - float(f["born"])) / FLOAT_SECONDS, 0.0, 1.0)
 			var row: int = int(stacked.get(f["npc"], 0))
 			stacked[f["npc"]] = row + 1
-			var head: Vector2 = FamilyArt.head_point(String(f["npc"]), RoomGeometry.to_screen(uv), s, String(placed["pose"]))
+			var head: Vector2 = _head_point(i, String(f["npc"]), RoomGeometry.to_screen(uv), s, String(placed["pose"]))
 			out.append({"at": RoomGeometry.to_display(head + Vector2(0.0, -30.0 * s - FLOAT_RISE * t - 16.0 * float(row))), "text": f["text"],
 				"color": f["color"], "alpha": 1.0 - maxf(0.0, t - 0.6) / 0.4})
 			break
@@ -475,7 +525,7 @@ func _draw_breath(index: int, npc_id: String, placed: Dictionary) -> void:
 	var uv: Vector2 = placed["uv"]
 	var s: float = RoomGeometry.scale_at(uv.y)
 	var side: float = -1.0 if Vector2(placed["facing"]).x < 0.0 else 1.0
-	var mouth: Vector2 = FamilyArt.head_point(npc_id, RoomGeometry.to_screen(uv), s, String(placed["pose"])) + Vector2(side * 12.0, 4.0) * s
+	var mouth: Vector2 = _head_point(index, npc_id, RoomGeometry.to_screen(uv), s, String(placed["pose"])) + Vector2(side * 12.0, 4.0) * s
 	var rise: float = (1.0 - a / maxf(float(_wear_config().get("breath_alpha", 0.45)), 0.01)) * 6.0 * s
 	for k: int in 3:
 		var at: Vector2 = mouth + Vector2(side * (5.0 + 6.0 * float(k)), -rise - 2.0 * float(k)) * Vector2(s, 1.0)
