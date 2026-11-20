@@ -853,15 +853,21 @@
 				]
 			},
 			"kitchen": {
-				"wall": "res://assets/art/surfaces/wall_kitchen_tiles.png",
+				"wall": "res://assets/art/surfaces/wall_kitchen_limewash.png",
 				"wall_tile_m": [
-					1.2,
-					1.2
+					1.6,
+					1.6
 				],
 				"floor": "res://assets/art/surfaces/floor_kitchen_quarry.png",
 				"floor_tile_m": [
 					1.6,
 					1.6
+				],
+				"wainscot": "res://assets/art/surfaces/wall_kitchen_tiles.png",
+				"wainscot_m": 1.4,
+				"wainscot_tile_m": [
+					1.2,
+					1.2
 				]
 			},
 			"hall": {
