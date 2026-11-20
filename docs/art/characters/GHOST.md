@@ -154,10 +154,13 @@ must not be cleared as holes — the first build did, see §9).
 (children of body, pivot at the shoulder), `leg_l`, `leg_r` (whole leg, hip to boot, pivot at the
 hip, behind the body). Side (facing right; left mirrored): `body`, `head`, `arm` (near), `legs`
 (both legs as one piece — the near/far split edits returned the whole figure four times). Knees and
-elbows are not split: the legs hang and swing from the hip. Scale: 510 px per metre in the 1024
-canvas (923 px from hair to the lowest toe ≈ 1.80 m hanging), built at 0.4.
+elbows are not split: the legs hang and swing from the hip. Scale: the family's storybook scale
+(they are drawn at ~0.76 of their nominal height: the father, 1.85 m, is a 1.42 m figure); the
+ghost's 923 px figure is 1.38 m (676 px per metre in the 1024 canvas), built at 0.4. The first build
+used his true 1.80 m and looked bigger than the father in the game (user review 2026-11-21); a test
+now keeps him between 0.85× and 1× the father's figure.
 
-**Foot point.** Each view's `foot` is the floor point under his lowest toe; `look.hover_m` (0.28 m)
+**Foot point.** Each view's `foot` is the floor point under his lowest toe; `look.hover_m` (0.16 m)
 lifts the whole figure above it, so he never touches the floor. A test checks every part's painted
 bottom is above the foot point and that no idle bob dips down.
 
@@ -225,6 +228,10 @@ behind and in front of the sofa, hiding and emerging, fright, far back, dark roo
   one raised arm (−36°) and a fling of ±30°.
 - First glide trailed the legs ~25° (read as swimming) — reduced to ~17°.
 - First side foot point was 50 px above the painted toes (the test caught it).
+- In-game review 1: reach shots showed no reach (lamp out at 10:00, then out of range) — capture
+  moved to 21:30 next to the lamp; "dark room" was firelit — lamp put out after arriving; side and
+  back read greyer than the front — per-view wash (`tools/art/wash.gd`).
+- In-game review 2: bigger than the father (true scale + 0.28 m hover) — family scale, hover 0.16 m.
 
 **Known limitations:** the glow-free edit made the contour thick and near-black (the art direction
 asks for dark brown); the side legs move as one piece; the side body has a painted white

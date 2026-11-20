@@ -39,10 +39,32 @@ func test_the_ghost_rig_is_complete() -> void:
 		assert_bool(rig.look.has(key)).override_failure_message("missing look " + key).is_true()
 
 
+func test_he_is_drawn_on_the_familys_scale() -> void:
+	# The family is drawn at the storybook scale (father 1.85 m → ~1.4 m figure): the ghost, a 1.78 m
+	# man, must not come out bigger than the father (user review 2026-11-21).
+	var ghost: CharacterRig = _rig()
+	var father: CharacterRig = CharacterRig.load_for("father")
+	assert_float(_figure_m(ghost)).is_less(_figure_m(father))
+	assert_float(_figure_m(ghost)).is_greater(_figure_m(father) * 0.85)
+
+
+## Painted figure height in metres in the front view (top of the highest part to the lowest).
+func _figure_m(rig: CharacterRig) -> float:
+	var v: Dictionary = rig.views["front"]
+	var top: float = INF
+	var bottom: float = -INF
+	for part: String in v["parts"]:
+		var p: Dictionary = v["parts"][part]
+		var tex: Texture2D = load(String(p["texture"]))
+		top = minf(top, float(p["origin"][1]))
+		bottom = maxf(bottom, float(p["origin"][1]) + float(tex.get_height()))
+	return (bottom - top) / float(v["px_per_m"])
+
+
 func test_he_always_floats_above_the_floor() -> void:
 	# No standing pose: he hangs above his floor point, and no clip has a walk or a planted foot.
 	var rig: CharacterRig = _rig()
-	assert_float(float(rig.look["hover_m"])).is_greater(0.15)
+	assert_float(float(rig.look["hover_m"])).is_greater(0.1)
 	for name: String in rig.clips:
 		assert_bool(name.begins_with("walk") or name.begins_with("idle") or name.begins_with("stand")).is_false()
 	# the painted toes are above the view's foot point (the floor under him), in every view

@@ -3,7 +3,7 @@
 	"id": "ghost",
 	"height_m": 1.8,
 	"stride_m": 1.1,
-	"px_per_m": 204.0,
+	"px_per_m": 270.40000000000003,
 	"views": {
 		"front": {
 			"foot": [
@@ -90,7 +90,7 @@
 					"z": 1
 				}
 			},
-			"px_per_m": 204.0,
+			"px_per_m": 270.40000000000003,
 			"faces_left": false
 		},
 		"back": {
@@ -178,7 +178,7 @@
 					"z": 1
 				}
 			},
-			"px_per_m": 204.0,
+			"px_per_m": 270.40000000000003,
 			"faces_left": false
 		},
 		"side": {
@@ -240,7 +240,7 @@
 					"z": 1
 				}
 			},
-			"px_per_m": 204.0,
+			"px_per_m": 270.40000000000003,
 			"faces_left": false
 		}
 	},
@@ -1747,7 +1747,7 @@
 		"glow_alpha": 0.34,
 		"glow_px": 7.0,
 		"glow_dark_boost": 0.35,
-		"hover_m": 0.28,
+		"hover_m": 0.16,
 		"shadow_alpha": 0.13
 	}
 }

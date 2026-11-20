@@ -1200,7 +1200,7 @@ func _run_ghost_test(dir: String) -> void:
 	await _frames(dir, "g14-far-back", 2.6, 0.0)
 	# an actual interaction in the evening, when the lamp is lit: reaching for it (the harm starts;
 	# it never lands here — the capture does not run the clock)
-	await _show(dir, "g09-evening", "21:30", "living_room", Vector2(0.56, 0.66))
+	await _show(dir, "g09-evening", "21:30", "living_room", Vector2(0.64, 0.60))   # within reach of the lamp
 	_update_view()
 	print("ghost target: %s" % _target)
 	_act()
