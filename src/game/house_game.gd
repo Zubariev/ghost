@@ -602,6 +602,10 @@ func _run_capture(dir: String) -> void:
 		await _run_hud_test(dir)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("--character-test=mother"):
+		await _run_mother_test(dir)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--character-test=father"):
 		await _run_father_test(dir)
 		get_tree().quit()
@@ -918,6 +922,66 @@ func _run_father_test(dir: String) -> void:
 	await _frames(dir, "f17-fright", 0.12, 0.002)
 	await _frames(dir, "f18-fright-frame", 0.4, 0.002)
 	await _show(dir, "f19-resting-on-sofa", "13:30", "living_room", Vector2(0.15, 0.95))
+
+
+## The painted mother (third family member, 2026-11-20): waking, walking to breakfast, eating,
+## cleaning up after the ghost opens the dining-room window, a glance catching the ghost while she
+## works (anxious), the fright of contact, resting on the sofa.
+func _run_mother_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	const M: int = 1   # mother: second in the schedule order
+	await _show(dir, "m01-waking-in-bedroom", "06:30", "parents_bedroom", Vector2(0.85, 0.95))
+	await _frames(dir, "m02-idle-frame", 1.2, 0.0)
+	var guard: int = 0
+	while not _motion.is_walking(M) and guard < 4000:
+		var step: float = _sim.clock.minutes_for(0.05)
+		_sim.advance(0.05)
+		_motion.update(step)
+		guard += 1
+	for i: int in 6:
+		_navigator.place(_motion.room_of(M), Vector2(0.85, 0.95))
+		await _frames(dir, "m%02d-walking-frame" % (i + 3), 0.12, 0.03)
+	await _show(dir, "m09-eating-at-table", "07:30", "dining_room", Vector2(0.5, 0.95))
+	# The house starts run down, so cleaning tasks are on the board: follow her to whichever room she
+	# cleans, once she has arrived and is working.
+	guard = 0
+	while (_sim.routines[M].current_task == null or _sim.routines[M].current_task.type != HouseTask.Type.CLEAN or _motion.is_walking(M)) and guard < 8000:
+		var step: float = _sim.clock.minutes_for(0.1)
+		_sim.advance(0.1)
+		_motion.update(step)
+		guard += 1
+	var cleaning_room: String = _motion.room_of(M)
+	print("mother task: %s, in %s" % [_sim.routines[M].current_task.key if _sim.routines[M].current_task != null else "none", cleaning_room])
+	_navigator.place(cleaning_room, Vector2(0.15, 0.95))
+	await _frames(dir, "m11-cleaning", 0.3, 0.0)
+	await _frames(dir, "m12-cleaning-frame", 0.7, 0.0)
+	# Straight ahead of her, 2 m off: inside her side-vision range (2.5 m), outside her direct one
+	# (1.65 m) — she glimpses it while she works (game rules unchanged).
+	var working: Dictionary = _motion.person(M, cleaning_room)
+	var size: Vector2 = _stage.layout.size(cleaning_room)
+	var look: Vector2 = (Vector2(working["facing"]) * size).normalized()
+	_navigator.place(cleaning_room, Vector2(working["uv"]) + look * 2.0 / size)
+	_stealth.observe()
+	var waited: int = 0
+	print("mother glimpse: %s" % [_stealth.phase_of("mother")])
+	await _frames(dir, "m13-glimpsed-anxious", 0.5, 0.002)
+	await _frames(dir, "m14-anxious-frame", 0.8, 0.002)
+	var here: Dictionary = _motion.person(M, _motion.room_of(M))
+	var room_size: Vector2 = _stage.layout.size(_motion.room_of(M))
+	_navigator.place(_motion.room_of(M), Vector2(here["uv"]) + (Vector2(here["facing"]) * room_size).normalized() * 0.8 / room_size)
+	while _stealth.phase_of("mother") != StealthSystem.Phase.NONE and waited < 400:   # let the glimpse settle first
+		var step2: float = _sim.clock.minutes_for(0.25)
+		_sim.advance(0.25)
+		_motion.update(step2)
+		waited += 1
+	here = _motion.person(M, _motion.room_of(M))
+	_navigator.place(_motion.room_of(M), Vector2(here["uv"]) + (Vector2(here["facing"]) * room_size).normalized() * 0.8 / room_size)
+	_stealth.observe()
+	_navigator.place(_motion.room_of(M), Vector2(0.15, 0.95))
+	await _frames(dir, "m15-fright", 0.12, 0.002)
+	await _frames(dir, "m16-fright-frame", 0.4, 0.002)
+	await _show(dir, "m17-resting-on-sofa", "13:30", "living_room", Vector2(0.15, 0.95))
 
 
 ## Capture only: lets [param seconds] of real time pass for the animation (the family walks on by

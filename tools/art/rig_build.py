@@ -35,7 +35,9 @@ def main(cid):
             src = p["src"]
             if src not in canvases:
                 canvas = f"{TMP}/{cid}_{src.replace('.png', '')}_canvas.png"
-                out = run(["res://tools/sprite_cutout.gd", "--", f"{src_dir}/{src}", canvas, "0", "1", "0.86", "0,0,1024,1024"])
+                # "white_parts": keep enclosed near-white areas (white trainers) instead of clearing them as holes
+                islands = "0" if spec.get("white_parts", False) else "1"
+                out = run(["res://tools/sprite_cutout.gd", "--", f"{src_dir}/{src}", canvas, "0", "1", "0.86", "0,0,1024,1024", islands])
                 if "wrote" not in out:
                     raise RuntimeError(out)
                 canvases[src] = canvas
