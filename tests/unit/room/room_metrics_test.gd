@@ -70,3 +70,12 @@ func test_walking_footprints_and_grid_follow_the_room_size() -> void:
 	assert_vector(big.size).is_equal_approx(Vector2(0.2, 0.125), Vector2(0.0001, 0.0001))
 	assert_vector(paths._cells_of("small")).is_equal(Vector2i(8, 4))
 	assert_vector(paths._cells_of("big")).is_equal(Vector2i(20, 16))
+
+
+func test_a_family_member_without_an_object_goes_to_their_seat_in_metres() -> void:
+	# Arrange: the small room (4 × 2 m) seats father at 1 m across, 0.5 m deep; nobody else
+	var layout := RoomLayout.new({"small": []}, _house(), {"small": [[1.0, 0.5]]})
+	# Act / Assert: father's seat in floor units; mother (no seat) falls back to the row of slots
+	assert_vector(layout.slot("small", 0)).is_equal(Vector2(0.25, 0.25))
+	assert_vector(layout.slot("small", 1)).is_equal(Vector2(0.31, 0.70))
+	assert_vector(layout.slot("big", 0)).is_equal(Vector2(0.18, 0.62))

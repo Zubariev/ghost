@@ -286,7 +286,7 @@
 			"sprite": "res://assets/art/props/hall/stairs.png",
 			"anchor": [
 				0.5,
-				0.9884
+				0.9885
 			],
 			"scale": 0.5
 		},
@@ -448,6 +448,14 @@
 			],
 			"scale": 0.5
 		},
+		"living_room/gramophone": {
+			"sprite": "res://assets/art/props/living_room/gramophone.png",
+			"anchor": [
+				0.5,
+				0.9777
+			],
+			"scale": 0.5
+		},
 		"living_room/painting:landscape": {
 			"sprite": "res://assets/art/props/living_room/painting_landscape.png",
 			"anchor": [
@@ -461,6 +469,22 @@
 			"anchor": [
 				0.5,
 				3.0389
+			],
+			"scale": 0.5
+		},
+		"living_room/plant:fern": {
+			"sprite": "res://assets/art/props/living_room/plant_fern.png",
+			"anchor": [
+				0.5,
+				0.9745
+			],
+			"scale": 0.5
+		},
+		"living_room/plant:palm": {
+			"sprite": "res://assets/art/props/living_room/plant_palm.png",
+			"anchor": [
+				0.5,
+				0.9788
 			],
 			"scale": 0.5
 		},
@@ -610,7 +634,7 @@
 			"sprite": "res://assets/art/props/upper_corridor/stairs.png",
 			"anchor": [
 				0.5,
-				0.9884
+				0.9769
 			],
 			"scale": 0.5
 		},

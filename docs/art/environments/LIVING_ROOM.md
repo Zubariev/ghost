@@ -6,6 +6,7 @@
 | Concept `living_room_cozy.jpeg` | **APPROVED as the Phase 1 visual target** (user decision 2026-11-15) — its look, not its perspective or geometry |
 | Full-size haunted concept | OPEN — none yet |
 | Painted fireplace (art Phase 3 trial) | **APPROVED** — built and approved 2026-11-15 (§8); shrunk to 76 % (scale 0.38) for the real-world scale, 2026-11-20 |
+| Layout in metres (Phase B pilot) | **Built 2026-11-20, awaiting user review** (§10) |
 | Painted props (art Phase 4) | **Built 2026-11-20, awaiting user review** — window (closed / open), sofa, both armchairs, side and tea tables, wall clock (painted hands: a stopped clock), both paintings, bookshelf; brass floor lamp (lit / out); rug 2.5 × 1.8 m and side-wall portraits ~60 % (still code-drawn); evidence `production/qa/evidence/art-phase4-props/` |
 
 The first and so far only room in the storybook style.
@@ -176,6 +177,65 @@ inside the firebox; cozy and haunted.
   surface cut into many thin strips. Cheaper art, more code, plank/panel lines less controllable.
 - Either way: painted wall art must leave the door openings to the code (doors differ per room),
   and must not bake in light or the wainscot's state.
+
+## 10. Phase B — laid out in metres (user approval 2026-11-20)
+
+The room is **7 × 5 m** (`rooms.json` size_m). Positions below are metres from the left wall (x)
+and the back wall (depth); `furniture.json` stores them as fractions of the room (u = x / 7,
+v = depth / 5). Walking footprints are the pieces' real sizes (`movement.json`).
+
+```
+      back wall
+   +--------------------------------------------------------+
+0.0|      FFFFFFFFFFFFFF                           BBBBBBB  |
+0.2|                                               BBBBBBB  |
+0.5|                                                        |
+0.8|   oooooo                                               |
+1.0|   oooooo                                       GGGGG   |
+1.2|   ooo4oo tttt                                  GGGGG   |
+1.5|          tttt                                          |
+1.8|                SSSSSSSSSSSSSSSS ssss                   |
+2.0D........        SSSSSSSSSSSSSSSS ssss           ........D
+2.2D........        SSSS1SSSSSS2SSSS                ........D
+2.5D........        SSSSSSSSSSSSSSSS~~~~ lllAAAAAAA ........D
+2.8D........        ~~~~~~~~~~~~~~~~~~~~    AAAAAAA ........D
+3.0|                ~~~~~~~~~~~~~~~~~~~~    AAA3AAA         |
+3.2|                ~~~~~~~~~~~~~~~~~~~~                    |
+3.5|                ~~~5~~~~~~~~6~~~~~~~                    |
+3.8|                ~~~~~~~~~~~~~~~~~~~~                    |
+4.0|  fffff                                          ppppp  |
+4.2|  fffff                                          ppppp  |
+4.5|  fffff                                          ppppp  |
+4.8|                                                        |
+   +--------------------------------------------------------+
+    0 m                                              7 m   (front, open side: camera)
+  L  landscape painting (wall, 1.3 m up)  at 0.40, 0.05 m  (0.6 x 0.1)
+```
+
+| Piece | x, depth (m) | Role |
+|---|---|---|
+| Landscape painting | 0.4 (wall, 1.3 m up) | decor |
+| Fireplace | 1.6 (wall) | decor |
+| Wall clock | 2.95 (wall, 1.15 m up) | decor |
+| Window | 4.2 (wall) | `window_living_room` |
+| Portrait | 5.45 (wall, 1.25 m up) | decor |
+| Bookshelf | 6.35, 0.3 | decor |
+| Gramophone on a cabinet **(new)** | 6.35, 1.25 | furniture (an obstacle: it stands in the way to the window) |
+| Olive armchair | 0.75, 1.1 | furniture — grandpa's seat (was decor) |
+| Tea table | 1.45, 1.45 | furniture (was decor: routes to grandpa crossed it) |
+| Sofa | 3.0, 2.2 | hiding spot — father's and mother's seats |
+| Side table | 4.35, 2.1 | furniture |
+| Floor lamp | 4.8, 2.6 | `lamp_living_room` |
+| Grandma's armchair | 5.45, 2.95 | `grandma_armchair`, hiding spot — grandma's seat |
+| Rug 2.5 × 1.8 m | 3.2, 3.2 | walked over — son and daughter (her dolls) |
+| Fern on a stand **(new)** | 0.55, 4.35 | decor |
+| Potted palm **(new)** | 6.45, 4.35 | decor |
+
+**Doors:** left (workshop) and right (hall) at depth 2.5 m; a 1 m clear zone in front of each
+holds nothing. **Seats** (`furniture.json` "seats", metres): where each family member rests or
+plays when the activity names no object — father 2.55, 2.35; mother 3.45, 2.35; grandma 5.45,
+3.05; grandpa 0.75, 1.25; son 2.4, 3.7; daughter 3.6, 3.5. The decor test checks that no route
+between the doors, the work spots and the seats crosses decor.
 
 ## 9. Open
 

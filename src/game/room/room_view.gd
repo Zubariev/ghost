@@ -63,6 +63,7 @@ func apply(room_id: String, stage: Node2D) -> void:
 	_room = room_id
 	var k: Vector2 = floor_scale(room_id)
 	RoomGeometry.set_floor_scale(k.x, k.y)
+	RoomGeometry.ROOM_SIZE_M = _sizes.get(room_id, _full)
 	var offset: Vector2 = _area.get_center() - RoomGeometry.bounds().get_center() * _zoom
 	RoomGeometry.set_view(_zoom, offset)
 	if stage != null:
@@ -73,4 +74,5 @@ func apply(room_id: String, stage: Node2D) -> void:
 ## Back to the full box with no zoom (leaving the game; tests).
 static func reset() -> void:
 	RoomGeometry.set_floor_scale(1.0)
+	RoomGeometry.ROOM_SIZE_M = Vector2(10.6, 7.5)
 	RoomGeometry.set_view(1.0, Vector2.ZERO)

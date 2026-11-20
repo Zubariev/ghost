@@ -19,8 +19,8 @@ extends RefCounted
 
 const HIGHLIGHT_WIDTH: float = 9.0
 ## The rug's half size in floor units (u, v): drawing only, rugs block nothing.
-## About 2.5 x 1.8 m at the props' real-world scale (75 px per metre; 2026-11-20, was 0.2 x 0.12).
-const RUG_HALF := Vector2(0.12, 0.075)
+## Half the rug in metres: 2.5 x 1.8 m (2026-11-20), as floor units of the room on screen.
+const RUG_HALF_M := Vector2(1.25, 0.9)
 
 ## Kinds drawn on the back wall (sorted behind everything on the floor).
 const WALL_KINDS: Array[String] = ["window", "fireplace", "painting", "wall_clock"]
@@ -458,12 +458,12 @@ static func _window(state: StringName, is_day: bool, time: float) -> Array:
 ## Rectangular patterned rug laid flat in the floor's perspective (concept target), kept muted
 ## so it stays below people and interactive props (readability review, 2026-11-15): terracotta
 ## border with gold beads, dusk-blue field, a parchment medallion and corner motifs, cream
-## fringe at the two short ends. [param uv] is its centre; it covers u ±RUG_HALF.x, v ±RUG_HALF.y
+## fringe at the two short ends. [param uv] is its centre; it covers ±RUG_HALF_M metres
 ## of floor (drawing only: rugs are walked over and block nothing).
 static func _rug(uv: Vector2) -> Array:
 	var s: float = RoomGeometry.scale_at(uv.y)
-	var hu: float = RUG_HALF.x
-	var hv: float = RUG_HALF.y
+	var hu: float = RUG_HALF_M.x / RoomGeometry.ROOM_SIZE_M.x
+	var hv: float = RUG_HALF_M.y / RoomGeometry.ROOM_SIZE_M.y
 	var q := func(du: float, dv: float) -> Vector2:
 		return _floor_point(uv, s, du, dv)
 	var quad := func(u0: float, v0: float, u1: float, v1: float) -> PackedVector2Array:

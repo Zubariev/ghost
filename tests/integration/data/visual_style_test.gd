@@ -61,8 +61,9 @@ func test_no_family_route_in_the_living_room_crosses_decor() -> void:
 	# Arrange: every place someone can start or stop in the room — doors, the points just
 	# inside them, every object's work spot and every free-standing slot.
 	var house: HouseState = _house()
-	var rooms: Dictionary = JsonData.read(FURNITURE_PATH)["rooms"]
-	var layout := RoomLayout.new(rooms, house)
+	var furniture: Dictionary = JsonData.read(FURNITURE_PATH)
+	var rooms: Dictionary = furniture["rooms"]
+	var layout := RoomLayout.new(rooms, house, furniture.get("seats", {}))
 	var config: Dictionary = JsonData.read(MOVEMENT_PATH)
 	var paths := RoomPaths.new(layout, config)
 	var motion := FamilyMotion.new([], house, layout, paths, config)
@@ -78,7 +79,7 @@ func test_no_family_route_in_the_living_room_crosses_decor() -> void:
 				var spread: float = (float(index) - 2.5) * 0.06
 				places.append(Vector2(clampf(at.x + spread, 0.08, 0.92), clampf(at.y + 0.12, 0.1, 0.95)))
 	for index: int in 6:
-		places.append(Vector2(0.18 + 0.13 * float(index), 0.62 + 0.08 * float(index % 2)))
+		places.append(layout.slot(ROOM, index))   # each family member's seat (Phase B, 2026-11-20)
 	var footprints: Dictionary = config["footprints"]
 	var clearance: float = float(config["clearance"])
 	var decor_rects: Array[Rect2] = []

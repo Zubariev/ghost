@@ -43,6 +43,11 @@ static func set_floor_scale(fw: float, fd: float = -1.0) -> void:
 	FRONT_SCALE = mid + (FULL_FRONT_SCALE - mid) * fd
 
 
+## The real floor size in metres of the room on screen ([RoomView]); the full box by default.
+## Lets drawings sized in metres (a rug) find their floor units.
+static var ROOM_SIZE_M := Vector2(10.6, 7.5)
+
+
 ## The room view's zoom and offset ([RoomView]): the stage is drawn scaled by VIEW_ZOOM and moved
 ## by VIEW_OFFSET; screen-space UI (the HUD) maps room points with [method to_display].
 static var VIEW_ZOOM: float = 1.0

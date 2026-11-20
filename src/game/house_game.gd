@@ -93,7 +93,8 @@ func _ready() -> void:
 	_stage = RoomStage.new()
 	_stage.sim = _sim
 	_stage.navigator = _navigator
-	_stage.layout = RoomLayout.new(JsonData.read(FURNITURE_PATH).get("rooms", {}), _sim.house)
+	var furniture_data: Dictionary = JsonData.read(FURNITURE_PATH)
+	_stage.layout = RoomLayout.new(furniture_data.get("rooms", {}), _sim.house, furniture_data.get("seats", {}))
 	add_child(_stage)
 	var room_sizes: Dictionary = {}
 	for room_id: String in _sim.house.rooms:

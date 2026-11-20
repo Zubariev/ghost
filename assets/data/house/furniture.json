@@ -1,5 +1,5 @@
 {
-	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). blocks_sight: [half width, half depth] in metres (2026-11-20, rooms of real sizes). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take. decor = drawn only (Whimsical Gothic Storybook art test, 2026-11-15): never an obstacle, hiding spot, sight blocker or object; variant picks a look (e.g. armchair olive, painting portrait/landscape). Every room has at least two hiding spots (user decision 2026-11-15).",
+	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). blocks_sight: [half width, half depth] in metres (2026-11-20, rooms of real sizes). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take. decor = drawn only (Whimsical Gothic Storybook art test, 2026-11-15): never an obstacle, hiding spot, sight blocker or object; variant picks a look (e.g. armchair olive, painting portrait/landscape). Every room has at least two hiding spots (user decision 2026-11-15). seats (Phase B, 2026-11-20): per room, where each family member (father, mother, grandma, grandpa, son, daughter) rests or plays when the activity names no object, in METRES [x, depth] on the room's real floor. Living room re-laid in metres (docs/art/environments/LIVING_ROOM.md, Phase B plan).",
 	"rooms": {
 		"workshop": [
 			{
@@ -39,82 +39,99 @@
 		"living_room": [
 			{
 				"kind": "window",
-				"u": 0.45,
+				"u": 0.6,
 				"v": 0.0,
 				"object": "window_living_room"
 			},
 			{
 				"kind": "rug",
-				"u": 0.5,
-				"v": 0.55
+				"u": 0.4571,
+				"v": 0.64
 			},
 			{
 				"kind": "sofa",
-				"u": 0.38,
-				"v": 0.32,
+				"u": 0.4286,
+				"v": 0.44,
 				"hide_id": "hide_living_room_sofa_2"
 			},
 			{
 				"kind": "armchair",
-				"u": 0.78,
-				"v": 0.55,
+				"u": 0.7786,
+				"v": 0.59,
 				"object": "grandma_armchair",
 				"hide_id": "grandma_armchair"
 			},
 			{
 				"kind": "side_table",
-				"u": 0.62,
-				"v": 0.3
+				"u": 0.6214,
+				"v": 0.42
 			},
 			{
 				"kind": "floor_lamp",
-				"u": 0.12,
-				"v": 0.78,
+				"u": 0.6857,
+				"v": 0.52,
 				"object": "lamp_living_room"
 			},
 			{
 				"kind": "fireplace",
-				"u": 0.18,
+				"u": 0.2286,
 				"v": 0.0,
 				"decor": true
 			},
 			{
 				"kind": "wall_clock",
-				"u": 0.585,
+				"u": 0.4214,
 				"v": 0.0,
 				"decor": true
 			},
 			{
 				"kind": "painting",
-				"u": 0.69,
+				"u": 0.7786,
 				"v": 0.0,
 				"variant": "portrait",
 				"decor": true
 			},
 			{
 				"kind": "painting",
-				"u": 0.81,
+				"u": 0.0571,
 				"v": 0.0,
 				"variant": "landscape",
 				"decor": true
 			},
 			{
 				"kind": "bookshelf",
-				"u": 0.9,
+				"u": 0.9071,
 				"v": 0.06,
 				"decor": true
 			},
 			{
 				"kind": "armchair",
-				"u": 0.1,
-				"v": 0.15,
-				"variant": "olive",
-				"decor": true
+				"u": 0.1071,
+				"v": 0.22,
+				"variant": "olive"
 			},
 			{
 				"kind": "tea_table",
-				"u": 0.06,
-				"v": 0.24,
+				"u": 0.2071,
+				"v": 0.29
+			},
+			{
+				"kind": "gramophone",
+				"u": 0.9071,
+				"v": 0.25
+			},
+			{
+				"kind": "plant",
+				"u": 0.0786,
+				"v": 0.87,
+				"variant": "fern",
+				"decor": true
+			},
+			{
+				"kind": "plant",
+				"u": 0.9214,
+				"v": 0.87,
+				"variant": "palm",
 				"decor": true
 			}
 		],
@@ -463,6 +480,34 @@
 				"v": 0.8,
 				"object": "lamp_upper_bathroom"
 			}
+		]
+	},
+	"seats": {
+		"living_room": [
+			[
+				2.55,
+				2.35
+			],
+			[
+				3.45,
+				2.35
+			],
+			[
+				5.45,
+				3.05
+			],
+			[
+				0.75,
+				1.25
+			],
+			[
+				2.4,
+				3.7
+			],
+			[
+				3.6,
+				3.5
+			]
 		]
 	}
 }

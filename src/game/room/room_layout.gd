@@ -19,13 +19,18 @@ enum Zone { NONE, PERIPHERAL, DEEP }
 
 ## room id -> Array of furniture dictionaries {kind, u, v, object?, hide_id?, blocks_sight?, pickup?}
 var furniture: Dictionary = {}
+## room id -> seats in metres [[x, depth], ...], one per family member in load order (father,
+## mother, grandma, grandpa, son, daughter): where each rests or plays when the activity names
+## no object (furniture.json "seats", Phase B 2026-11-20). Rooms without seats use a row of slots.
+var seats: Dictionary = {}
 
 var _house: HouseState
 
 
-func _init(furniture_by_room: Dictionary, house: HouseState) -> void:
+func _init(furniture_by_room: Dictionary, house: HouseState, seats_by_room: Dictionary = {}) -> void:
 	furniture = furniture_by_room
 	_house = house
+	seats = seats_by_room
 
 
 func pieces(room_id: String) -> Array:
@@ -153,6 +158,16 @@ func spot(routine: NpcRoutine, index: int, room_id: String) -> Vector2:
 	if at.x >= 0.0:
 		var spread: float = (float(index) - 2.5) * 0.06
 		return Vector2(clampf(at.x + spread, 0.08, 0.92), clampf(at.y + 0.12, 0.1, 0.95))
+	return slot(room_id, index)
+
+
+## Where person [param index] rests in [param room_id] when nothing they use is there: their seat
+## (metres, furniture.json "seats"), else a slot in a row across the front of the room.
+func slot(room_id: String, index: int) -> Vector2:
+	var room_seats: Array = seats.get(room_id, [])
+	if index < room_seats.size():
+		var seat: Array = room_seats[index]
+		return to_uv(room_id, Vector2(float(seat[0]), float(seat[1])))
 	return Vector2(0.18 + 0.13 * float(index), 0.62 + 0.08 * float(index % 2))
 
 
