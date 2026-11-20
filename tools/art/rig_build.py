@@ -55,7 +55,8 @@ def main(cid):
                            "pivot": [round(pivot[0] * k, 2), round(pivot[1] * k, 2)], "parent": p.get("parent", ""), "z": p.get("z", 0)}
             print(view, name, "origin", ox, oy, "size", w, h, flush=True)
         rig["views"][view] = {"foot": [vdef["foot"][0] * k, vdef["foot"][1] * k], "parts": parts,
-                              "px_per_m": float(vdef.get("px_per_m", spec["px_per_m"])) * k}
+                              "px_per_m": float(vdef.get("px_per_m", spec["px_per_m"])) * k,
+                              "faces_left": bool(vdef.get("faces_left", False))}
     open(f"{out_dir}/rig.json", "w").write(json.dumps(rig, indent="\t", ensure_ascii=False) + "\n")
     print("wrote", f"{out_dir}/rig.json")
 

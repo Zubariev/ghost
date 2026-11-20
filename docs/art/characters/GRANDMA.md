@@ -84,6 +84,21 @@ on the seat); c16a resting alone (08:20); c16–c17 a glance catches the ghost 1
 "looks" back toward the chair and sees the room only in her side glances, while her painting faces
 the room. A design decision for later.
 
+## Review round 2 (user, 2026-11-20)
+
+- **Eating at the table:** `sit_side` — a painted profile seated pose with a spoon (`pose_sit_side.png`,
+  painted facing left: `faces_left`), chosen only while eating and turned by her seat's direction
+  toward the table (not by her glances — a glance sideways in the armchair had switched it on).
+- **Cooking:** one painted pose from behind with the elbows bent and the hands at the pot
+  (`cook_back.png`), animated by lean, sway and weight shift. A separately cut stirring arm was
+  tried and dropped: the generated arm did not match the pose (a stray hand), and cutting it from
+  the pose left seams.
+- **Scale:** every view at the seated pose's scale (747 px per metre of the painting): seated she
+  fitted the chair; standing she had looked bigger.
+- **Walk:** planted feet turn back at constant speed (linear clip keys), the swing foot lifts,
+  double support with a body dip, weight shift side to side in the front and back views.
+- **Idle:** larger weight shift, breathing and head turns.
+
 ## Known limits (pilot)
 
 - Sleeping is still the code drawing in bed; the tricycle is not grandma's.

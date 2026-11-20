@@ -822,6 +822,9 @@ func _run_character_test(dir: String) -> void:
 	for i: int in 5:
 		_navigator.place(_motion.room_of(2), Vector2(0.15, 0.95))
 		await _frames(dir, "c%02d-walking-frame" % (i + 5), 0.12, 0.03)
+	# At the table: her place is at an end, so she sits turned toward the table (side seated pose).
+	await _show(dir, "c09b-breakfast-at-table", "07:30", "dining_room", Vector2(0.5, 0.95))
+	await _frames(dir, "c09c-breakfast-frame", 0.8, 0.0)
 	_navigator.place("kitchen", Vector2(0.1, 0.95))
 	await _show(dir, "c10-kitchen-before", "09:20", "kitchen", Vector2(0.1, 0.95))
 	var cook: Dictionary = _stage.layout.person(_sim.routines[2], 2, "kitchen", _sim.routines)   # at the stove now

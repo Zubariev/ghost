@@ -328,6 +328,7 @@ func _update_animators(delta: float) -> void:
 			activity = routine.current.animation
 		(_animators[i] as CharacterAnimator).update(delta, {"pose": String(placed["pose"]), "uv": placed["uv"],
 			"facing": placed["facing"], "marker": String(placed.get("marker", "")), "activity": activity,
+			"seat_facing": layout.facing(routine, room_id, placed["uv"]) if layout != null else Vector2(0, 1),
 			"room_size": layout.size(room_id) if layout != null else Vector2.ONE})
 
 

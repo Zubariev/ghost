@@ -11,7 +11,9 @@
 ##   fright:  marker "!"                          → "fright" (front)
 ##   anxious: marker "?"                          → "anxious" (front)
 ##   broken:  pose "broken"                       → "slump" (front)
-##   sit:     pose "sit" (rest, eat, read …)      → "sit" (painted seated view)
+##   sit:     pose "sit", eating, seat faces sideways (a table end) → "sit_side" (painted profile,
+##            mirrored for left; by the seat's direction, not a glance)
+##   sit:     pose "sit" otherwise                → "sit" (painted seated view, facing the camera)
 ##   sleep:   pose "sleep"                        → drawn by the code on the bed (not rigged yet)
 ##   walk:    pose "walk"                         → "walk_side" / "walk_front" / "walk_back" by facing
 ##   <activity>: standing in an activity with a clip of that name (e.g. "cook") → that clip
@@ -50,7 +52,8 @@ func _init(character_rig: CharacterRig, stride: float = 1.1) -> void:
 
 
 ## The clip and view for this moment of the game (pure: see the state table above).
-## [param state]: {pose, activity?, marker?, facing (floor units), room_size (metres)}.
+## [param state]: {pose, activity?, marker?, facing (floor units, includes glances), seat_facing (where
+## the place itself faces, toward the object in use), room_size (metres)}.
 func choose(state: Dictionary) -> Array:
 	var pose: String = String(state.get("pose", "stand"))
 	var marker: String = String(state.get("marker", ""))
@@ -61,11 +64,16 @@ func choose(state: Dictionary) -> Array:
 		return ["anxious", false]
 	if pose == "broken" and rig.has_clip("slump"):
 		return ["slump", false]
+	var activity: String = String(state.get("activity", ""))
+	if pose == "sit" and activity == "eat" and rig.has_clip("sit_side"):
+		# eating at a table end, turned toward the table: by where her seat faces, never by a glance
+		var seat: String = _direction(state.get("seat_facing", Vector2(0, 1)), state.get("room_size", Vector2.ONE))
+		if seat == "left" or seat == "right":
+			return ["sit_side", seat == "left"]
 	if pose == "sit" and rig.has_clip("sit"):
 		return ["sit", false]
 	if pose == "walk":
 		return [_by_direction("walk", dir), dir == "left"]
-	var activity: String = String(state.get("activity", ""))
 	if not activity.is_empty() and rig.has_clip(activity):
 		return [activity, false]
 	return [_by_direction("idle", dir), dir == "left"]

@@ -12,7 +12,7 @@ func _rig() -> CharacterRig:
 				"body": {"texture": "", "origin": [30, 20], "pivot": [50, 60], "parent": "", "z": 0},
 				"head": {"texture": "", "origin": [40, 0], "pivot": [50, 20], "parent": "body", "z": 1}}},
 			"side": {"foot": [50, 100], "px_per_m": 75.0, "parts": {
-				"body": {"texture": "", "origin": [30, 20], "pivot": [50, 60], "parent": "", "z": 0}}},
+				"body": {"texture": "", "origin": [30, 20], "pivot": [60, 60], "parent": "", "z": 0}}},
 		},
 		"clips": {
 			"idle_front": {"view": "front", "length": 2.0, "loop": true, "tracks": {"head": [[0, 0], [1, 10], [2, 0]]}},
@@ -23,6 +23,8 @@ func _rig() -> CharacterRig:
 			"fright": {"view": "front", "length": 1.0, "loop": false, "tracks": {"head": [[0, 0], [1, 6]]}},
 			"cook": {"view": "front", "length": 1.0, "loop": true, "tracks": {}},
 			"sit": {"view": "front", "length": 1.0, "loop": true, "tracks": {}},
+			"sit_side": {"view": "side", "length": 1.0, "loop": true, "tracks": {}},
+			"stride": {"view": "side", "length": 1.0, "loop": true, "ease": "linear", "tracks": {"body": [[0, 0], [1, 10]]}},
 		},
 	})
 
@@ -34,6 +36,7 @@ func test_a_clip_is_eased_between_keys_and_loops_or_holds() -> void:
 	assert_float(rig.sample("idle_front", 0.25)["head"][0]).is_less(2.5)                 # eased in: slower at first
 	assert_float(rig.sample("idle_front", 3.0)["head"][0]).is_equal_approx(10.0, 0.001)  # looped
 	assert_float(rig.sample("fright", 5.0)["head"][0]).is_equal_approx(6.0, 0.001)       # held at the end
+	assert_float(rig.sample("stride", 0.25)["body"][0]).is_equal_approx(2.5, 0.001)      # linear: constant speed
 
 
 func test_the_rest_pose_puts_every_part_where_it_was_painted() -> void:
@@ -57,6 +60,11 @@ func test_the_animator_follows_the_games_states() -> void:
 	assert_array(anim.choose({"pose": "stand", "marker": "?", "room_size": size})).is_equal(["anxious", false])
 	assert_array(anim.choose({"pose": "walk", "marker": "!", "room_size": size})).is_equal(["fright", false])
 	assert_array(anim.choose({"pose": "sit", "room_size": size})).is_equal(["sit", false])
+	# eating at a table end: turned by the seat, not by a glance; resting while glancing sideways: front
+	assert_array(anim.choose({"pose": "sit", "activity": "eat", "facing": Vector2(0, 1), "seat_facing": Vector2(-1, 0), "room_size": size})).is_equal(["sit_side", true])
+	assert_array(anim.choose({"pose": "sit", "activity": "eat", "facing": Vector2(-1, 0), "seat_facing": Vector2(1, 0), "room_size": size})).is_equal(["sit_side", false])
+	assert_array(anim.choose({"pose": "sit", "activity": "rest", "facing": Vector2(1, 0), "seat_facing": Vector2(0, -1), "room_size": size})).is_equal(["sit", false])
+	assert_array(anim.choose({"pose": "sit", "activity": "eat", "seat_facing": Vector2(0, 1), "room_size": size})).is_equal(["sit", false])
 	assert_array(anim.choose({"pose": "stand", "activity": "knit", "facing": Vector2(0, 1), "room_size": size})).is_equal(["idle_front", false])
 
 
@@ -81,5 +89,18 @@ func test_grandmas_rig_is_complete() -> void:
 		assert_bool(rig.views.has(view)).override_failure_message(clip + ": no view " + view).is_true()
 		for part: String in rig.clips[clip]["tracks"]:
 			assert_bool(part == "root" or rig.views[view]["parts"].has(part)).override_failure_message(clip + ": no part " + part).is_true()
-	for clip: String in ["idle_front", "walk_side", "walk_front", "walk_back", "cook", "anxious", "fright", "sit", "slump"]:
+	for clip: String in ["idle_front", "walk_side", "walk_front", "walk_back", "cook", "anxious", "fright", "sit", "sit_side", "slump"]:
 		assert_bool(rig.has_clip(clip)).override_failure_message("no clip " + clip).is_true()
+
+
+func test_a_view_painted_facing_left_is_mirrored_the_other_way() -> void:
+	# The side seated pose is painted facing left: drawn unflipped it must face left (its parts
+	# where painted), and flipped (facing right) mirrored about the foot.
+	var rig: CharacterRig = _rig()
+	rig.views["side"]["faces_left"] = true
+	var plain: Vector2 = rig.part_point("side", {}, "body", Vector2(300, 400), 1.0, false)
+	var flipped: Vector2 = rig.part_point("side", {}, "body", Vector2(300, 400), 1.0, true)
+	rig.views["side"]["faces_left"] = false
+	var normal: Vector2 = rig.part_point("side", {}, "body", Vector2(300, 400), 1.0, false)
+	assert_float(plain.x - 300.0).is_equal_approx(-(normal.x - 300.0), 0.01)
+	assert_float(flipped.x).is_equal_approx(normal.x, 0.01)

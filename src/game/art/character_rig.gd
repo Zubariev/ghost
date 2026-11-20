@@ -6,7 +6,9 @@
 ## the room's one depth-sorted pass with the furniture (no scene nodes).
 ##
 ## A pose is {part: [rotation_deg, dx, dy, scale_y]}; "root" moves the whole figure. Clips are
-## {view, length, loop, tracks: {part: [[t, rot, dx, dy, sy?], ...]}}, eased between keys.
+## {view, length, loop, ease, tracks: {part: [[t, rot, dx, dy, sy?], ...]}}: eased between keys
+## ("smooth", the default), or "linear" — constant speed, for a planted foot that must move back
+## exactly as fast as the body moves on (walks, 2026-11-20).
 ##
 ## [codeblock]
 ## var rig := CharacterRig.load_for("grandma")
@@ -70,8 +72,9 @@ func sample(name: String, t: float) -> Dictionary:
 	var time: float = fposmod(t, length) if bool(clip.get("loop", true)) else clampf(t, 0.0, length)
 	var pose: Dictionary = {}
 	var tracks: Dictionary = clip.get("tracks", {})
+	var linear: bool = String(clip.get("ease", "smooth")) == "linear"
 	for part: String in tracks:
-		pose[part] = _sample_track(tracks[part], time)
+		pose[part] = _sample_track(tracks[part], time, linear)
 	return pose
 
 
@@ -101,6 +104,8 @@ func draw(canvas: CanvasItem, view: String, pose: Dictionary, foot: Vector2, s: 
 	if not views.has(view):
 		return
 	var v: Dictionary = views[view]
+	if bool(v.get("faces_left", false)):
+		flip = not flip   # painted facing left (2026-11-20): mirror it the other way
 	var k: float = screen_scale(view, s)
 	var foot_art := Vector2(float(v["foot"][0]), float(v["foot"][1]))
 	var to_screen := Transform2D(Vector2(k * squeeze * (-1.0 if flip else 1.0), 0), Vector2(0, k), foot) * Transform2D(0.0, -foot_art)
@@ -122,6 +127,8 @@ func part_point(view: String, pose: Dictionary, part: String, foot: Vector2, s: 
 	var v: Dictionary = views.get(view, {})
 	if v.is_empty() or not v["parts"].has(part):
 		return foot
+	if bool(v.get("faces_left", false)):
+		flip = not flip
 	var k: float = screen_scale(view, s)
 	var foot_art := Vector2(float(v["foot"][0]), float(v["foot"][1]))
 	var world: Dictionary = {}
@@ -152,15 +159,18 @@ static func _local(pivot: Vector2, p: Array) -> Transform2D:
 	return Transform2D(0.0, Vector2(float(p[1]), float(p[2])) + pivot) * Transform2D(rot, Vector2(1.0, sy), 0.0, Vector2.ZERO) * Transform2D(0.0, -pivot)
 
 
-# A track's value at [param t]: eased (smoothstep) between the keys around it.
-static func _sample_track(keys: Array, t: float) -> Array:
+# A track's value at [param t]: eased (smoothstep, or straight when [param linear]) between the
+# keys around it.
+static func _sample_track(keys: Array, t: float, linear: bool = false) -> Array:
 	if keys.is_empty():
 		return [0.0, 0.0, 0.0, 1.0]
 	var prev: Array = keys[0]
 	for key: Array in keys:
 		if float(key[0]) >= t:
 			var span: float = float(key[0]) - float(prev[0])
-			var f: float = 0.0 if span <= 0.0 else smoothstep(0.0, 1.0, (t - float(prev[0])) / span)
+			var f: float = 0.0 if span <= 0.0 else (t - float(prev[0])) / span
+			if not linear:
+				f = smoothstep(0.0, 1.0, f)
 			return [lerpf(_v(prev, 1, 0.0), _v(key, 1, 0.0), f), lerpf(_v(prev, 2, 0.0), _v(key, 2, 0.0), f),
 				lerpf(_v(prev, 3, 0.0), _v(key, 3, 0.0), f), lerpf(_v(prev, 4, 1.0), _v(key, 4, 1.0), f)]
 		prev = key
