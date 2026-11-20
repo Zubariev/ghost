@@ -21,6 +21,9 @@ var has_window: bool = false
 var grid: Vector2i = Vector2i.ZERO
 ## Where the debug plan view draws the room. Not used by the simulation.
 var plan_rect: Rect2 = Rect2()
+## Real floor size in metres, width (u) × depth (v) (user decision 2026-11-20: rooms of
+## different sizes, laid out in metres). ZERO when the data gives none.
+var size_m: Vector2 = Vector2.ZERO
 
 
 static func from_dict(data: Dictionary) -> RoomState:
@@ -38,6 +41,9 @@ static func from_dict(data: Dictionary) -> RoomState:
 	var rect: Array = data.get("plan_rect", [0, 0, 0, 0])
 	if rect.size() == 4:
 		room.plan_rect = Rect2(float(rect[0]), float(rect[1]), float(rect[2]), float(rect[3]))
+	var size: Array = data.get("size_m", [])
+	if size.size() == 2:
+		room.size_m = Vector2(float(size[0]), float(size[1]))
 	return room
 
 

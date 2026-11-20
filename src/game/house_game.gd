@@ -95,7 +95,11 @@ func _ready() -> void:
 	_stage.navigator = _navigator
 	_stage.layout = RoomLayout.new(JsonData.read(FURNITURE_PATH).get("rooms", {}), _sim.house)
 	add_child(_stage)
-	_room_view = RoomView.new(JsonData.read(RoomView.CONFIG_PATH))
+	var room_sizes: Dictionary = {}
+	for room_id: String in _sim.house.rooms:
+		if _sim.house.rooms[room_id].size_m != Vector2.ZERO:
+			room_sizes[room_id] = _sim.house.rooms[room_id].size_m
+	_room_view = RoomView.new(JsonData.read(RoomView.CONFIG_PATH), room_sizes)
 	var stealth_cfg: Dictionary = JsonData.read(STEALTH_PATH)
 	_hide_range = float(stealth_cfg.get("hide_range", 0.16))
 	# Stage 5d: detection penalties live with the rest of the energy numbers.
@@ -177,7 +181,8 @@ func _process(delta: float) -> void:
 			_casting.cancel()   # floating off interrupts harm
 		_casting.hold(Input.is_action_pressed(&"interact"))   # hold E to act (2026-11-15)
 		var room_factor: float = RoomCondition.ghost_factor(RoomCondition.run_down(_sim.house, _navigator.room_id), _ghost_slowest)
-		_navigator.move(direction * _ghost_speed * room_factor * delta)
+		# speed in metres per second: the same pace in a small room as in a big one (2026-11-20)
+		_navigator.move(_stage.layout.to_uv(_navigator.room_id, direction * _ghost_speed * room_factor * delta))
 		_stealth.observe()
 	_update_view()
 	_show_outcome_if_over()
@@ -246,7 +251,7 @@ func _update_view() -> void:
 	for piece: Dictionary in _stage.layout.pieces(room_id):
 		var object_id: String = String(piece.get("object", ""))
 		var at := Vector2(float(piece["u"]), float(piece["v"]))
-		var distance: float = _navigator.uv.distance_to(at)
+		var distance: float = _stage.layout.distance(room_id, _navigator.uv, at)
 		if piece.has("pickup") and not _has_monocle and distance <= best_distance:
 			best = "pickup:" + String(piece["pickup"])
 			best_distance = distance
@@ -323,7 +328,7 @@ func _nearest_hiding_spot() -> String:
 	var best: String = ""
 	var best_distance: float = _hide_range
 	for spot: Dictionary in _stage.layout.hiding_spots(_navigator.room_id):
-		var distance: float = _navigator.uv.distance_to(spot["uv"])
+		var distance: float = _stage.layout.distance(_navigator.room_id, _navigator.uv, spot["uv"])
 		if distance <= best_distance:
 			best = String(spot["id"])
 			best_distance = distance

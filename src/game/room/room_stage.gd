@@ -541,18 +541,20 @@ func _draw_cones(room_id: String) -> void:
 		var placed: Dictionary = motion.person(i, room_id)
 		if placed.is_empty():
 			continue
+		var size: Vector2 = layout.size(room_id)
 		_draw_fan(placed["uv"], placed["facing"], float(sight_config.get("peripheral_angle_deg", 120)),
-			float(sight_config.get("peripheral_range", 0.5)), Color(1.0, 0.9, 0.4, 0.16))
+			float(sight_config.get("peripheral_range", 0.5)), Color(1.0, 0.9, 0.4, 0.16), size)
 		_draw_fan(placed["uv"], placed["facing"], float(sight_config.get("deep_angle_deg", 40)),
-			float(sight_config.get("deep_range", 0.33)), Color(1.0, 0.45, 0.25, 0.30))
+			float(sight_config.get("deep_range", 0.33)), Color(1.0, 0.45, 0.25, 0.30), size)
 
 
-func _draw_fan(origin: Vector2, look: Vector2, angle_deg: float, reach: float, color: Color) -> void:
+## A sight cone: [param reach] in metres on a floor of [param size] metres (2026-11-20).
+func _draw_fan(origin: Vector2, look: Vector2, angle_deg: float, reach: float, color: Color, size: Vector2) -> void:
 	var points := PackedVector2Array([RoomGeometry.to_screen(origin)])
 	var half: float = deg_to_rad(angle_deg) * 0.5
 	for step: int in 19:
-		var direction: Vector2 = look.normalized().rotated(-half + 2.0 * half * float(step) / 18.0)
-		points.append(RoomGeometry.to_screen(origin + direction * reach))
+		var direction: Vector2 = (look * size).normalized().rotated(-half + 2.0 * half * float(step) / 18.0)
+		points.append(RoomGeometry.to_screen(origin + direction * reach / size))
 	for piece: PackedVector2Array in floor_pieces(points):
 		draw_colored_polygon(piece, color)
 		_outline(piece, Color(color, minf(color.a * 2.5, 0.8)), 2.0)

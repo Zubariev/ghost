@@ -142,7 +142,7 @@ func observe() -> void:
 		var where: Dictionary = _person(routine, i, room_id)
 		if where.is_empty():
 			continue
-		match RoomLayout.sight_zone(where["uv"], where["facing"], _nav.uv, _cfg, _layout.occluders(room_id)):
+		match RoomLayout.sight_zone(where["uv"], where["facing"], _nav.uv, _cfg, _layout.occluders(room_id), _layout.size(room_id)):
 			RoomLayout.Zone.DEEP:
 				_contact(routine, "deep")
 				return
@@ -204,10 +204,10 @@ func begin_search(npc_id: String, room_id: String, last_seen: Vector2) -> void:
 	var radius: float = float(_cfg.get("nearby_spot_radius", 0.35))
 	var nearby: Array[Dictionary] = []
 	for spot: Dictionary in spots:
-		if Vector2(spot["uv"]).distance_to(last_seen) <= radius:
+		if _layout.distance(room_id, spot["uv"], last_seen) <= radius:
 			nearby.append(spot)
 	nearby.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return Vector2(a["uv"]).distance_to(last_seen) < Vector2(b["uv"]).distance_to(last_seen))
+		return _layout.distance(room_id, a["uv"], last_seen) < _layout.distance(room_id, b["uv"], last_seen))
 	incident["queue"] = nearby
 	incident["spots"] = spots
 	incident["search_left"] = search_minutes_for(npc_id)
@@ -226,7 +226,7 @@ func _decide(routine: NpcRoutine) -> void:
 			var look: Vector2 = Vector2(incident["last_seen"]) - Vector2(where["uv"])
 			if look.length() < 0.0001:
 				look = where["facing"]
-			if RoomLayout.sight_zone(where["uv"], look, _nav.uv, _cfg, _layout.occluders(room_id)) != RoomLayout.Zone.NONE:
+			if RoomLayout.sight_zone(where["uv"], look, _nav.uv, _cfg, _layout.occluders(room_id), _layout.size(room_id)) != RoomLayout.Zone.NONE:
 				_contact(routine, "deep")
 				return
 	if not hidden_in.is_empty() and hidden_room == room_id:

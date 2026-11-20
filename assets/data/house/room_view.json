@@ -1,18 +1,5 @@
 {
-	"_source": "Room sizes on screen (user decision 2026-11-20, from the room-size comparison production/qa/evidence/room-size-views/: 'zoomed'). Each room is drawn at its real width; the full box is full_box_width_m wide at the props' real-world scale (75 px per metre, docs/art/SPRITE_SPEC.md §2). The whole house shares one zoom, chosen so the widest room fills view_area (between the HUD's top strip and the slot bar); smaller rooms sit centred with dark around them, and people and props keep one size everywhere. Depth shrinks with width for now; positions stay relative (u, v) until the rooms are re-laid in metres (OPEN).",
-	"full_box_width_m": 10.6,
-	"view_area": [20, 60, 1240, 585],
-	"width_m": {
-		"living_room": 7.0,
-		"upper_corridor": 6.0,
-		"dining_room": 5.0,
-		"library": 5.0,
-		"workshop": 5.0,
-		"parents_bedroom": 5.0,
-		"children_bedroom": 5.0,
-		"kitchen": 4.5,
-		"hall": 4.5,
-		"grandparents_bedroom": 4.5,
-		"upper_bathroom": 3.5
-	}
+	"_source": "Room view (user decision 2026-11-20, from the room-size comparison production/qa/evidence/room-size-views/: 'zoomed'). Each room is drawn at its real size (rooms.json size_m, width x depth) within the full box, which is full_box_size_m at the props' real-world scale (75 px per metre, docs/art/SPRITE_SPEC.md §2). The whole house shares one zoom, the largest at which every room fits view_area (between the HUD's top strip and the slot bar): the largest room fills it, smaller ones sit centred with dark around them; people and props keep one size everywhere.",
+	"full_box_size_m": [10.6, 7.5],
+	"view_area": [20, 60, 1240, 585]
 }

@@ -16,6 +16,13 @@ narrows toward the back, no front wall (`RoomGeometry`: floor corners (330, 250)
 front; depth scale 0.78 at the back to 1.12 at the front). Positions are floor coordinates
 (u left→right, v back→front, 0..1).
 
+**Rooms of different sizes (user decision 2026-11-20).** Each room is drawn at its real floor
+size (`rooms.json` size_m, width × depth) inside the box above, which is the full 10.6 × 7.5 m
+floor; the whole house shares one zoom (the largest room fills the view) and smaller rooms sit
+centred (`RoomView`, `assets/data/house/room_view.json`). People and props keep one size. Distances
+— speeds, reach, sight, search, walking footprints, sight blockers, the walking grid — are metres
+on each room's floor; positions stay floor units (u, v) of that room.
+
 Concept images are painted in free perspective. The game does **not** copy that camera, geometry
 or projection. Translate a concept into the box: keep its furniture, materials, light and mood;
 the pieces stay where `furniture.json` puts them.
@@ -170,7 +177,13 @@ All 11 rooms now have painted props (`../SPRITE_SPEC.md` §2), sized at a real-w
    **User decision 2026-11-20: more decor** — non-blocking pieces (decor entries, drawn only,
    kept off family routes as the decor test requires).
 3. **Room sizes.** **User decision 2026-11-20: smaller rooms, of different sizes like a real
-   house** — fewer overlapping sprites. The one room box is fixed by the GDD and Demo Spec
-   (camera, projection, room geometry), so this needs a design change there first, then the
-   room view and the data; a plan goes to the user for approval before any change.
+   house** — fewer overlapping sprites. The GDD fixes the Hamlet presentation, not one size.
+   Compared as now / zoomed / fill (`production/qa/evidence/room-size-views/`): **zoomed**
+   chosen. Built in three phases (user approval 2026-11-20):
+   - **A — metric foundation (built):** sizes in `rooms.json`; every distance in metres (values
+     converted from floor units at 5 m, a mid-sized room, so balance roughly holds there).
+   - **B — layouts, room by room:** furniture, decor, doors and footprints re-laid in metres to
+     match the real-size paintings (answers 1 and 2 above); each room a top-down plan and a
+     capture for approval, the living room first.
+   - **C — tuning:** sight, search and speeds from captures and play.
 

@@ -1,5 +1,5 @@
 {
-	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take. decor = drawn only (Whimsical Gothic Storybook art test, 2026-11-15): never an obstacle, hiding spot, sight blocker or object; variant picks a look (e.g. armchair olive, painting portrait/landscape). Every room has at least two hiding spots (user decision 2026-11-15).",
+	"_source": "Stage 5a view layout (Demo Specification §8.7). u: left→right across the floor, v: back wall (0) → front edge (1). blocks_sight: [half width, half depth] in metres (2026-11-20, rooms of real sizes). object = the sim object this piece shows hide_id = hiding spot (§8.8); blocks_sight = [half-width u, half-depth v] occluder footprint; pickup = item the ghost can take. decor = drawn only (Whimsical Gothic Storybook art test, 2026-11-15): never an obstacle, hiding spot, sight blocker or object; variant picks a look (e.g. armchair olive, painting portrait/landscape). Every room has at least two hiding spots (user decision 2026-11-15).",
 	"rooms": {
 		"workshop": [
 			{
@@ -13,8 +13,8 @@
 				"u": 0.75,
 				"v": 0.02,
 				"blocks_sight": [
-					0.1,
-					0.05
+					0.5,
+					0.25
 				]
 			},
 			{
@@ -124,8 +124,8 @@
 				"u": 0.22,
 				"v": 0.02,
 				"blocks_sight": [
-					0.12,
-					0.06
+					0.6,
+					0.3
 				],
 				"hide_id": "hide_hall_stairs"
 			},
@@ -170,8 +170,8 @@
 				"v": 0.08,
 				"hide_id": "hide_dining_room_sideboard_1",
 				"blocks_sight": [
-					0.12,
-					0.05
+					0.6,
+					0.25
 				]
 			},
 			{
@@ -247,8 +247,8 @@
 				"u": 0.22,
 				"v": 0.02,
 				"blocks_sight": [
-					0.1,
-					0.05
+					0.5,
+					0.25
 				]
 			},
 			{
@@ -257,8 +257,8 @@
 				"variant": "books",
 				"v": 0.02,
 				"blocks_sight": [
-					0.1,
-					0.05
+					0.5,
+					0.25
 				]
 			},
 			{
@@ -267,8 +267,8 @@
 				"variant": "curios",
 				"v": 0.02,
 				"blocks_sight": [
-					0.1,
-					0.05
+					0.5,
+					0.25
 				],
 				"hide_id": "hide_library_bookshelf"
 			},
@@ -309,8 +309,8 @@
 				"v": 0.05,
 				"hide_id": "hide_parents_bedroom_wardrobe_2",
 				"blocks_sight": [
-					0.1,
-					0.06
+					0.5,
+					0.3
 				]
 			},
 			{
@@ -345,8 +345,8 @@
 				"v": 0.05,
 				"hide_id": "hide_grandparents_bedroom_wardrobe_2",
 				"blocks_sight": [
-					0.1,
-					0.06
+					0.5,
+					0.3
 				]
 			},
 			{
@@ -373,8 +373,8 @@
 				"u": 0.22,
 				"v": 0.02,
 				"blocks_sight": [
-					0.12,
-					0.06
+					0.6,
+					0.3
 				],
 				"hide_id": "hide_upper_corridor_stairs"
 			},

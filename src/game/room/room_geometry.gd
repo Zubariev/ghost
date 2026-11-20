@@ -25,18 +25,22 @@ static var BACK_SCALE: float = FULL_BACK_SCALE
 static var FRONT_SCALE: float = FULL_FRONT_SCALE
 
 
-## A floor [param f] times the full box's width and depth (a smaller
-## room at the same scale for people and props), about the floor's centre; walls keep their
-## height, and the depth scale narrows with the shallower floor. 1.0 restores the full box.
-static func set_floor_scale(f: float) -> void:
+## A floor [param fw] times the full box's width and [param fd] times its depth ([param fd] < 0:
+## the same as [param fw]), about the floor's centre: a smaller room at the same scale for people
+## and props. Walls keep their height; the depth scale narrows with a shallower floor. 1.0
+## restores the full box.
+static func set_floor_scale(fw: float, fd: float = -1.0) -> void:
+	if fd < 0.0:
+		fd = fw
 	var centre: Vector2 = (FULL_BACK_LEFT + FULL_BACK_RIGHT + FULL_FRONT_LEFT + FULL_FRONT_RIGHT) / 4.0
-	BACK_LEFT = centre + (FULL_BACK_LEFT - centre) * f
-	BACK_RIGHT = centre + (FULL_BACK_RIGHT - centre) * f
-	FRONT_LEFT = centre + (FULL_FRONT_LEFT - centre) * f
-	FRONT_RIGHT = centre + (FULL_FRONT_RIGHT - centre) * f
+	var k := Vector2(fw, fd)
+	BACK_LEFT = centre + (FULL_BACK_LEFT - centre) * k
+	BACK_RIGHT = centre + (FULL_BACK_RIGHT - centre) * k
+	FRONT_LEFT = centre + (FULL_FRONT_LEFT - centre) * k
+	FRONT_RIGHT = centre + (FULL_FRONT_RIGHT - centre) * k
 	var mid: float = (FULL_BACK_SCALE + FULL_FRONT_SCALE) / 2.0
-	BACK_SCALE = mid + (FULL_BACK_SCALE - mid) * f
-	FRONT_SCALE = mid + (FULL_FRONT_SCALE - mid) * f
+	BACK_SCALE = mid + (FULL_BACK_SCALE - mid) * fd
+	FRONT_SCALE = mid + (FULL_FRONT_SCALE - mid) * fd
 
 
 ## The room view's zoom and offset ([RoomView]): the stage is drawn scaled by VIEW_ZOOM and moved

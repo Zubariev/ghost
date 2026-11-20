@@ -85,7 +85,8 @@ func test_no_family_route_in_the_living_room_crosses_decor() -> void:
 	for piece: Dictionary in _decor(rooms, ROOM):
 		if footprints.has(String(piece["kind"])):
 			var half: Array = footprints[String(piece["kind"])]
-			var size := Vector2(float(half[0]), float(half[1])) + Vector2(clearance, clearance)
+			# footprints and clearance are metres (2026-11-20): as floor units of this room
+			var size: Vector2 = layout.to_uv(ROOM, Vector2(float(half[0]), float(half[1])) + Vector2(clearance, clearance))
 			decor_rects.append(Rect2(Vector2(float(piece["u"]), float(piece["v"])) - size, size * 2.0))
 	assert_int(decor_rects.size()).is_greater(0)
 	# Act / Assert

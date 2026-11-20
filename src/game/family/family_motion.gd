@@ -162,7 +162,7 @@ func is_walking(index: int) -> bool:
 	return not (_walkers[index]["route"] as Array).is_empty()
 
 
-## Length of the route person [param index] still has to walk, in floor units.
+## Length of the route person [param index] still has to walk, in metres (2026-11-20).
 func remaining(index: int) -> float:
 	var walker: Dictionary = _walkers[index]
 	var total: float = 0.0
@@ -172,7 +172,7 @@ func remaining(index: int) -> float:
 		var at: Vector2 = walker["uv"] if first and String(segment["room"]) == String(walker["room"]) else segment["start"]
 		first = false
 		for point: Vector2 in segment["targets"]:
-			total += at.distance_to(point)
+			total += _layout.distance(String(segment["room"]), at, point)
 			at = point
 	return total
 
@@ -207,8 +207,8 @@ func _goal(index: int) -> Dictionary:
 ## Where someone coming from [param from_room] stops just inside [param room_id]'s door.
 func entry_uv(room_id: String, from_room: String) -> Vector2:
 	var door: Vector2 = _layout.door_uv(room_id, from_room)
-	var inward: Vector2 = Vector2(0.5, 0.5) - door
-	var entry: Vector2 = door + (inward.normalized() * _door_inset if inward.length() > 0.0001 else Vector2.ZERO)
+	var inward: Vector2 = (Vector2(0.5, 0.5) - door) * _layout.size(room_id)   # metres
+	var entry: Vector2 = door + (_layout.to_uv(room_id, inward.normalized() * _door_inset) if inward.length() > 0.0001 else Vector2.ZERO)
 	return entry if _paths.is_free(room_id, entry) else _paths.nearest_free(room_id, entry)
 
 
@@ -262,7 +262,7 @@ func _targets(room_id: String, from_uv: Vector2, to_uv: Vector2) -> PackedVector
 	return points
 
 
-# Moves the walker [param distance] floor units along its route, through doors.
+# Moves the walker [param distance] metres along its route, through doors.
 func _advance(index: int, walker: Dictionary, distance: float) -> void:
 	var route: Array = walker["route"]
 	while not route.is_empty():
@@ -281,9 +281,9 @@ func _advance(index: int, walker: Dictionary, distance: float) -> void:
 			break
 		var at: Vector2 = walker["uv"]
 		var to: Vector2 = targets[0]
-		var gap: float = at.distance_to(to)
+		var gap: float = _layout.distance(String(segment["room"]), at, to)
 		if gap > 0.0001:
-			walker["facing"] = (to - at) / gap
+			walker["facing"] = (to - at).normalized()
 		if gap <= distance:
 			walker["uv"] = to
 			distance -= gap

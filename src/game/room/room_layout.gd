@@ -32,6 +32,26 @@ func pieces(room_id: String) -> Array:
 	return furniture.get(room_id, [])
 
 
+## The room's real floor size in metres (width × depth; rooms.json size_m). A room without one
+## measures in floor units (1 × 1), so distances in metres equal floor units there (tests).
+func size(room_id: String) -> Vector2:
+	if _house != null and _house.rooms.has(room_id):
+		var s: Vector2 = _house.rooms[room_id].size_m
+		if s.x > 0.0 and s.y > 0.0:
+			return s
+	return Vector2.ONE
+
+
+## Metres between two floor points of [param room_id].
+func distance(room_id: String, a: Vector2, b: Vector2) -> float:
+	return ((b - a) * size(room_id)).length()
+
+
+## A length or offset in metres as floor units of [param room_id] (per axis).
+func to_uv(room_id: String, metres: Vector2) -> Vector2:
+	return metres / size(room_id)
+
+
 ## Floor position of a sim object in a room, or (-1, -1) when it is not placed there.
 func object_uv(room_id: String, object_id: String) -> Vector2:
 	for piece: Dictionary in pieces(room_id):
@@ -78,7 +98,8 @@ func occluders(room_id: String) -> Array[Rect2]:
 	var rects: Array[Rect2] = []
 	for piece: Dictionary in pieces(room_id):
 		if piece.has("blocks_sight"):
-			var half := Vector2(float(piece["blocks_sight"][0]), float(piece["blocks_sight"][1]))
+			# half width × half depth in metres (2026-11-20)
+			var half: Vector2 = to_uv(room_id, Vector2(float(piece["blocks_sight"][0]), float(piece["blocks_sight"][1])))
 			rects.append(Rect2(_uv(piece) - half, half * 2.0))
 	return rects
 
@@ -164,15 +185,17 @@ func bed_spot(routine: NpcRoutine, room_id: String, routines: Array[NpcRoutine])
 
 
 ## Which sight zone the ghost is in for someone at [param from_uv] looking along
-## [param look]. Walls and [param blockers] (tall furniture) block sight.
-static func sight_zone(from_uv: Vector2, look: Vector2, ghost_uv: Vector2, cfg: Dictionary, blockers: Array[Rect2]) -> Zone:
+## [param look]. Walls and [param blockers] (tall furniture) block sight. Ranges and angles are
+## measured in metres on a floor of [param room_size] (width × depth, 2026-11-20).
+static func sight_zone(from_uv: Vector2, look: Vector2, ghost_uv: Vector2, cfg: Dictionary, blockers: Array[Rect2],
+		room_size: Vector2 = Vector2.ONE) -> Zone:
 	if not line_of_sight(from_uv, ghost_uv, blockers):
 		return Zone.NONE
-	var to_ghost: Vector2 = ghost_uv - from_uv
+	var to_ghost: Vector2 = (ghost_uv - from_uv) * room_size
 	var distance: float = to_ghost.length()
 	if distance < 0.0001:
 		return Zone.DEEP
-	var angle: float = rad_to_deg(absf(look.normalized().angle_to(to_ghost)))
+	var angle: float = rad_to_deg(absf((look * room_size).normalized().angle_to(to_ghost)))
 	if angle <= float(cfg.get("deep_angle_deg", 40)) * 0.5 and distance <= float(cfg.get("deep_range", 0.33)):
 		return Zone.DEEP
 	if angle <= float(cfg.get("peripheral_angle_deg", 120)) * 0.5 and distance <= float(cfg.get("peripheral_range", 0.5)):

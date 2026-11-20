@@ -1,23 +1,30 @@
 {
-	"_source": "GDD §6.7, §12.1a; Demo Specification §8.5, §8.8 (stage 5b, approved 2026-11-13). All numbers provisional. contact_morale_penalty 10 -> 4 (user decision 2026-11-15): contact still frightens but is worth less than well-timed harm, so it is not a scare to farm. search_base_minutes 10 -> 4 (user decision 2026-11-15): a calm searcher checks only the spot nearest the sighting; anxious or unhappy ones search longer. Energy penalties for being seen live in energy.json (stage 5d); the game passes them in as energy_penalty. glance (user decision 2026-11-15): resting people glance to a random side every every_minutes (game minutes, divided by their anxiety; divided by focused_factor during focused_activities or any repair job), for duration_minutes, up to max_angle_deg either side; seeded.",
+	"_source": "GDD §6.7, §12.1a; Demo Specification §8.5, §8.8 (stage 5b, approved 2026-11-13). All numbers provisional. contact_morale_penalty 10 -> 4 (user decision 2026-11-15): contact still frightens but is worth less than well-timed harm, so it is not a scare to farm. search_base_minutes 10 -> 4 (user decision 2026-11-15): a calm searcher checks only the spot nearest the sighting; anxious or unhappy ones search longer. Energy penalties for being seen live in energy.json (stage 5d); the game passes them in as energy_penalty. glance (user decision 2026-11-15): resting people glance to a random side every every_minutes (game minutes, divided by their anxiety; divided by focused_factor during focused_activities or any repair job), for duration_minutes, up to max_angle_deg either side; seeded. Metres (2026-11-20, rooms of real sizes): peripheral_range, deep_range, nearby_spot_radius and hide_range are metres on the room's real floor, converted from floor units at 5 m (a mid-sized room); tuning in Phase C.",
 	"peripheral_angle_deg": 120,
-	"peripheral_range": 0.5,
+	"peripheral_range": 2.5,
 	"deep_angle_deg": 40,
-	"deep_range": 0.33,
+	"deep_range": 1.65,
 	"contact_morale_penalty": 4,
 	"inspect_minutes": 1,
 	"search_base_minutes": 4,
 	"search_walk_minutes": 1,
 	"check_minutes": 2,
 	"fright_minutes": 1,
-	"nearby_spot_radius": 0.35,
-	"hide_range": 0.16,
+	"nearby_spot_radius": 1.75,
+	"hide_range": 0.8,
 	"seed": 20261113,
 	"glance": {
 		"every_minutes": [3.0, 7.0],
 		"duration_minutes": [1.0, 2.0],
 		"max_angle_deg": 110,
-		"focused_activities": ["cook", "computer", "tools", "read", "draw", "wash"],
+		"focused_activities": [
+			"cook",
+			"computer",
+			"tools",
+			"read",
+			"draw",
+			"wash"
+		],
 		"focused_factor": 0.4,
 		"seed": 20261115
 	}

@@ -1,8 +1,12 @@
 {
-	"_source": "Demo Specification §4.2 / GDD §9.2; stage 3 rooms. walk_minutes: an adult (pace 1) in a room in perfect order, measured from the walking routes on screen by tools/measure_walks.gd (2026-11-15); slower people and run-down rooms take longer. plan_rect is for the debug view only; stage 5a: per-floor grid (col, row; row 0 = back), windows, a lamp per room (Demo Specification §8.7).",
+	"_source": "size_m: real floor width x depth in metres (user decision 2026-11-20: rooms of different sizes; RoomLayout converts distances in metres to the room's floor units). Demo Specification §4.2 / GDD §9.2; stage 3 rooms. walk_minutes: an adult (pace 1) in a room in perfect order, measured from the walking routes on screen by tools/measure_walks.gd (2026-11-15); slower people and run-down rooms take longer. plan_rect is for the debug view only; stage 5a: per-floor grid (col, row; row 0 = back), windows, a lamp per room (Demo Specification §8.7).",
 	"rooms": [
 		{
 			"id": "parents_bedroom",
+			"size_m": [
+				5.0,
+				4.5
+			],
 			"name": "Спальня батьків",
 			"floor": 1,
 			"plan_rect": [
@@ -19,6 +23,10 @@
 		},
 		{
 			"id": "grandparents_bedroom",
+			"size_m": [
+				4.5,
+				4.0
+			],
 			"name": "Спальня бабусі й дідуся",
 			"floor": 1,
 			"plan_rect": [
@@ -35,6 +43,10 @@
 		},
 		{
 			"id": "upper_corridor",
+			"size_m": [
+				6.0,
+				2.5
+			],
 			"name": "Коридор (2 поверх)",
 			"floor": 1,
 			"plan_rect": [
@@ -51,6 +63,10 @@
 		},
 		{
 			"id": "children_bedroom",
+			"size_m": [
+				5.0,
+				4.5
+			],
 			"name": "Дитяча спальня",
 			"floor": 1,
 			"plan_rect": [
@@ -67,6 +83,10 @@
 		},
 		{
 			"id": "upper_bathroom",
+			"size_m": [
+				3.5,
+				3.0
+			],
 			"name": "Ванна (2 поверх)",
 			"floor": 1,
 			"plan_rect": [
@@ -83,6 +103,10 @@
 		},
 		{
 			"id": "workshop",
+			"size_m": [
+				5.0,
+				4.0
+			],
 			"name": "Майстерня",
 			"floor": 0,
 			"plan_rect": [
@@ -99,6 +123,10 @@
 		},
 		{
 			"id": "living_room",
+			"size_m": [
+				7.0,
+				5.0
+			],
 			"name": "Вітальня",
 			"floor": 0,
 			"plan_rect": [
@@ -115,6 +143,10 @@
 		},
 		{
 			"id": "hall",
+			"size_m": [
+				4.5,
+				5.5
+			],
 			"name": "Хол",
 			"floor": 0,
 			"plan_rect": [
@@ -131,6 +163,10 @@
 		},
 		{
 			"id": "dining_room",
+			"size_m": [
+				5.0,
+				4.5
+			],
 			"name": "Їдальня",
 			"floor": 0,
 			"plan_rect": [
@@ -147,6 +183,10 @@
 		},
 		{
 			"id": "kitchen",
+			"size_m": [
+				4.5,
+				4.0
+			],
 			"name": "Кухня",
 			"floor": 0,
 			"plan_rect": [
@@ -163,6 +203,10 @@
 		},
 		{
 			"id": "library",
+			"size_m": [
+				5.0,
+				4.5
+			],
 			"name": "Бібліотека",
 			"floor": 0,
 			"plan_rect": [

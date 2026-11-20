@@ -14,10 +14,16 @@ extends RefCounted
 const MOVEMENT_PATH: String = "res://assets/data/house/movement.json"
 
 var _layout: RoomLayout
+## Grid cells across and deep when the config gives no cell size (old configs, tests).
 var _cells: Vector2i
+## Grid cell size in metres (2026-11-20): each room gets as many cells as fit its real size.
+var _cell_m: float = 0.0
+## A person's half width in metres, added around every footprint.
 var _clearance: float
-## kind -> half size (u, v)
+## kind -> half size in metres (width, depth)
 var _footprints: Dictionary[String, Vector2] = {}
+## room id -> cells across and deep
+var _room_cells: Dictionary = {}
 ## room id -> Array[Rect2]
 var _blocked: Dictionary = {}
 ## room id -> AStarGrid2D
@@ -28,6 +34,7 @@ func _init(layout: RoomLayout, config: Dictionary) -> void:
 	_layout = layout
 	var cells: Array = config.get("grid_cells", [40, 24])
 	_cells = Vector2i(int(cells[0]), int(cells[1]))
+	_cell_m = float(config.get("cell_m", 0.0))
 	_clearance = float(config.get("clearance", 0.025))
 	var footprints: Dictionary = config.get("footprints", {})
 	for kind: String in footprints:
@@ -44,7 +51,7 @@ func blocked(room_id: String) -> Array[Rect2]:
 			var kind: String = String(piece["kind"])
 			if not _footprints.has(kind) or bool(piece.get("decor", false)):
 				continue   # decor (art test, 2026-11-15) is drawn only, never an obstacle
-			var half: Vector2 = _footprints[kind] + Vector2(_clearance, _clearance)
+			var half: Vector2 = _layout.to_uv(room_id, _footprints[kind] + Vector2(_clearance, _clearance))
 			rects.append(Rect2(Vector2(float(piece["u"]), float(piece["v"])) - half, half * 2.0))
 		_blocked[room_id] = rects
 	return _blocked[room_id]
@@ -82,9 +89,9 @@ func find(room_id: String, from_uv: Vector2, to_uv: Vector2) -> PackedVector2Arr
 	var middle: Array[Vector2] = [start]
 	if not is_clear(room_id, start, finish):
 		var grid: AStarGrid2D = _grid(room_id)
-		var ids: Array[Vector2i] = grid.get_id_path(_cell_of(start), _cell_of(finish))
+		var ids: Array[Vector2i] = grid.get_id_path(_cell_of(room_id, start), _cell_of(room_id, finish))
 		for i: int in range(1, ids.size() - 1):
-			middle.append(_centre(ids[i]))
+			middle.append(_centre(room_id, ids[i]))
 	middle.append(finish)
 	var out := PackedVector2Array([from_uv])
 	for point: Vector2 in _straighten(room_id, middle):
@@ -99,10 +106,11 @@ func find(room_id: String, from_uv: Vector2, to_uv: Vector2) -> PackedVector2Arr
 func nearest_free(room_id: String, uv: Vector2) -> Vector2:
 	var best := Vector2(0.5, 0.5)
 	var best_distance: float = INF
-	for x: int in _cells.x:
-		for y: int in _cells.y:
-			var centre: Vector2 = _centre(Vector2i(x, y))
-			var distance: float = centre.distance_squared_to(uv)
+	var cells: Vector2i = _cells_of(room_id)
+	for x: int in cells.x:
+		for y: int in cells.y:
+			var centre: Vector2 = _centre(room_id, Vector2i(x, y))
+			var distance: float = _layout.distance(room_id, centre, uv)
 			if distance < best_distance and is_free(room_id, centre):
 				best = centre
 				best_distance = distance
@@ -133,25 +141,39 @@ func _straighten(room_id: String, points: Array[Vector2]) -> Array[Vector2]:
 
 func _grid(room_id: String) -> AStarGrid2D:
 	if not _grids.has(room_id):
+		var cells: Vector2i = _cells_of(room_id)
 		var grid := AStarGrid2D.new()
-		grid.region = Rect2i(Vector2i.ZERO, _cells)
-		grid.cell_size = Vector2.ONE
+		grid.region = Rect2i(Vector2i.ZERO, cells)
+		grid.cell_size = _layout.size(room_id) / Vector2(cells)   # metres, so A* weighs real distance
 		grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 		grid.update()
-		for x: int in _cells.x:
-			for y: int in _cells.y:
-				if not is_free(room_id, _centre(Vector2i(x, y))):
+		for x: int in cells.x:
+			for y: int in cells.y:
+				if not is_free(room_id, _centre(room_id, Vector2i(x, y))):
 					grid.set_point_solid(Vector2i(x, y), true)
 		_grids[room_id] = grid
 	return _grids[room_id]
 
 
-func _centre(cell: Vector2i) -> Vector2:
-	return Vector2((float(cell.x) + 0.5) / float(_cells.x), (float(cell.y) + 0.5) / float(_cells.y))
+## Grid cells across and deep in [param room_id]: from its real size and the cell size in
+## metres, else the config's fixed count.
+func _cells_of(room_id: String) -> Vector2i:
+	if _cell_m <= 0.0:
+		return _cells
+	if not _room_cells.has(room_id):
+		var s: Vector2 = _layout.size(room_id)
+		_room_cells[room_id] = Vector2i(maxi(4, ceili(s.x / _cell_m)), maxi(4, ceili(s.y / _cell_m)))
+	return _room_cells[room_id]
 
 
-func _cell_of(uv: Vector2) -> Vector2i:
-	return Vector2i(clampi(floori(uv.x * float(_cells.x)), 0, _cells.x - 1), clampi(floori(uv.y * float(_cells.y)), 0, _cells.y - 1))
+func _centre(room_id: String, cell: Vector2i) -> Vector2:
+	var cells: Vector2i = _cells_of(room_id)
+	return Vector2((float(cell.x) + 0.5) / float(cells.x), (float(cell.y) + 0.5) / float(cells.y))
+
+
+func _cell_of(room_id: String, uv: Vector2) -> Vector2i:
+	var cells: Vector2i = _cells_of(room_id)
+	return Vector2i(clampi(floori(uv.x * float(cells.x)), 0, cells.x - 1), clampi(floori(uv.y * float(cells.y)), 0, cells.y - 1))
 
 
 static func _segment_hits_rect(a: Vector2, b: Vector2, rect: Rect2) -> bool:
