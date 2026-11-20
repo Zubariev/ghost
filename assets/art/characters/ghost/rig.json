@@ -3,7 +3,7 @@
 	"id": "ghost",
 	"height_m": 1.8,
 	"stride_m": 1.1,
-	"px_per_m": 270.40000000000003,
+	"px_per_m": 259.2,
 	"views": {
 		"front": {
 			"foot": [
@@ -90,7 +90,7 @@
 					"z": 1
 				}
 			},
-			"px_per_m": 270.40000000000003,
+			"px_per_m": 259.2,
 			"faces_left": false
 		},
 		"back": {
@@ -178,7 +178,7 @@
 					"z": 1
 				}
 			},
-			"px_per_m": 270.40000000000003,
+			"px_per_m": 259.2,
 			"faces_left": false
 		},
 		"side": {
@@ -240,7 +240,7 @@
 					"z": 1
 				}
 			},
-			"px_per_m": 270.40000000000003,
+			"px_per_m": 259.2,
 			"faces_left": false
 		}
 	},

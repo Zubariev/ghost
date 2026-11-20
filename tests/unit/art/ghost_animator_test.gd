@@ -40,12 +40,12 @@ func test_the_ghost_rig_is_complete() -> void:
 
 
 func test_he_is_drawn_on_the_familys_scale() -> void:
-	# The family is drawn at the storybook scale (father 1.85 m → ~1.4 m figure): the ghost, a 1.78 m
-	# man, must not come out bigger than the father (user review 2026-11-21).
+	# The family is drawn at the storybook scale (father 1.85 m → ~1.4 m figure). User review
+	# 2026-11-21: first bigger than the father, then too small; the ghost's figure is the father's
+	# height, a very little more (he floats, toes pointed).
 	var ghost: CharacterRig = _rig()
 	var father: CharacterRig = CharacterRig.load_for("father")
-	assert_float(_figure_m(ghost)).is_less(_figure_m(father))
-	assert_float(_figure_m(ghost)).is_greater(_figure_m(father) * 0.85)
+	assert_float(_figure_m(ghost)).is_between(_figure_m(father) * 0.99, _figure_m(father) * 1.05)
 
 
 ## Painted figure height in metres in the front view (top of the highest part to the lowest).

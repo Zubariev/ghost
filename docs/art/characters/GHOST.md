@@ -156,9 +156,10 @@ hip, behind the body). Side (facing right; left mirrored): `body`, `head`, `arm`
 (both legs as one piece — the near/far split edits returned the whole figure four times). Knees and
 elbows are not split: the legs hang and swing from the hip. Scale: the family's storybook scale
 (they are drawn at ~0.76 of their nominal height: the father, 1.85 m, is a 1.42 m figure); the
-ghost's 923 px figure is 1.38 m (676 px per metre in the 1024 canvas), built at 0.4. The first build
-used his true 1.80 m and looked bigger than the father in the game (user review 2026-11-21); a test
-now keeps him between 0.85× and 1× the father's figure.
+ghost's 923 px figure is 1.44 m (648 px per metre in the 1024 canvas), built at 0.4 — the father's
+height (1.42 m), a very little more, and he floats 0.16 m above the floor. The first build used his
+true 1.80 m and looked bigger than the father; the second (1.38 m) too small (user reviews
+2026-11-21). A test keeps his figure between 0.99× and 1.05× the father's.
 
 **Foot point.** Each view's `foot` is the floor point under his lowest toe; `look.hover_m` (0.16 m)
 lifts the whole figure above it, so he never touches the floor. A test checks every part's painted
@@ -232,6 +233,7 @@ behind and in front of the sofa, hiding and emerging, fright, far back, dark roo
   moved to 21:30 next to the lamp; "dark room" was firelit — lamp put out after arriving; side and
   back read greyer than the front — per-view wash (`tools/art/wash.gd`).
 - In-game review 2: bigger than the father (true scale + 0.28 m hover) — family scale, hover 0.16 m.
+- In-game review 3 (user): now too small beside the father — the father's height (1.44 m figure).
 
 **Known limitations:** the glow-free edit made the contour thick and near-black (the art direction
 asks for dark brown); the side legs move as one piece; the side body has a painted white
