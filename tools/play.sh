@@ -7,6 +7,7 @@
 #   bash tools/play.sh hud-test  HUD: help, map found in the library, slot bar, floats → production/qa/evidence/hud-slots-map/
 #   bash tools/play.sh art-test  cozy and haunted storybook living room → production/qa/evidence/art-test-living-room/
 #   bash tools/play.sh art-test <dir> --code-art   the same with every prop code-drawn (painted sprites off), for comparison
+#   bash tools/play.sh character-test father  the painted father: waking, walking, eating, workbench, anxious, repairing, fright, sofa → production/qa/evidence/character-father/
 #   bash tools/play.sh character-test  the painted grandma pilot: cooking, walking, anxious, fright, armchair → production/qa/evidence/character-pilot-grandma/
 #   bash tools/play.sh props-test  every room with its painted props, by day (cozy) and night (haunted) → production/qa/evidence/art-phase4-props/
 set -euo pipefail
@@ -27,6 +28,8 @@ elif [[ "${1:-}" == "font-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" -s res://tools/font_specimen.gd -- "$PWD/prototypes/font-trial-2026-11-15/fonts" "$PWD/production/qa/evidence/font-trial/specimen.png"
 elif [[ "${1:-}" == "hud-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-hud-slots-map}" --hud-test
+elif [[ "${1:-}" == "character-test" && "${2:-}" == "father" ]]; then
+	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/character-father" --character-test=father
 elif [[ "${1:-}" == "character-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-character-pilot-grandma}" --character-test
 elif [[ "${1:-}" == "props-test" ]]; then

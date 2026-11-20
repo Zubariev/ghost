@@ -2,7 +2,7 @@
 	"_source": "Built by tools/art/rig_build.py from art/concepts/characters/family/grandma/rig_src.json — do not edit by hand.",
 	"id": "grandma",
 	"height_m": 1.58,
-	"stride_m": 0.9,
+	"stride_m": 0.67,
 	"px_per_m": 298.8,
 	"views": {
 		"front": {

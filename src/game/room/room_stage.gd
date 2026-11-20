@@ -324,7 +324,9 @@ func _update_animators(delta: float) -> void:
 		if not _animators.has(i):
 			_animators[i] = CharacterAnimator.new(rigs[npc_id], (rigs[npc_id] as CharacterRig).stride_m)
 		var activity: String = ""
-		if routine.state == NpcRoutine.State.PERFORMING and routine.current != null and routine.current_task == null:
+		if routine.current_task != null:   # a task from the board: repairing or cleaning (2026-11-20)
+			activity = "repair" if routine.current_task.type == HouseTask.Type.REPAIR else "clean"
+		elif routine.state == NpcRoutine.State.PERFORMING and routine.current != null:
 			activity = routine.current.animation
 		(_animators[i] as CharacterAnimator).update(delta, {"pose": String(placed["pose"]), "uv": placed["uv"],
 			"facing": placed["facing"], "marker": String(placed.get("marker", "")), "activity": activity,

@@ -65,6 +65,8 @@ func test_the_animator_follows_the_games_states() -> void:
 	assert_array(anim.choose({"pose": "sit", "activity": "eat", "facing": Vector2(-1, 0), "seat_facing": Vector2(1, 0), "room_size": size})).is_equal(["sit_side", false])
 	assert_array(anim.choose({"pose": "sit", "activity": "rest", "facing": Vector2(1, 0), "seat_facing": Vector2(0, -1), "room_size": size})).is_equal(["sit", false])
 	assert_array(anim.choose({"pose": "sit", "activity": "eat", "seat_facing": Vector2(0, 1), "room_size": size})).is_equal(["sit", false])
+	# behind the table, off to one side (the table's centre is down and to the right): facing the camera
+	assert_array(anim.choose({"pose": "sit", "activity": "eat", "seat_facing": Vector2(0.5, 0.55), "room_size": size})).is_equal(["sit", false])
 	assert_array(anim.choose({"pose": "stand", "activity": "knit", "facing": Vector2(0, 1), "room_size": size})).is_equal(["idle_front", false])
 
 
@@ -78,7 +80,15 @@ func test_the_walk_advances_by_the_metres_walked() -> void:
 
 
 func test_grandmas_rig_is_complete() -> void:
-	var rig: CharacterRig = CharacterRig.load_for("grandma")
+	_check_rig("grandma", ["idle_front", "walk_side", "walk_front", "walk_back", "cook", "anxious", "fright", "sit", "sit_side", "slump"])
+
+
+func test_fathers_rig_is_complete() -> void:
+	_check_rig("father", ["idle_front", "idle_side", "idle_back", "walk_side", "walk_front", "walk_back", "repair", "tools", "anxious", "fright", "sit", "sit_side", "slump"])
+
+
+func _check_rig(npc_id: String, required: Array) -> void:
+	var rig: CharacterRig = CharacterRig.load_for(npc_id)
 	assert_object(rig).is_not_null()
 	for view: String in rig.views:
 		for part: String in rig.views[view]["parts"]:
@@ -89,7 +99,7 @@ func test_grandmas_rig_is_complete() -> void:
 		assert_bool(rig.views.has(view)).override_failure_message(clip + ": no view " + view).is_true()
 		for part: String in rig.clips[clip]["tracks"]:
 			assert_bool(part == "root" or rig.views[view]["parts"].has(part)).override_failure_message(clip + ": no part " + part).is_true()
-	for clip: String in ["idle_front", "walk_side", "walk_front", "walk_back", "cook", "anxious", "fright", "sit", "sit_side", "slump"]:
+	for clip: String in required:
 		assert_bool(rig.has_clip(clip)).override_failure_message("no clip " + clip).is_true()
 
 

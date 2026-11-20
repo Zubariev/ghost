@@ -602,6 +602,10 @@ func _run_capture(dir: String) -> void:
 		await _run_hud_test(dir)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("--character-test=father"):
+		await _run_father_test(dir)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--character-test"):
 		await _run_character_test(dir)
 		get_tree().quit()
@@ -858,6 +862,62 @@ func _run_character_test(dir: String) -> void:
 	print("glimpse after %.1f game minutes" % (waited * 0.25))
 	await _frames(dir, "c16-glimpsed-anxious", 0.5, 0.002)
 	await _frames(dir, "c17-anxious-frame", 0.8, 0.002)
+
+
+## The painted father (second family member, 2026-11-20): waking in the bedroom, walking to
+## breakfast, eating at the table, at the workbench, repairing the stove the ghost breaks, a glance
+## catching the ghost (anxious), the fright of contact, resting on the sofa.
+func _run_father_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	const F: int = 0   # father: first in the schedule order
+	await _show(dir, "f01-waking-in-bedroom", "06:30", "parents_bedroom", Vector2(0.15, 0.95))
+	await _frames(dir, "f02-idle-frame", 1.2, 0.0)
+	var guard: int = 0
+	while not _motion.is_walking(F) and guard < 4000:
+		var step: float = _sim.clock.minutes_for(0.05)
+		_sim.advance(0.05)
+		_motion.update(step)
+		guard += 1
+	for i: int in 6:
+		_navigator.place(_motion.room_of(F), Vector2(0.15, 0.95))
+		await _frames(dir, "f%02d-walking-frame" % (i + 3), 0.12, 0.03)
+	await _show(dir, "f09-eating-at-table", "07:30", "dining_room", Vector2(0.5, 0.95))
+	await _show(dir, "f10-at-the-workbench", "08:20", "workshop", Vector2(0.15, 0.95))
+	await _frames(dir, "f11-workbench-frame", 0.8, 0.0)
+	# A glance at the workbench catches the ghost waiting 1.5 m to his side (game rules unchanged).
+	var at_bench: Dictionary = _stage.layout.person(_sim.routines[F], F, "workshop", _sim.routines)
+	_navigator.place("workshop", Vector2(at_bench["uv"]) + Vector2(1.4 / 5.0, 0.0))
+	var waited: int = 0
+	while _stealth.phase_of("father") == StealthSystem.Phase.NONE and waited < 200 and _navigator.room_id == "workshop":
+		var step: float = _sim.clock.minutes_for(0.25)
+		_sim.advance(0.25)
+		_motion.update(step)
+		_stealth.observe()
+		waited += 1
+	print("father glimpse after %.1f game minutes" % (waited * 0.25))
+	await _frames(dir, "f12-glimpsed-anxious", 0.5, 0.002)
+	await _frames(dir, "f13-anxious-frame", 0.8, 0.002)
+	# The ghost breaks the stove; he comes to repair it (a critical repair task from the board).
+	await _show(dir, "f14-kitchen-before-repair", "09:05", "kitchen", Vector2(0.15, 0.95))
+	GhostActions.act(_sim.house, "stove")
+	guard = 0
+	while (_sim.routines[F].current_task == null or _motion.room_of(F) != "kitchen" or _motion.is_walking(F)) and guard < 6000:
+		var step: float = _sim.clock.minutes_for(0.1)
+		_sim.advance(0.1)
+		_motion.update(step)
+		guard += 1
+	_navigator.place("kitchen", Vector2(0.15, 0.95))
+	await _frames(dir, "f15-repairing-stove", 0.3, 0.0)
+	await _frames(dir, "f16-repairing-frame", 0.7, 0.0)
+	# Contact: in front of him while he works; the game sends the ghost back to its start.
+	var fixing: Dictionary = _stage.layout.person(_sim.routines[F], F, "kitchen", _sim.routines)
+	_navigator.place("kitchen", Vector2(fixing["uv"]) + Vector2(fixing["facing"]) * 0.12)
+	_stealth.observe()
+	_navigator.place("kitchen", Vector2(0.15, 0.95))
+	await _frames(dir, "f17-fright", 0.12, 0.002)
+	await _frames(dir, "f18-fright-frame", 0.4, 0.002)
+	await _show(dir, "f19-resting-on-sofa", "13:30", "living_room", Vector2(0.15, 0.95))
 
 
 ## Capture only: lets [param seconds] of real time pass for the animation (the family walks on by

@@ -16,7 +16,8 @@
 ##   sit:     pose "sit" otherwise                → "sit" (painted seated view, facing the camera)
 ##   sleep:   pose "sleep"                        → drawn by the code on the bed (not rigged yet)
 ##   walk:    pose "walk"                         → "walk_side" / "walk_front" / "walk_back" by facing
-##   <activity>: standing in an activity with a clip of that name (e.g. "cook") → that clip
+##   <activity>: standing in an activity with a clip of that name (e.g. "cook"; a board task is
+##            "repair" or "clean") → that clip
 ##   idle:    anything else                       → "idle_front" / "idle_side" / "idle_back" by facing
 ##
 ## [codeblock]
@@ -31,6 +32,8 @@ const BLEND: float = 0.25
 const TURN: float = 0.16
 ## A facing counts as sideways when its sideways share (in metres) is at least this.
 const SIDEWAYS: float = 0.55
+## A seat counts as a table end (eat side-on) when its sideways share is at least this.
+const TABLE_END: float = 0.85
 
 var rig: CharacterRig
 ## Metres covered by one full walk cycle (two steps).
@@ -67,7 +70,10 @@ func choose(state: Dictionary) -> Array:
 	var activity: String = String(state.get("activity", ""))
 	if pose == "sit" and activity == "eat" and rig.has_clip("sit_side"):
 		# eating at a table end, turned toward the table: by where her seat faces, never by a glance
-		var seat: String = _direction(state.get("seat_facing", Vector2(0, 1)), state.get("room_size", Vector2.ONE))
+		# only a seat at a table end faces it squarely sideways; a place behind the table, even off to
+		# one side, faces the camera (2026-11-20: the father behind the table was shown side-on)
+		var sm: Vector2 = Vector2(state.get("seat_facing", Vector2(0, 1))) * Vector2(state.get("room_size", Vector2.ONE))
+		var seat: String = ("left" if sm.x < 0.0 else "right") if sm.length() > 0.0001 and absf(sm.normalized().x) >= TABLE_END else ""
 		if seat == "left" or seat == "right":
 			return ["sit_side", seat == "left"]
 	if pose == "sit" and rig.has_clip("sit"):
