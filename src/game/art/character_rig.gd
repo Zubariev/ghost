@@ -26,12 +26,15 @@ var height_m: float = 1.6
 var stride_m: float = 1.1
 var views: Dictionary = {}
 var clips: Dictionary = {}
+## Visual settings passed through from the rig source (the ghost's opacity, tint, glow, hover;
+## 2026-11-21); empty for family members.
+var look: Dictionary = {}
 var _textures: Dictionary = {}
 ## view -> part names in draw order
 var _order: Dictionary = {}
 
 
-## The rig of family member [param npc_id], or null when it has none (drawn in code instead).
+## The rig of family member (or the ghost) [param npc_id], or null when it has none (drawn in code instead).
 static func load_for(npc_id: String) -> CharacterRig:
 	var path: String = "%s/%s/rig.json" % [DIR, npc_id]
 	if not FileAccess.file_exists(path):
@@ -45,6 +48,7 @@ func _init(data: Dictionary) -> void:
 	stride_m = float(data.get("stride_m", 1.1))
 	views = data.get("views", {})
 	clips = data.get("clips", {})
+	look = data.get("look", {})
 	for view: String in views:
 		var parts: Dictionary = views[view]["parts"]
 		var names: Array = parts.keys()

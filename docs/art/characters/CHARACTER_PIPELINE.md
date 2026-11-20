@@ -168,6 +168,14 @@ personality) → build → captures. Their activities decide extra clips (father
 cleaning, grandpa: `read`, son: `computer`, daughter: `dolls`, `draw`, the tricycle as a painted pose
 set). Stop for review per character.
 
+## 7b. The ghost (2026-11-21)
+
+The player's ghost uses the same rig format and builder (sources in
+`art/concepts/characters/ghost/prod/`), with differences recorded in `GHOST.md` §7–§9: generated on
+flat mid-grey (`bg_min`, `white_parts`), his painted glow removed by an edit and drawn by the game,
+the figure composited offscreen (`GhostVisual`) so opacity applies once, and his own animator
+(`GhostAnimator`: float, glide, reach, fright; lean and trailing from his real drift).
+
 ## 8. Status
 
 | Item | Status |

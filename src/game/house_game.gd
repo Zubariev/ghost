@@ -132,6 +132,7 @@ func _ready() -> void:
 		var rig: CharacterRig = CharacterRig.load_for(routine.schedule.npc_id)
 		if rig != null:
 			_stage.rigs[routine.schedule.npc_id] = rig
+	_stage.ghost_rig = CharacterRig.load_for("ghost")   # the painted ghost (Phase 3, 2026-11-21); null: code-drawn
 	_stage.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR   # painted surfaces tile seamlessly; sprites stay inside 0..1
 	_sim.clock.minute_advanced.connect(func(total: int) -> void:
 		if not _sim.is_over():
@@ -502,6 +503,9 @@ func _connect_events() -> void:
 	_energy.lost.connect(_stats.record_energy)
 	_stealth.noticed.connect(func(_npc: String) -> void: _stats.record_noticed())
 	_stealth.contact.connect(func(_npc: String, _how: String) -> void: _stats.record_caught())
+	# The painted ghost flinches when caught or glimpsed (visual only, 2026-11-21)
+	_stealth.contact.connect(func(_npc: String, _how: String) -> void: _stage.ghost_startle(true))
+	_stealth.noticed.connect(func(_npc: String) -> void: _stage.ghost_startle(false))
 	_loot.taken.connect(func(item_id: String) -> void: _stats.record_find(_loot.kind_of(item_id)))
 	_sim.clock.phase_changed.connect(func(is_day: bool) -> void:
 		if is_day and not _sim.is_over():
@@ -600,6 +604,10 @@ func _run_capture(dir: String) -> void:
 		return
 	if OS.get_cmdline_user_args().has("--hud-test"):
 		await _run_hud_test(dir)
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("--character-test=ghost"):
+		await _run_ghost_test(dir)
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("--character-test=daughter"):
@@ -1143,6 +1151,78 @@ func _run_daughter_test(dir: String) -> void:
 	_navigator.place(_motion.room_of(K), Vector2(0.15, 0.95))
 	await _frames(dir, "d15-fright", 0.12, 0.002)
 	await _frames(dir, "d16-fright-frame", 0.4, 0.002)
+
+
+## The painted ghost (Phase 3, 2026-11-21; docs/art/characters/GHOST.md §8): floating idle in
+## each view, gliding, turning, stopping and settling, reaching for the lamp, hiding in the sofa and
+## coming out, behind and in front of the sofa, a fright, and a dark room — all in the living room,
+## moved through the navigator as the player would move him.
+func _run_ghost_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	await _show(dir, "g00-living-room", "10:00", "living_room", Vector2(0.5, 0.82))
+	await _frames(dir, "g01-idle-front", 2.6, 0.0)
+	await _glide(Vector2(1.6, 0), 1.0)
+	await _frames(dir, "g02-glide-side", 0.05, 0.0)
+	await _frames(dir, "g03a-stop-settling", 0.12, 0.0)
+	await _frames(dir, "g03b-stop-settling", 0.3, 0.0)
+	await _frames(dir, "g03c-idle-side", 1.0, 0.0)
+	await _glide(Vector2(0, -1.6), 0.9)
+	await _frames(dir, "g04-glide-back", 0.05, 0.0)
+	await _frames(dir, "g05-idle-back", 1.0, 0.0)
+	await _glide(Vector2(-1.6, 0), 0.8)
+	await _frames(dir, "g06a-glide-left", 0.05, 0.0)
+	await _glide(Vector2(0, 1.6), 0.07)
+	await _frames(dir, "g06b-turning", 0.01, 0.0)
+	await _glide(Vector2(0, 1.6), 0.6)
+	await _frames(dir, "g07-glide-front", 0.05, 0.0)
+	await _frames(dir, "g08-stopped-front", 1.2, 0.0)
+	# behind and in front of the sofa
+	_navigator.place("living_room", Vector2(0.43, 0.30))
+	await _frames(dir, "g10-behind-sofa", 0.8, 0.0)
+	_navigator.place("living_room", Vector2(0.43, 0.62))
+	await _frames(dir, "g11-in-front-of-sofa", 0.8, 0.0)
+	# hiding in the sofa and coming out
+	_navigator.place("living_room", Vector2(0.43, 0.52))
+	_update_view()
+	_stealth.hide("hide_living_room_sofa_2")
+	await _frames(dir, "g12a-hiding", 0.12, 0.0)
+	await _frames(dir, "g12b-hidden", 0.8, 0.0)
+	_stealth.unhide()
+	await _frames(dir, "g12c-emerging", 0.15, 0.0)
+	await _frames(dir, "g12d-out", 0.8, 0.0)
+	# a fright (as when caught)
+	_stage.ghost_startle(true)
+	await _frames(dir, "g13a-fright", 0.12, 0.0)
+	await _frames(dir, "g13b-fright", 0.6, 0.0)
+	# far back at gameplay scale
+	_navigator.place("living_room", Vector2(0.3, 0.12))
+	await _frames(dir, "g14-far-back", 2.6, 0.0)
+	# an actual interaction in the evening, when the lamp is lit: reaching for it (the harm starts;
+	# it never lands here — the capture does not run the clock)
+	await _show(dir, "g09-evening", "21:30", "living_room", Vector2(0.56, 0.66))
+	_update_view()
+	print("ghost target: %s" % _target)
+	_act()
+	await _frames(dir, "g09a-reach-lamp", 0.5, 0.0)
+	await _frames(dir, "g09b-reach-lamp", 0.4, 0.0)
+	_casting.cancel()
+	await _frames(dir, "g09c-after-reach", 0.6, 0.0)
+	# a dark room: the lamp out after the family has gone to bed
+	await _show(dir, "g15-night", "23:00", "living_room", Vector2(0.62, 0.75))
+	_haunt_living_room()
+	await _frames(dir, "g16-dark-room-idle", 2.6, 0.0)
+
+
+## Capture only: moves the ghost at [param velocity] metres per second for [param seconds], frame by
+## frame through the navigator (as the player's keys do), so his animation sees real motion.
+func _glide(velocity: Vector2, seconds: float) -> void:
+	var left: float = seconds
+	while left > 0.0:
+		await get_tree().process_frame
+		var dt: float = get_process_delta_time()
+		_navigator.move(_stage.layout.to_uv(_navigator.room_id, velocity * dt))
+		left -= dt
 
 
 ## Capture only: lets [param seconds] of real time pass for the animation (the family walks on by

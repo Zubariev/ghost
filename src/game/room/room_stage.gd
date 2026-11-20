@@ -55,6 +55,16 @@ var surfaces: RoomSurfaces
 var rigs: Dictionary = {}
 ## person index -> CharacterAnimator (visual only: never saved, never read by gameplay)
 var _animators: Dictionary = {}
+## The painted ghost's rig (Phase 3, 2026-11-21); null: the code-drawn ghost.
+var ghost_rig: CharacterRig:
+	set(value):
+		ghost_rig = value
+		_setup_ghost()
+## The ghost's animation and its offscreen compositing (visual only).
+var _ghost_anim: GhostAnimator
+var _ghost_visual: GhostVisual
+var _ghost_last_uv := Vector2(-99, -99)
+var _ghost_last_room: String = ""
 ## Paper grain material used in storybook rooms; may be null.
 var paper_material: Material
 
@@ -129,6 +139,7 @@ func _process(delta: float) -> void:
 	_floats.assign(_floats.filter(func(f: Dictionary) -> bool: return _time - float(f["born"]) < FLOAT_SECONDS))
 	_walk_phase += delta * 9.0
 	_update_animators(delta)
+	_update_ghost(delta)
 	if _mood_room != navigator.room_id:
 		settle_mood()
 	_warmth = RoomMood.approach(_warmth, RoomMood.warmth(sim.house.rooms[navigator.room_id]), delta)
@@ -232,17 +243,21 @@ func _draw() -> void:
 	var over_floor: bool = ghost_uv.x >= 0.0 and ghost_uv.x <= 1.0 and ghost_uv.y >= 0.0 and ghost_uv.y <= 1.0
 	var harm_uv: Vector2 = _harm_uv(room_id)
 	var effort: float = casting.progress() if harm_uv.x > -1.0 else 0.0
-	if not hidden:
+	if _ghost_visual != null:
+		# the painted ghost: also drawn while he fades into or out of a hiding spot
+		if _ghost_anim.presence() > 0.001:
+			items.append([ghost_sort_y(ghost_uv), _draw_painted_ghost.bind(ghost_uv, over_floor)])
+	elif not hidden:
 		# Acting: the ghost trembles harder as the harm builds.
 		var shake := Vector2(sin(_time * 47.0), cos(_time * 39.0)) * (1.5 + 3.5 * effort) if harm_uv.x > -1.0 else Vector2.ZERO
-		items.append([RoomGeometry.to_screen(ghost_uv).y if over_floor else 100000.0, FamilyArt.draw_ghost.bind(self,
+		items.append([ghost_sort_y(ghost_uv), FamilyArt.draw_ghost.bind(self,
 			RoomGeometry.to_screen(ghost_uv) + shake, RoomGeometry.scale_at(ghost_uv.y), _time, over_floor)])
 	if show_cones:
 		_draw_cones(room_id)
 	items.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
 	for item: Array in items:
 		(item[1] as Callable).call()
-	if hidden:
+	if hidden and (_ghost_anim == null or _ghost_anim.presence() < 0.5):
 		_draw_hidden_glint(ghost_uv)
 		if loot != null and loot.is_searching():
 			for spot: Dictionary in layout.hiding_spots(room_id):
@@ -346,6 +361,63 @@ func _head_point(index: int, npc_id: String, foot: Vector2, s: float, pose: Stri
 	if _animators.has(index) and pose != "sleep":
 		return (_animators[index] as CharacterAnimator).head_point(foot, s)
 	return FamilyArt.head_point(npc_id, foot, s, pose)
+
+
+# --- The painted ghost (Phase 3, 2026-11-21; docs/art/characters/GHOST.md §7) ------------------
+
+## Where the ghost sorts among furniture and people: by his floor point, like everyone else; inside
+## a wall (off the floor) he is drawn over the room.
+static func ghost_sort_y(uv: Vector2) -> float:
+	var over_floor: bool = uv.x >= 0.0 and uv.x <= 1.0 and uv.y >= 0.0 and uv.y <= 1.0
+	return RoomGeometry.to_screen(uv).y if over_floor else 100000.0
+
+
+## The ghost is startled: [param caught] (contact) or noticed. Visual only.
+func ghost_startle(caught: bool) -> void:
+	if _ghost_anim != null:
+		_ghost_anim.startle(caught)
+
+
+## The ghost's animator, or null when he is code-drawn (captures and tests read it).
+func ghost_animator() -> GhostAnimator:
+	return _ghost_anim
+
+
+func _setup_ghost() -> void:
+	if _ghost_visual != null:
+		_ghost_visual.queue_free()
+	_ghost_visual = null
+	_ghost_anim = null
+	if ghost_rig == null:
+		return
+	_ghost_anim = GhostAnimator.new(ghost_rig)
+	_ghost_visual = GhostVisual.new(ghost_rig, _ghost_anim)
+	add_child(_ghost_visual)
+
+
+## Feeds the ghost's animator how he really moved this frame (from the navigator), whether he is
+## hidden, and the harm he is casting. Visual only.
+func _update_ghost(delta: float) -> void:
+	if _ghost_anim == null or navigator == null or delta <= 0.0:
+		return
+	var room_id: String = navigator.room_id
+	var size: Vector2 = layout.size(room_id) if layout != null else Vector2(5, 5)
+	var velocity := Vector2.ZERO
+	if room_id == _ghost_last_room and _ghost_last_uv.x > -90.0:
+		velocity = (navigator.uv - _ghost_last_uv) * size / delta
+	_ghost_last_uv = navigator.uv
+	_ghost_last_room = room_id
+	var harm_uv: Vector2 = _harm_uv(room_id)
+	_ghost_anim.update(delta, {"velocity": velocity, "hidden": stealth != null and not stealth.hidden_in.is_empty(),
+		"casting": harm_uv.x > -1.0, "target": (harm_uv - navigator.uv) * size})
+
+
+func _draw_painted_ghost(uv: Vector2, over_floor: bool) -> void:
+	var foot: Vector2 = RoomGeometry.to_screen(uv)
+	var s: float = RoomGeometry.scale_at(uv.y)
+	var room: RoomState = sim.house.rooms[navigator.room_id]
+	var dark: float = 1.0 if room.light == RoomState.Light.DARK else (0.4 if room.light == RoomState.Light.DIM else 0.0)
+	_ghost_visual.draw_on(self, foot, s, dark, over_floor)   # inside a wall: no floor for a shadow
 
 
 ## A painted effects layer (e.g. burning logs and flames) at [param at], with a gentle flicker:
@@ -655,6 +727,8 @@ func _harm_uv(room_id: String) -> Vector2:
 ## Wavy strands from the ghost to the object it is harming, stronger as the harm builds.
 func _draw_wisps(ghost_uv: Vector2, harm_uv: Vector2, effort: float) -> void:
 	var from: Vector2 = RoomGeometry.to_screen(ghost_uv) + Vector2(0, -70 * RoomGeometry.scale_at(ghost_uv.y))
+	if _ghost_visual != null:
+		from = _ghost_visual.chest_point(RoomGeometry.to_screen(ghost_uv), RoomGeometry.scale_at(ghost_uv.y))
 	var to: Vector2 = RoomGeometry.to_screen(harm_uv) + Vector2(0, -60 * RoomGeometry.scale_at(harm_uv.y))
 	var across: Vector2 = (to - from).orthogonal().normalized()
 	for strand: int in 3:
