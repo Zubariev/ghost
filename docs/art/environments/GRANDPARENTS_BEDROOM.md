@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/grandparents_bedroom/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — window (closed / open, lace), iron-and-brass bed, mirrored wardrobe, rocking chair, dresser (monocle still code-drawn); rose floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -92,3 +93,45 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 - [ ] The monocle is easy to spot on the painted dresser until taken.
 - [ ] The occupied bed reads (grandparents asleep).
 - [ ] The rocking chair is not mistaken for a hiding spot.
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **4.5 × 4.0 m** (`rooms.json` size_m); `furniture.json` stores x / 4.5 and depth / 4.0.
+Footprints are real sizes (`movement.json`). Doors: front (upper corridor); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +------------------------------------+  back wall
+0.0| AAAAAAA     BBBBBBBBBBBBBBCCCCCCCCC|
+0.2| AAAAAAA     BBBBBBBBBBBBBBCCCCCCCCC|
+0.5|             BBBBBBBBBBBBBBCCCCCCCCC|
+0.8|             BBBBBBBBBBBBBB         |
+1.0|             BBBBBBBBBBBBBB         |
+1.2|             BBBBBBBBBBBBBB         |
+1.5|             BBBBBBBBBBBBBB         |
+1.8|             BBBBBBBBBBBBBB         |
+2.0|             BBBBBBBBBBBBBB         |
+2.2|   DDDDD EEEE                 FFF   |
+2.5|   DD4DD EEEE                       |
+2.8|   DDDDD                            |
+3.0|             ..........             |
+3.2|             ..........             |
+3.5|             ..........             |
+3.8|             ..........             |
+   +------------------------------------+  front (camera)   4.5 x 4.0 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| - | window | 1.75 (wall) | `window_grandparents_bedroom` |
+| A | dresser | 0.55, 0.30 | pickup: monocle |
+| B | double bed | 2.50, 1.10 | `grandparents_bed`, hiding spot |
+| C | wardrobe | 3.95, 0.35 | hiding spot, blocks sight |
+| D | rocking chair | 0.70, 2.60 | furniture |
+| E | side table | 1.35, 2.60 | furniture |
+| F | floor lamp | 3.90, 2.40 | `lamp_grandparents_bedroom` |
+
+**Seats:** grandpa 0.7, 2.7.
+

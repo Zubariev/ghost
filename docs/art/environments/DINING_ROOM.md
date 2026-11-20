@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/dining_room/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — window (closed / open, plum curtains), sideboard, dining table (meal `none` / `ready`), chairs; standard floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -95,3 +96,50 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 - [ ] Six people around the table stay readable against the cloth and chairs.
 - [ ] Laid and empty table are clearly different.
 - [ ] The hiding spot under the table reads as possible (tablecloth hangs low).
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **5.0 × 4.5 m** (`rooms.json` size_m); `furniture.json` stores x / 5.0 and depth / 4.5.
+Footprints are real sizes (`movement.json`). Doors: left (hall), right (kitchen); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +----------------------------------------+  back wall
+0.0|                            AAAAAAAAAA  |
+0.2|  GGGG                      AAAAAAAAAA  |
+0.5|  GGGG                                  |
+0.8|                                        |
+1.0|                                        |
+1.2|                                        |
+1.5|              BBBB    CCCC              |
+1.8D........    DDDDDDDDDDDDDDDD    ........D
+2.0D........ EEEDDDDDDDDDDDDDDDDFFF ........D
+2.2D........ EEEDDDDDDDDDDDDDDDDFFF ........D
+2.5D........    DDDDDDDDDDDDDDDD    ........D
+2.8|                                        |
+3.0|                                        |
+3.2|                                        |
+3.5|                                        |
+3.8|                                  HHHH  |
+4.0|                                  HHHH  |
+4.2|                                        |
+   +----------------------------------------+  front (camera)   5.0 x 4.5 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| - | window | 2.50 (wall) | `window_dining_room` |
+| A | sideboard | 4.10, 0.30 | hiding spot, blocks sight |
+| B | chair | 2.00, 1.65 | furniture |
+| C | chair | 3.00, 1.65 | furniture |
+| - | rug | 2.50, 2.30 | walked over |
+| D | dining table | 2.50, 2.30 | `meal_food`, hiding spot |
+| E | chair | 1.30, 2.30 | furniture |
+| F | chair | 3.70, 2.30 | furniture |
+| G | floor lamp | 0.50, 0.50 | `lamp_dining_room` |
+| H | plant (fern) | 4.50, 3.95 | decor |
+
+**Places at the table** (furniture.json "object_seats" → `meal_food`, metres): father 2.0, 1.75 and mother 3.0, 1.75 behind it; grandma 1.3, 2.4 and grandpa 3.7, 2.4 at the ends; son 2.1, 2.95 and daughter 2.9, 2.95 in front.
+

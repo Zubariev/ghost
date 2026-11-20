@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/kitchen/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — cast-iron range (`working` / `broken`), grocery basket (`available` / `hidden`), counter, table, window (closed / open, gingham); tulip floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -108,3 +109,45 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 - [ ] Stove and basket read as interactive among the clutter; both states clear.
 - [ ] Grandma at the range stays readable against the black iron.
 - [ ] The broken stove reads as broken without the smoke.
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **4.5 × 4.0 m** (`rooms.json` size_m); `furniture.json` stores x / 4.5 and depth / 4.0.
+Footprints are real sizes (`movement.json`). Doors: left (dining room); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +------------------------------------+  back wall
+0.0|              AAAAAAAAAAAAAABBBBBBBB|
+0.2|   CCC        AAAAAAAAAAAAAABBBBBBBB|
+0.5|   CCC                      BBBBBBBB|
+0.8|                                    |
+1.0|                                    |
+1.2|                                    |
+1.5D........       DDD    EEE           |
+1.8D........       DDD    EEE           |
+2.0D........       FFFFFFFFFF           |
+2.2D........       FFFFFFFFFF           |
+2.5|               FFFFFFFFFF           |
+2.8|                                    |
+3.0|                                    |
+3.2|  HHHH                         GGG  |
+3.5|  HHHH                         GGG  |
+3.8|                                    |
+   +------------------------------------+  front (camera)   4.5 x 4.0 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| - | window | 1.20 (wall) | `window_kitchen` |
+| A | counter | 2.65, 0.30 | hiding spot |
+| B | stove | 4.00, 0.40 | `stove` |
+| C | basket | 0.55, 0.50 | `grocery_basket` |
+| D | chair | 2.05, 1.75 | furniture |
+| E | chair | 2.95, 1.75 | furniture |
+| F | kitchen table | 2.50, 2.40 | hiding spot |
+| G | floor lamp | 4.10, 3.45 | `lamp_kitchen` |
+| H | barrel | 0.50, 3.45 | decor |
+

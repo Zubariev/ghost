@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/workshop/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — window (closed / open, cracked pane), tool rack, workbench, crate; metal work lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -89,3 +90,44 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 
 - [ ] The father at the bench reads against the clutter.
 - [ ] The crate and the workbench read as hiding places.
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **5.0 × 4.0 m** (`rooms.json` size_m); `furniture.json` stores x / 5.0 and depth / 4.0.
+Footprints are real sizes (`movement.json`). Doors: right (living room); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +----------------------------------------+  back wall
+0.0|                        AAAAAAAAAA      |
+0.2|                                   CCCCC|
+0.5|                                   CCCCC|
+0.8|           BBBBBBBBBBBBB                |
+1.0|           BBBBBBBBBBBBB                |
+1.2|           BBBBBBBBBBBBB                |
+1.5|                                ........D
+1.8|                 1              ........D
+2.0|                                ........D
+2.2|                                ........D
+2.5|                                        |
+2.8|                                        |
+3.0|                                DDDDD   |
+3.2|  EEEE                          DDDDD   |
+3.5|  EEEE                          DDDDD   |
+3.8|                                        |
+   +----------------------------------------+  front (camera)   5.0 x 4.0 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| - | window | 1.50 (wall) | `window_workshop` |
+| A | tool rack | 3.60, 0.15 | blocks sight |
+| B | workbench | 2.20, 1.10 | hiding spot |
+| C | barrel | 4.65, 0.45 | decor |
+| D | crate | 4.30, 3.40 | hiding spot |
+| E | floor lamp | 0.50, 3.50 | `lamp_workshop` |
+
+**Seats:** father 2.2, 1.75.
+

@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/upper_corridor/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — staircase down, painted blanket chest; brass floor lamp (house-wide); real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -91,3 +92,35 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 
 - [ ] All four doors and the stair read with the lamp out.
 - [ ] People crossing at bedtime do not merge with the dark doors.
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **6.0 × 2.5 m** (`rooms.json` size_m); `furniture.json` stores x / 6.0 and depth / 2.5.
+Footprints are real sizes (`movement.json`). Doors: left (parents bedroom), back (grandparents bedroom), right (children bedroom), front (upper bathroom), stairs (hall); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +------------------------------------------------+  back wall
+0.0|  CCC   AAAAAAAAAAAAAAAAA.......... BBBBBBB     |
+0.2|  CCC   AAAAAAAAAAAAAAAAA.......... BBBBBBB     |
+0.5|        AAAAAAAAAAAAAAAAA.......... BBBBBBB     |
+0.8D........AAAAAAAAAAAAAAAAA..........     ........D
+1.0D........                                ........D
+1.2D........                                ........D
+1.5D........           ..........           ........D
+1.8|                   ..........                   |
+2.0|                   ..........                   |
+2.2|                   ..........                   |
+   +------------------------------------------------+  front (camera)   6.0 x 2.5 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| - | painting (portrait) | 5.30 (wall) | decor |
+| A | stairs | 2.06, 0.50 | hiding spot, blocks sight |
+| B | chest | 4.95, 0.35 | hiding spot |
+| - | rug | 3.00, 1.25 | walked over |
+| C | floor lamp | 0.40, 0.30 | `lamp_upper_corridor` |
+

@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/children_bedroom/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — window (closed / open, starry yellow curtains), two different beds (patchwork; `starry` variant added to `furniture.json`), computer desk (`working` / `broken`, old beige computer — the proposed era), toy box, easel; star floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -95,3 +96,49 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 - [ ] The computer and its two states read; the broken one without the code's effects.
 - [ ] The hiding bed is distinguishable from the other bed.
 - [ ] Two children asleep read at night.
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **5.0 × 4.5 m** (`rooms.json` size_m); `furniture.json` stores x / 5.0 and depth / 4.5.
+Footprints are real sizes (`movement.json`). Doors: left (upper corridor); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +----------------------------------------+  back wall
+0.0|        CCCCCCCC BBBBBB DDDDDDDD        |
+0.2|        CCCCCCCC BBBBBB DDDDDDDD   AAA  |
+0.5|        CCCCCCCC        DDDDDDDD        |
+0.8|        CCCCCCCC        DDDDDDDD        |
+1.0|        CCCCCCCC        DDDDDDDD        |
+1.2|        CCCCCCCC        DDDDDDDD        |
+1.5|        CCCCCCCC        DDDDDDDD        |
+1.8D........CCCCCCCC        DDDDDDDD        |
+2.0D........                                |
+2.2D........                       EEEEEEEEE|
+2.5D........            6          EEEEEEEEE|
+2.8|                               EEEEEEEEE|
+3.0|         FFFFF                     5    |
+3.2|         FFFFF                          |
+3.5|         FFFFF         GGGGGGG          |
+3.8|                       GGGGGGG          |
+4.0|                                        |
+4.2|                                        |
+   +----------------------------------------+  front (camera)   5.0 x 4.5 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| - | window | 2.50 (wall) | `window_children_bedroom` |
+| A | floor lamp | 4.55, 0.40 | `lamp_children_bedroom` |
+| B | toy box | 2.50, 0.35 | hiding spot |
+| C | bed | 1.55, 0.95 | furniture |
+| D | bed (starry) | 3.45, 0.95 | hiding spot |
+| - | rug | 2.50, 2.60 | walked over |
+| E | computer desk | 4.40, 2.60 | `computer` |
+| F | easel | 1.40, 3.40 | furniture |
+| G | rocking horse | 3.30, 3.75 | decor |
+
+**Seats:** son 4.4, 3.2; daughter 2.5, 2.7.
+

@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/parents_bedroom/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — window (closed / open, rose curtains over lace), double bed, walnut wardrobe; standard floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -89,3 +90,47 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 
 - [ ] Two sleepers read in the bed at night (cozy and haunted).
 - [ ] The wardrobe hiding spot reads; the ghost behind it is hidden as before.
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **5.0 × 4.5 m** (`rooms.json` size_m); `furniture.json` stores x / 5.0 and depth / 4.5.
+Footprints are real sizes (`movement.json`). Doors: right (upper corridor); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +----------------------------------------+  back wall
+0.0|          AAAABBBBBBBBBBBBBB  CCCCCCCCC |
+0.2|          AAAABBBBBBBBBBBBBB  CCCCCCCCC |
+0.5|              BBBBBBBBBBBBBB  CCCCCCCCC |
+0.8|  DDD         BBBBBBBBBBBBBB            |
+1.0|  DDD         BBBBBBBBBBBBBB            |
+1.2|              BBBBBBBBBBBBBB            |
+1.5|              BBBBBBBBBBBBBB            |
+1.8|              BBBBBBBBBBBBBB    ........D
+2.0|              BBBBBBBBBBBBBB    ........D
+2.2|                                ........D
+2.5|                 2      1       ........D
+2.8|                                        |
+3.0|                                        |
+3.2|                                        |
+3.5|  EEEE                                  |
+3.8|  EEEE                                  |
+4.0|  EEEE                                  |
+4.2|                                        |
+   +----------------------------------------+  front (camera)   5.0 x 4.5 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| - | window | 1.20 (wall) | `window_parents_bedroom` |
+| A | nightstand | 1.45, 0.30 | furniture |
+| B | double bed | 2.60, 1.10 | hiding spot |
+| C | wardrobe | 4.35, 0.35 | hiding spot, blocks sight |
+| D | floor lamp | 0.45, 1.00 | `lamp_parents_bedroom` |
+| - | rug | 2.60, 3.00 | walked over |
+| E | plant (fern) | 0.50, 3.90 | decor |
+
+**Seats:** father 3.0, 2.6; mother 2.2, 2.6.
+

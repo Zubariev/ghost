@@ -182,8 +182,10 @@ All 11 rooms now have painted props (`../SPRITE_SPEC.md` §2), sized at a real-w
    chosen. Built in three phases (user approval 2026-11-20):
    - **A — metric foundation (built):** sizes in `rooms.json`; every distance in metres (values
      converted from floor units at 5 m, a mid-sized room, so balance roughly holds there).
-   - **B — layouts, room by room:** furniture, decor, doors and footprints re-laid in metres to
-     match the real-size paintings (answers 1 and 2 above); each room a top-down plan and a
-     capture for approval, the living room first.
+   - **B — layouts (built 2026-11-20):** every room re-laid in metres — living room approved as the
+     pilot, the other ten done in one pass (user: "without interruption at every room"); plans in
+     each room's brief. Footprints at real size (answers 1 and 2 above); seats and places at the
+     table (furniture.json "seats", "object_seats"); new decor (gramophone, fern, palm, barrel,
+     globe, nightstand, rocking horse, laundry basket); doors kept clear (a test).
    - **C — tuning:** sight, search and speeds from captures and play.
 

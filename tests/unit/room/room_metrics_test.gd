@@ -79,3 +79,17 @@ func test_a_family_member_without_an_object_goes_to_their_seat_in_metres() -> vo
 	assert_vector(layout.slot("small", 0)).is_equal(Vector2(0.25, 0.25))
 	assert_vector(layout.slot("small", 1)).is_equal(Vector2(0.31, 0.70))
 	assert_vector(layout.slot("big", 0)).is_equal(Vector2(0.18, 0.62))
+
+
+func test_people_take_their_own_place_at_an_object_in_metres() -> void:
+	# Arrange: around a "table" object in the small room (4 × 2 m), father's place 1 m across, 1 m deep
+	var layout := RoomLayout.new({"small": [{"kind": "dining_table", "u": 0.5, "v": 0.5, "object": "table"}]}, _house(),
+		{}, {"table": [[1.0, 1.0]]})
+	var house: HouseState = _house()
+	var schedule := Schedule.from_dict({"npc_id": "father", "start_room": "small", "activities": [
+		{"id": "eat", "start": "00:00", "end": "23:59", "room": "small", "target": "table", "animation": "eat"}]})
+	var routine := NpcRoutine.new(schedule, house, 15)
+	routine.current = schedule.activities[0]
+	# Act / Assert: father (0) at his place; mother (1, no place) in front of the table
+	assert_vector(layout.spot(routine, 0, "small")).is_equal(Vector2(0.25, 0.5))
+	assert_vector(layout.spot(routine, 1, "small")).is_equal(Vector2(0.41, 0.62))

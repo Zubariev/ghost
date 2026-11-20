@@ -23,14 +23,18 @@ var furniture: Dictionary = {}
 ## mother, grandma, grandpa, son, daughter): where each rests or plays when the activity names
 ## no object (furniture.json "seats", Phase B 2026-11-20). Rooms without seats use a row of slots.
 var seats: Dictionary = {}
+## object id -> places in metres [[x, depth], ...], one per family member in load order: where each
+## stands or sits to use that object (furniture.json "object_seats"; e.g. around the dining table).
+var object_seats: Dictionary = {}
 
 var _house: HouseState
 
 
-func _init(furniture_by_room: Dictionary, house: HouseState, seats_by_room: Dictionary = {}) -> void:
+func _init(furniture_by_room: Dictionary, house: HouseState, seats_by_room: Dictionary = {}, seats_by_object: Dictionary = {}) -> void:
 	furniture = furniture_by_room
 	_house = house
 	seats = seats_by_room
+	object_seats = seats_by_object
 
 
 func pieces(room_id: String) -> Array:
@@ -152,9 +156,14 @@ func person(routine: NpcRoutine, index: int, room_id: String, routines: Array[Np
 	return {"uv": at_spot, "pose": pose, "facing": facing(routine, room_id, at_spot)}
 
 
-## The spot for this person: their repair's object, their activity's object, else a slot.
+## The spot for this person: their place at the object they use (object_seats), else in front of
+## it; with no object, their seat or a slot.
 func spot(routine: NpcRoutine, index: int, room_id: String) -> Vector2:
 	var at: Vector2 = _focus_object_uv(routine, room_id)
+	var places: Array = object_seats.get(_focus_object_id(routine), [])
+	if at.x >= 0.0 and index < places.size():
+		var place: Array = places[index]
+		return to_uv(room_id, Vector2(float(place[0]), float(place[1])))
 	if at.x >= 0.0:
 		var spread: float = (float(index) - 2.5) * 0.06
 		return Vector2(clampf(at.x + spread, 0.08, 0.92), clampf(at.y + 0.12, 0.1, 0.95))
@@ -165,7 +174,7 @@ func spot(routine: NpcRoutine, index: int, room_id: String) -> Vector2:
 ## (metres, furniture.json "seats"), else a slot in a row across the front of the room.
 func slot(room_id: String, index: int) -> Vector2:
 	var room_seats: Array = seats.get(room_id, [])
-	if index < room_seats.size():
+	if index < room_seats.size() and (room_seats[index] as Array).size() == 2:   # [] = no seat here
 		var seat: Array = room_seats[index]
 		return to_uv(room_id, Vector2(float(seat[0]), float(seat[1])))
 	return Vector2(0.18 + 0.13 * float(index), 0.62 + 0.08 * float(index % 2))
@@ -193,7 +202,7 @@ func bed_spot(routine: NpcRoutine, room_id: String, routines: Array[NpcRoutine])
 			continue
 		var capacity: int = 2 if kind == "double_bed" else 1
 		if place < capacity:
-			var offset: float = 0.0 if capacity == 1 else (-0.045 if place == 0 else 0.045)
+			var offset: float = 0.0 if capacity == 1 else to_uv(room_id, Vector2(0.35 if place == 1 else -0.35, 0.0)).x   # 35 cm either side
 			return Vector2(float(piece["u"]) + offset, float(piece["v"]) + 0.001)
 		place -= capacity
 	return Vector2(-1, -1)
@@ -247,12 +256,17 @@ static func _toward(from_uv: Vector2, to_uv: Vector2, fallback: Vector2) -> Vect
 
 
 func _focus_object_uv(routine: NpcRoutine, room_id: String) -> Vector2:
-	var object_id: String = ""
-	if routine.current_task != null and routine.current_task.type == HouseTask.Type.REPAIR:
-		object_id = routine.current_task.target_id
-	elif routine.current != null:
-		object_id = routine.current.target_object_id
+	var object_id: String = _focus_object_id(routine)
 	return object_uv(room_id, object_id) if not object_id.is_empty() else Vector2(-1, -1)
+
+
+## The object this person is using: their repair's, else their activity's ("" for none).
+func _focus_object_id(routine: NpcRoutine) -> String:
+	if routine.current_task != null and routine.current_task.type == HouseTask.Type.REPAIR:
+		return routine.current_task.target_id
+	if routine.current != null:
+		return routine.current.target_object_id
+	return ""
 
 
 static func _uv(piece: Dictionary) -> Vector2:

@@ -30,6 +30,30 @@
 				}
 			}
 		},
+		"armchair:olive": {
+			"sprite": "res://assets/art/props/living_room/armchair_olive.png",
+			"anchor": [
+				0.5,
+				0.9767
+			],
+			"scale": 0.5
+		},
+		"barrel": {
+			"sprite": "res://assets/art/props/barrel.png",
+			"anchor": [
+				0.5,
+				0.9683
+			],
+			"scale": 0.5
+		},
+		"chair": {
+			"sprite": "res://assets/art/props/dining_room/chair.png",
+			"anchor": [
+				0.5,
+				0.9753
+			],
+			"scale": 0.5
+		},
 		"children_bedroom/bed": {
 			"sprite": "res://assets/art/props/children_bedroom/bed.png",
 			"anchor": [
@@ -93,6 +117,14 @@
 				"scale": 0.751
 			}
 		},
+		"children_bedroom/rocking_horse": {
+			"sprite": "res://assets/art/props/children_bedroom/rocking_horse.png",
+			"anchor": [
+				0.5,
+				0.9688
+			],
+			"scale": 0.5
+		},
 		"children_bedroom/toy_box": {
 			"sprite": "res://assets/art/props/children_bedroom/toy_box.png",
 			"anchor": [
@@ -116,14 +148,6 @@
 				"closed": "res://assets/art/props/children_bedroom/window_closed_glass.png",
 				"open": "res://assets/art/props/children_bedroom/window_open_glass.png"
 			}
-		},
-		"dining_room/chair": {
-			"sprite": "res://assets/art/props/dining_room/chair.png",
-			"anchor": [
-				0.5,
-				0.9753
-			],
-			"scale": 0.5
 		},
 		"dining_room/dining_table": {
 			"sprite": "res://assets/art/props/dining_room/dining_table_none.png",
@@ -416,6 +440,14 @@
 				"scale": 0.842
 			}
 		},
+		"library/globe": {
+			"sprite": "res://assets/art/props/library/globe.png",
+			"anchor": [
+				0.5,
+				0.9722
+			],
+			"scale": 0.5
+		},
 		"library/reading_chair": {
 			"sprite": "res://assets/art/props/library/reading_chair.png",
 			"anchor": [
@@ -432,14 +464,6 @@
 			],
 			"scale": 0.5
 		},
-		"living_room/armchair:olive": {
-			"sprite": "res://assets/art/props/living_room/armchair_olive.png",
-			"anchor": [
-				0.5,
-				0.9767
-			],
-			"scale": 0.5
-		},
 		"living_room/bookshelf": {
 			"sprite": "res://assets/art/props/living_room/bookshelf.png",
 			"anchor": [
@@ -453,46 +477,6 @@
 			"anchor": [
 				0.5,
 				0.9777
-			],
-			"scale": 0.5
-		},
-		"living_room/painting:landscape": {
-			"sprite": "res://assets/art/props/living_room/painting_landscape.png",
-			"anchor": [
-				0.5,
-				3.4177
-			],
-			"scale": 0.5
-		},
-		"living_room/painting:portrait": {
-			"sprite": "res://assets/art/props/living_room/painting_portrait.png",
-			"anchor": [
-				0.5,
-				3.0389
-			],
-			"scale": 0.5
-		},
-		"living_room/plant:fern": {
-			"sprite": "res://assets/art/props/living_room/plant_fern.png",
-			"anchor": [
-				0.5,
-				0.9745
-			],
-			"scale": 0.5
-		},
-		"living_room/plant:palm": {
-			"sprite": "res://assets/art/props/living_room/plant_palm.png",
-			"anchor": [
-				0.5,
-				0.9788
-			],
-			"scale": 0.5
-		},
-		"living_room/side_table": {
-			"sprite": "res://assets/art/props/living_room/side_table.png",
-			"anchor": [
-				0.5,
-				0.9646
 			],
 			"scale": 0.5
 		},
@@ -536,6 +520,22 @@
 				"open": "res://assets/art/props/living_room/window_open_glass.png"
 			}
 		},
+		"painting:landscape": {
+			"sprite": "res://assets/art/props/living_room/painting_landscape.png",
+			"anchor": [
+				0.5,
+				3.4177
+			],
+			"scale": 0.5
+		},
+		"painting:portrait": {
+			"sprite": "res://assets/art/props/living_room/painting_portrait.png",
+			"anchor": [
+				0.5,
+				3.0389
+			],
+			"scale": 0.5
+		},
 		"parents_bedroom/double_bed": {
 			"sprite": "res://assets/art/props/parents_bedroom/double_bed.png",
 			"anchor": [
@@ -563,6 +563,14 @@
 				"scale": 0.842
 			}
 		},
+		"parents_bedroom/nightstand": {
+			"sprite": "res://assets/art/props/parents_bedroom/nightstand.png",
+			"anchor": [
+				0.5,
+				0.9699
+			],
+			"scale": 0.5
+		},
 		"parents_bedroom/wardrobe": {
 			"sprite": "res://assets/art/props/parents_bedroom/wardrobe.png",
 			"anchor": [
@@ -586,6 +594,30 @@
 				"closed": "res://assets/art/props/parents_bedroom/window_closed_glass.png",
 				"open": "res://assets/art/props/parents_bedroom/window_open_glass.png"
 			}
+		},
+		"plant:fern": {
+			"sprite": "res://assets/art/props/living_room/plant_fern.png",
+			"anchor": [
+				0.5,
+				0.9745
+			],
+			"scale": 0.5
+		},
+		"plant:palm": {
+			"sprite": "res://assets/art/props/living_room/plant_palm.png",
+			"anchor": [
+				0.5,
+				0.9788
+			],
+			"scale": 0.5
+		},
+		"side_table": {
+			"sprite": "res://assets/art/props/living_room/side_table.png",
+			"anchor": [
+				0.5,
+				0.9646
+			],
+			"scale": 0.5
 		},
 		"upper_bathroom/bathtub": {
 			"sprite": "res://assets/art/props/upper_bathroom/bathtub.png",
@@ -613,6 +645,14 @@
 				],
 				"scale": 0.876
 			}
+		},
+		"upper_bathroom/laundry_basket": {
+			"sprite": "res://assets/art/props/upper_bathroom/laundry_basket.png",
+			"anchor": [
+				0.5,
+				0.9612
+			],
+			"scale": 0.5
 		},
 		"upper_bathroom/sink": {
 			"sprite": "res://assets/art/props/upper_bathroom/sink.png",

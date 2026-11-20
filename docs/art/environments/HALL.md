@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/hall/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — staircase, coat stand, travel chest; brass floor lamp (house-wide); real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -95,3 +96,51 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 - [ ] The four exits and the stair read at a glance.
 - [ ] The ghost's start point (centre front) stays clear and readable.
 - [ ] The daughter's tricycle route reads against the tiles and runner.
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **4.5 × 5.5 m** (`rooms.json` size_m); `furniture.json` stores x / 4.5 and depth / 5.5.
+Footprints are real sizes (`movement.json`). Doors: stairs (upper corridor), left (living room), right (dining room), back (library); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +------------------------------------+  back wall
+0.0|AAAAAAAAAAAAAAAAA ......... BBBBBBB |
+0.2|AAAAAAAAAAAAAAAAA ......... BBBBBBB |
+0.5|AAAAAAAAAAAAAAAAA ......... BBBBBBB |
+0.8|AAAAAAAAAAAAAAAAA .........         |
+1.0|                                    |
+1.2|                                    |
+1.5|                                    |
+1.8|                                    |
+2.0|                                    |
+2.2D........                    ........D
+2.5D........                    ........D
+2.8D........                    ........D
+3.0D........                    ........D
+3.2|                                    |
+3.5|                  6                 |
+3.8|                                    |
+4.0|                                    |
+4.2|                             CCCCC  |
+4.5|  DDDD                       CCCCC  |
+4.8|  DDDD                       CCCCC  |
+5.0|                                    |
+5.2|                                    |
+   +------------------------------------+  front (camera)   4.5 x 5.5 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| A | stairs | 1.10, 0.45 | hiding spot, blocks sight |
+| B | chest | 3.90, 0.40 | hiding spot |
+| - | door front | 2.25, 5.50 |  |
+| - | rug | 2.25, 3.20 | walked over |
+| C | coat stand | 3.95, 4.60 | furniture |
+| D | floor lamp | 0.50, 4.80 | `lamp_hall` |
+| - | painting (landscape) | 3.90 (wall) | decor |
+
+**Seats:** daughter 2.25, 3.6.
+

@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/library/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — three different bookshelves (maps, `books`, `curios` — variants added to `furniture.json`), leather reading chair; standard floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -90,3 +91,49 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 - [ ] With the lamp out, people and the ghost stay readable (the room is the darkest).
 - [ ] The bookshelf hiding spot is distinguishable from the two that are not.
 - [ ] Grandpa in the reading chair reads against the leather.
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **5.0 × 4.5 m** (`rooms.json` size_m); `furniture.json` stores x / 5.0 and depth / 4.5.
+Footprints are real sizes (`movement.json`). Doors: front (hall); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +----------------------------------------+  back wall
+0.0|    AAAAAAAA    BBBBBBBB    CCCCCCCC    |
+0.2|    AAAAAAAA    BBBBBBBB    CCCCCCCC    |
+0.5|                                        |
+0.8|                                        |
+1.0|                                        |
+1.2|                                        |
+1.5|                                        |
+1.8|                 EEE                    |
+2.0|         DDDDDDD EEE    FFFFFFF GGGGG   |
+2.2|         DDDDDDD        FFFFFFF GGGGG   |
+2.5|         DDD4DDD        FFF5FFF         |
+2.8|                                        |
+3.0|                                        |
+3.2|                                        |
+3.5|  HHHH         ..........               |
+3.8|  HHHH         ..........               |
+4.0|  HHHH         ..........               |
+4.2|               ..........               |
+   +----------------------------------------+  front (camera)   5.0 x 4.5 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| A | bookshelf | 1.00, 0.25 | blocks sight |
+| B | bookshelf (books) | 2.50, 0.25 | blocks sight |
+| C | bookshelf (curios) | 4.00, 0.25 | hiding spot, blocks sight |
+| - | rug | 2.50, 2.60 | walked over |
+| D | reading chair | 1.60, 2.40 | hiding spot |
+| E | floor lamp | 2.35, 2.00 | `lamp_library` |
+| F | armchair (olive) | 3.40, 2.40 | furniture |
+| G | globe | 4.35, 2.30 | decor |
+| H | plant (palm) | 0.50, 3.90 | decor |
+
+**Seats:** grandpa 1.6, 2.5; son 3.4, 2.5.
+

@@ -173,8 +173,9 @@ func _draw() -> void:
 	var items: Array = []
 	for piece: Dictionary in layout.pieces(room_id):
 		var kind: String = String(piece["kind"])
-		if bool(piece.get("decor", false)) and not storybook:
-			continue   # decor exists only in the storybook look
+		if bool(piece.get("decor", false)) and not storybook \
+				and (visuals == null or visuals.texture_for(kind, String(piece.get("variant", "")), &"", room_id) == null):
+			continue   # decor is drawn in the storybook look, or anywhere it has a painting (Phase B, 2026-11-20)
 		var uv := Vector2(float(piece["u"]), float(piece["v"]))
 		var object_id: String = String(piece.get("object", ""))
 		var state: StringName = sim.house.get_object_state(object_id) if not object_id.is_empty() else &""

@@ -4,6 +4,7 @@
 |---|---|
 | Room brief (this file) | **PROVISIONAL** — drafted 2026-11-15 (art Phase 4), awaiting review |
 | Concept image | OPEN — none yet (to be generated from §5 and kept in `art/concepts/environments/upper_bathroom/`) |
+| Layout in metres (Phase B) | **Built 2026-11-20, awaiting user review** (§ Phase B below) |
 | Painted props | **Built 2026-11-20, awaiting user review** — claw-foot bathtub, pedestal sink with mirror; tulip floor lamp; real-world scale (`../SPRITE_SPEC.md` §2), evidence `production/qa/evidence/art-phase4-props/` |
 | In game | Placeholder look (not in `visual_style.json` → `storybook_rooms`) |
 
@@ -87,3 +88,39 @@ The checklist in `ENVIRONMENT_GUIDELINES.md` §7, plus:
 
 - [ ] The children read against white tiles (contrast).
 - [ ] The bathtub reads as a hiding place.
+
+## Phase B — laid out in metres (built 2026-11-20, awaiting user review)
+
+The room is **3.5 × 3.0 m** (`rooms.json` size_m); `furniture.json` stores x / 3.5 and depth / 3.0.
+Footprints are real sizes (`movement.json`). Doors: back (upper corridor); the 1.2 m × 1 m zone inside each side,
+back or front door (`.` below) holds nothing (test `test_nothing_stands_in_front_of_a_door`), and no
+family route crosses decor (`test_no_family_route_in_any_room_crosses_decor`). Letters are pieces
+that stand on the floor; digits are seats (furniture.json "seats").
+
+```
+   +----------------------------+  back wall
+0.0|             .........AAAAA |
+0.2|             .........AAAAA |
+0.5|             .........      |
+0.8|             .........  5   |
+1.0|BBBBBBBBBBBBBB              |
+1.2|BBBBBBBBBBBBBB              |
+1.5|BBBBBBBBBBBBBB   6          |
+1.8|                            |
+2.0|                            |
+2.2|                        CCC |
+2.5| DDDD                   CCC |
+2.8|                            |
+   +----------------------------+  front (camera)   3.5 x 3.0 m
+```
+
+| | Piece | x, depth (m) | Role |
+|---|---|---|---|
+| A | sink | 3.10, 0.35 | hiding spot |
+| B | bathtub | 0.90, 1.45 | hiding spot |
+| - | rug | 1.90, 2.40 | walked over |
+| C | floor lamp | 3.15, 2.50 | `lamp_upper_bathroom` |
+| D | laundry basket | 0.40, 2.60 | decor |
+
+**Seats:** son 3.0, 0.95; daughter 2.2, 1.5.
+

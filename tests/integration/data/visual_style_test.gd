@@ -57,48 +57,93 @@ func test_walking_obstacles_are_only_the_gameplay_furniture() -> void:
 	assert_array(with_decor).is_equal(gameplay_only)
 
 
-func test_no_family_route_in_the_living_room_crosses_decor() -> void:
-	# Arrange: every place someone can start or stop in the room — doors, the points just
-	# inside them, every object's work spot and every free-standing slot.
+func test_no_family_route_in_any_room_crosses_decor() -> void:
+	# Every room (Phase B, 2026-11-20: all re-laid in metres with decor): every place someone can
+	# start or stop — doors, the points just inside them, every object's place (object_seats or
+	# in front of it) and every seat — joined by family routes that never cross a decor piece.
 	var house: HouseState = _house()
 	var furniture: Dictionary = JsonData.read(FURNITURE_PATH)
 	var rooms: Dictionary = furniture["rooms"]
-	var layout := RoomLayout.new(rooms, house, furniture.get("seats", {}))
+	var object_seats: Dictionary = furniture.get("object_seats", {})
+	var layout := RoomLayout.new(rooms, house, furniture.get("seats", {}), object_seats)
 	var config: Dictionary = JsonData.read(MOVEMENT_PATH)
 	var paths := RoomPaths.new(layout, config)
 	var motion := FamilyMotion.new([], house, layout, paths, config)
-	var places: Array[Vector2] = []
-	for other: String in house.rooms:
-		if other != ROOM and house.walk_minutes(ROOM, other) > 0:
-			places.append(layout.door_uv(ROOM, other))
-			places.append(motion.entry_uv(ROOM, other))
-	for piece: Dictionary in rooms[ROOM]:
-		if piece.has("object"):
-			var at := Vector2(float(piece["u"]), float(piece["v"]))
-			for index: int in 6:
-				var spread: float = (float(index) - 2.5) * 0.06
-				places.append(Vector2(clampf(at.x + spread, 0.08, 0.92), clampf(at.y + 0.12, 0.1, 0.95)))
-	for index: int in 6:
-		places.append(layout.slot(ROOM, index))   # each family member's seat (Phase B, 2026-11-20)
 	var footprints: Dictionary = config["footprints"]
 	var clearance: float = float(config["clearance"])
-	var decor_rects: Array[Rect2] = []
-	for piece: Dictionary in _decor(rooms, ROOM):
-		if footprints.has(String(piece["kind"])):
-			var half: Array = footprints[String(piece["kind"])]
-			# footprints and clearance are metres (2026-11-20): as floor units of this room
-			var size: Vector2 = layout.to_uv(ROOM, Vector2(float(half[0]), float(half[1])) + Vector2(clearance, clearance))
-			decor_rects.append(Rect2(Vector2(float(piece["u"]), float(piece["v"])) - size, size * 2.0))
-	assert_int(decor_rects.size()).is_greater(0)
-	# Act / Assert
-	for a: Vector2 in places:
-		for b: Vector2 in places:
-			var points: PackedVector2Array = paths.find(ROOM, a, b)
-			for i: int in points.size() - 1:
-				for rect: Rect2 in decor_rects:
-					var crosses: bool = rect.has_point(points[i]) or rect.has_point(points[i + 1]) \
-						or RoomPaths._segment_hits_rect(points[i], points[i + 1], rect)
-					assert_bool(crosses).override_failure_message("route %s → %s crosses decor %s" % [a, b, rect]).is_false()
+	var checked: int = 0
+	for room_id: String in rooms:
+		var decor_rects: Array[Rect2] = []
+		for piece: Dictionary in _decor(rooms, room_id):
+			if footprints.has(String(piece["kind"])) and not StorybookArt.is_wall(String(piece["kind"])):
+				var half: Array = footprints[String(piece["kind"])]
+				var size: Vector2 = layout.to_uv(room_id, Vector2(float(half[0]), float(half[1])) + Vector2(clearance, clearance))
+				decor_rects.append(Rect2(Vector2(float(piece["u"]), float(piece["v"])) - size, size * 2.0))
+		if decor_rects.is_empty():
+			continue
+		var places: Array[Vector2] = []
+		for other: String in house.rooms:
+			if other != room_id and house.walk_minutes(room_id, other) > 0:
+				places.append(layout.door_uv(room_id, other))
+				places.append(motion.entry_uv(room_id, other))
+		for piece: Dictionary in rooms[room_id]:
+			if piece.has("object"):
+				var at := Vector2(float(piece["u"]), float(piece["v"]))
+				var seats: Array = object_seats.get(String(piece["object"]), [])
+				for index: int in 6:
+					if index < seats.size():
+						places.append(layout.to_uv(room_id, Vector2(float(seats[index][0]), float(seats[index][1]))))
+					else:
+						var spread: float = (float(index) - 2.5) * 0.06
+						places.append(Vector2(clampf(at.x + spread, 0.08, 0.92), clampf(at.y + 0.12, 0.1, 0.95)))
+		for index: int in 6:
+			places.append(layout.slot(room_id, index))
+		# Act / Assert
+		for a: Vector2 in places:
+			for b: Vector2 in places:
+				var points: PackedVector2Array = paths.find(room_id, a, b)
+				for i: int in points.size() - 1:
+					for rect: Rect2 in decor_rects:
+						var crosses: bool = rect.has_point(points[i]) or rect.has_point(points[i + 1]) \
+							or RoomPaths._segment_hits_rect(points[i], points[i + 1], rect)
+						assert_bool(crosses).override_failure_message("%s: route %s → %s crosses decor %s" % [room_id, a, b, rect]).is_false()
+		checked += 1
+	assert_int(checked).is_greater_equal(8)
+
+
+func test_nothing_stands_in_front_of_a_door() -> void:
+	# User request 2026-11-20 ("don't forget about doors when adding decor"): in every room the
+	# 1.2 m wide, 1 m deep zone inside each side, back or front door holds no piece's footprint.
+	var house: HouseState = _house()
+	var furniture: Dictionary = JsonData.read(FURNITURE_PATH)
+	var rooms: Dictionary = furniture["rooms"]
+	var layout := RoomLayout.new(rooms, house)
+	var footprints: Dictionary = JsonData.read(MOVEMENT_PATH)["footprints"]
+	var zones: int = 0
+	for room_id: String in rooms:
+		var size: Vector2 = layout.size(room_id)
+		for other: String in house.rooms:
+			if other == room_id or house.walk_minutes(room_id, other) <= 0 or house.rooms[other].floor_level != house.rooms[room_id].floor_level:
+				continue   # stairs are a door themselves
+			var door: Vector2 = layout.door_uv(room_id, other) * size   # metres
+			var zone: Rect2
+			if door.x <= 0.001:
+				zone = Rect2(0.0, door.y - 0.6, 1.0, 1.2)
+			elif door.x >= size.x - 0.001:
+				zone = Rect2(size.x - 1.0, door.y - 0.6, 1.0, 1.2)
+			elif door.y <= 0.001:
+				zone = Rect2(door.x - 0.6, 0.0, 1.2, 1.0)
+			else:
+				zone = Rect2(door.x - 0.6, size.y - 1.0, 1.2, 1.0)
+			zones += 1
+			for piece: Dictionary in rooms[room_id]:
+				var kind: String = String(piece["kind"])
+				if not footprints.has(kind) or StorybookArt.is_wall(kind):
+					continue
+				var half := Vector2(float(footprints[kind][0]), float(footprints[kind][1]))
+				var rect := Rect2(Vector2(float(piece["u"]), float(piece["v"])) * size - half, half * 2.0)
+				assert_bool(rect.intersects(zone)).override_failure_message("%s: %s stands in front of the door to %s" % [room_id, kind, other]).is_false()
+	assert_int(zones).is_greater_equal(14)
 
 
 func test_storybook_rooms_exist_and_sprite_files_exist() -> void:
