@@ -48,6 +48,8 @@ var monocle_taken: bool = false
 var sight_config: Dictionary = {}
 ## Which rooms are storybook, and painted sprites replacing code-drawn props; may be null.
 var visuals: PropVisuals
+## Painted walls, floors, rugs and cobwebs (2026-11-20); may be null.
+var surfaces: RoomSurfaces
 ## Paper grain material used in storybook rooms; may be null.
 var paper_material: Material
 
@@ -148,22 +150,29 @@ func _draw() -> void:
 	var storybook: bool = is_storybook()
 	FamilyArt.storybook = storybook
 	FamilyArt.shadow_stretch = 1.0 + (1.0 - _warmth) * HAUNTED_SHADOW_STRETCH
+	var painted: bool = surfaces != null and surfaces.has_room(room_id)
 	if storybook:
 		draw_rect(Rect2(-200, -200, 1680, 1120), Palette.SB_CHARCOAL.darkened(0.35))
-		StorybookShell.draw_floor(self)
-		StorybookShell.draw_back_wall(self, float(_wall_alpha["back"]))
-		StorybookShell.draw_side_wall(self, true, float(_wall_alpha["left"]))
-		StorybookShell.draw_side_wall(self, false, float(_wall_alpha["right"]))
+		if painted:
+			surfaces.draw_room(self, room_id, _wall_alpha)
+		else:
+			StorybookShell.draw_floor(self)
+			StorybookShell.draw_back_wall(self, float(_wall_alpha["back"]))
+			StorybookShell.draw_side_wall(self, true, float(_wall_alpha["left"]))
+			StorybookShell.draw_side_wall(self, false, float(_wall_alpha["right"]))
 		StorybookShell.draw_wall_portraits(self, visuals.wall_portraits(room_id), _wall_alpha)
 		StorybookShell.draw_doors(self, sim.house, room_id, _wall_alpha)
 		_draw_wear_surfaces(room_id)
 		_draw_storybook_light(room_id)
 	else:
 		draw_rect(Rect2(-200, -200, 1680, 1120), Palette.BACKGROUND)
-		_draw_floor()
-		_draw_back_wall(float(_wall_alpha["back"]))
-		_draw_side_wall(true, float(_wall_alpha["left"]))
-		_draw_side_wall(false, float(_wall_alpha["right"]))
+		if painted:
+			surfaces.draw_room(self, room_id, _wall_alpha)
+		else:
+			_draw_floor()
+			_draw_back_wall(float(_wall_alpha["back"]))
+			_draw_side_wall(true, float(_wall_alpha["left"]))
+			_draw_side_wall(false, float(_wall_alpha["right"]))
 		_draw_doors(room_id)
 		_draw_wear_surfaces(room_id)
 		_draw_lamp_glow(room_id)
@@ -254,14 +263,19 @@ func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted:
 	var variant: String = String(piece.get("variant", ""))
 	var hearth: Vector2 = RoomGeometry.to_screen(uv)
 	var painted: bool = false
+	if kind == "rug" and surfaces != null:
+		var size: Array = piece.get("size_m", [2.5, 1.8])
+		if surfaces.draw_rug(self, uv, Vector2(float(size[0]), float(size[1]))):
+			return
 	if visuals != null:
 		var wall: bool = StorybookArt.is_wall(kind)
-		var depth: float = 1.0 if wall else RoomGeometry.scale_at(uv.y)
+		# wall pieces hang on the back wall: its depth (perspective, 2026-11-20; was 1.0)
+		var depth: float = RoomGeometry.scale_at(0.0) if wall else RoomGeometry.scale_at(uv.y)
 		var room: String = navigator.room_id
 		var glass: Texture2D = visuals.glass_mask(kind, variant, state, room)
 		if glass != null:
 			StorybookArt.draw_painted_glass(self, glass, visuals.sprite_rect(kind, variant, state, hearth, depth, room), state, sim.house.is_day)
-		if visuals.draw_sprite(self, kind, variant, state, hearth, depth, highlighted, room):
+		if visuals.draw_sprite(self, kind, variant, state, hearth, depth, highlighted, room, bool(piece.get("flip", false))):
 			painted = true
 			var points: Dictionary = visuals.effect_points(kind, variant, room)
 			for name: String in points:
@@ -349,6 +363,12 @@ func _draw_wear_surfaces(room_id: String) -> void:
 func _draw_web(corner: Vector2, along_a: Vector2, along_b: Vector2, size: float) -> void:
 	var cfg: Dictionary = _wear_config()
 	var radius: float = float(cfg.get("web_radius", 46)) * size
+	var painted_web: Texture2D = surfaces.web_texture() if surfaces != null else null
+	if painted_web != null:   # the painted web, its corner at [param corner], spread along both directions
+		draw_set_transform_matrix(Transform2D(along_a.normalized() * radius * 1.6, along_b.normalized() * radius * 1.6, corner))
+		draw_texture_rect(painted_web, Rect2(0, 0, 1, 1), false, Color(1, 1, 1, float(cfg.get("web_alpha", 0.55)) * _dirt * 1.4))
+		draw_set_transform_matrix(Transform2D.IDENTITY)
+		return
 	var color := Color(Palette.SB_CREAM, float(cfg.get("web_alpha", 0.55)) * _dirt)
 	var a0: float = along_a.angle()
 	var a1: float = along_b.angle()

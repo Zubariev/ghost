@@ -46,6 +46,14 @@ How-to steps: `assets/art/props/sprite_guide.md`. Rules: `ART_DIRECTION.md`, `VI
 
 The game renders at 1280 × 720.
 
+**Perspective (user review 2026-11-20).** Scale 1 is 75 px per metre; the room camera draws a
+prop at FOCAL / z / 75 of that at its depth z (`RoomGeometry.scale_at`), wall pieces at the back
+wall's — so sizes in metres are all a prop needs. A piece may be mirrored (`"flip": true` in
+furniture.json: a chair turned the other way). Tools (`tools/art/`): `props.py` (the size table,
+cut-out and merge), `kichat.py` (image generation; token per run, never stored),
+`glass_masks.gd`, `defringe.gd` (removes a light halo from a cut-out), `texture_prep.gd`,
+`montage.gd`, `crop.gd`.
+
 **Real-world scale — PROVISIONAL (user review 2026-11-20).** Every painted prop is sized from its
 real width × height in metres at the family's own scale: people are drawn about 120–140 px tall at
 depth 1, so **75 px per metre**; the back wall (170 px) is about 2.3 m. Art is painted at 2×

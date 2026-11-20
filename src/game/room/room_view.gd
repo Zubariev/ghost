@@ -33,13 +33,12 @@ func _init(config: Dictionary, sizes: Dictionary) -> void:
 	_sizes = sizes
 	_zoom = INF
 	for room_id: String in _sizes:   # the zoom at which every room fits; the largest fills the view
-		var k: Vector2 = floor_scale(room_id)
-		RoomGeometry.set_floor_scale(k.x, k.y)
+		RoomGeometry.set_room(_sizes[room_id])
 		var box: Rect2 = RoomGeometry.bounds()
 		_zoom = minf(_zoom, minf(_area.size.x / box.size.x, _area.size.y / box.size.y))
 	if _zoom == INF:
 		_zoom = 1.0
-	RoomGeometry.set_floor_scale(1.0)
+	RoomGeometry.set_room(RoomGeometry.FULL_SIZE_M)
 
 
 ## The one zoom of the house (the widest room fills the view).
@@ -61,9 +60,7 @@ func apply(room_id: String, stage: Node2D) -> void:
 	if room_id == _room:
 		return
 	_room = room_id
-	var k: Vector2 = floor_scale(room_id)
-	RoomGeometry.set_floor_scale(k.x, k.y)
-	RoomGeometry.ROOM_SIZE_M = _sizes.get(room_id, _full)
+	RoomGeometry.set_room(_sizes.get(room_id, _full))
 	var offset: Vector2 = _area.get_center() - RoomGeometry.bounds().get_center() * _zoom
 	RoomGeometry.set_view(_zoom, offset)
 	if stage != null:
@@ -73,6 +70,5 @@ func apply(room_id: String, stage: Node2D) -> void:
 
 ## Back to the full box with no zoom (leaving the game; tests).
 static func reset() -> void:
-	RoomGeometry.set_floor_scale(1.0)
-	RoomGeometry.ROOM_SIZE_M = Vector2(10.6, 7.5)
+	RoomGeometry.set_room(RoomGeometry.FULL_SIZE_M)
 	RoomGeometry.set_view(1.0, Vector2.ZERO)

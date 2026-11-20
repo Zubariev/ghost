@@ -160,15 +160,24 @@ func scale(kind: String, variant: String, room: String = "") -> float:
 
 ## Draws the painted image of a prop with its foot at [param foot] and depth scale
 ## [param depth]; [param highlighted] adds the interaction halo. False when there is no image.
+## [param flip] mirrors the painting left to right about its foot (a chair turned the other way,
+## 2026-11-20: furniture.json "flip").
 func draw_sprite(canvas: CanvasItem, kind: String, variant: String, state: StringName, foot: Vector2, depth: float, highlighted: bool,
-		room: String = "") -> bool:
+		room: String = "", flip: bool = false) -> bool:
 	var tex: Texture2D = texture_for(kind, variant, state, room)
 	if tex == null:
 		return false
 	var rect: Rect2 = sprite_rect(kind, variant, state, foot, depth, room)
+	if flip:
+		rect.position.x = 2.0 * foot.x - rect.end.x
 	if highlighted:
 		Ink.glow(canvas, rect.get_center(), rect.size * 0.62, Color(Palette.SB_HIGHLIGHT, 0.5))
-	canvas.draw_texture_rect(tex, rect, false)
+	if flip:
+		canvas.draw_set_transform(Vector2(2.0 * rect.get_center().x, 0.0), 0.0, Vector2(-1.0, 1.0))
+		canvas.draw_texture_rect(tex, rect, false)
+		canvas.draw_set_transform_matrix(Transform2D.IDENTITY)
+	else:
+		canvas.draw_texture_rect(tex, rect, false)
 	return true
 
 

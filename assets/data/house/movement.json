@@ -44,7 +44,8 @@
 		"globe": [0.3, 0.3],
 		"nightstand": [0.25, 0.22],
 		"rocking_horse": [0.45, 0.25],
-		"laundry_basket": [0.25, 0.2]
+		"laundry_basket": [0.25, 0.2],
+		"desk": [0.6, 0.35]
 	},
 	"cell_m": 0.125
 }

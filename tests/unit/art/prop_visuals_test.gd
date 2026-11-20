@@ -157,3 +157,17 @@ func test_a_painted_window_has_a_glass_mask_per_state_and_a_stove_its_fire_point
 	assert_object(rect).is_equal(Rect2(90, 190, 20, 10))
 	assert_vector(points["fire"]).is_equal(Vector2(4, -30))
 	assert_bool(visuals.effect_points("floor_lamp", "").is_empty()).is_true()
+
+
+func test_a_flipped_piece_is_mirrored_about_its_foot() -> void:
+	# A chair turned the other way (2026-11-20): an image anchored at its left quarter, flipped,
+	# has its anchor at its right quarter, so it still stands on the same foot point.
+	var config: Dictionary = _config()
+	config["sprites"]["chair"] = {"sprite": LAMP_PATH, "anchor": [0.25, 1.0], "scale": 1.0}
+	var visuals := PropVisuals.new(config, func(_path: String) -> Texture2D:
+		return ImageTexture.create_from_image(Image.create(40, 20, false, Image.FORMAT_RGBA8)))
+	var canvas: Node2D = auto_free(Node2D.new())
+	var plain: Rect2 = visuals.sprite_rect("chair", "", &"", Vector2(100, 50), 1.0)
+	assert_bool(visuals.draw_sprite(canvas, "chair", "", &"", Vector2(100, 50), 1.0, false, "", true)).is_true()
+	assert_float(plain.position.x).is_equal(90.0)
+	assert_float(2.0 * 100.0 - plain.end.x).is_equal(70.0)   # the flipped rect starts here

@@ -16,6 +16,21 @@ narrows toward the back, no front wall (`RoomGeometry`: floor corners (330, 250)
 front; depth scale 0.78 at the back to 1.12 at the front). Positions are floor coordinates
 (u left→right, v back→front, 0..1).
 
+**A real camera (user review 2026-11-20).** The box is a pinhole camera's view (`RoomGeometry`):
+focal 1057 px, 9.04 m above the floor, every room's front edge 10.57 m away, ceiling 2.9 m —
+calibrated so the full 10.6 × 7.5 m floor is exactly the spike's box. A thing at depth z is drawn
+at FOCAL / z px per metre, the same as the floor there: nearer means bigger, depth rows crowd
+toward the back, and a shallow room narrows less than a deep one. Wall pieces take the back
+wall's depth. Tested in `tests/unit/room/room_perspective_test.gd`.
+
+**Painted surfaces (2026-11-20).** Walls, wainscot, floors, rugs and cobwebs are textures
+(`assets/art/surfaces/`, generated from the user's references in `art/textures/`; per room in
+`visual_style.json` → `surfaces`), laid in the camera's perspective by `RoomSurfaces` and tiled
+mirrored. Wallpapers: living room narrow stripes, dining room toile, library and corridor wide
+stripes, parents damask, children's toy toile, grandparents floral, kitchen and bathroom tiles,
+hall wood panelling, workshop planks; wood-panel wainscot where it suits; floors boards, kitchen
+quarry tiles, bathroom chequer, hall flagstones. Rugs are sized per room (`size_m`).
+
 **Rooms of different sizes (user decision 2026-11-20).** Each room is drawn at its real floor
 size (`rooms.json` size_m, width × depth) inside the box above, which is the full 10.6 × 7.5 m
 floor; the whole house shares one zoom (the largest room fills the view) and smaller rooms sit

@@ -52,7 +52,11 @@
 			{
 				"kind": "rug",
 				"u": 0.4571,
-				"v": 0.64
+				"v": 0.64,
+				"size_m": [
+					2.5,
+					1.8
+				]
 			},
 			{
 				"kind": "sofa",
@@ -166,7 +170,11 @@
 			{
 				"kind": "rug",
 				"u": 0.5,
-				"v": 0.5818
+				"v": 0.5818,
+				"size_m": [
+					2.2,
+					1.4
+				]
 			},
 			{
 				"kind": "coat_stand",
@@ -217,7 +225,11 @@
 			{
 				"kind": "rug",
 				"u": 0.5,
-				"v": 0.5111
+				"v": 0.5111,
+				"size_m": [
+					2.8,
+					2.0
+				]
 			},
 			{
 				"kind": "dining_table",
@@ -229,12 +241,15 @@
 			{
 				"kind": "chair",
 				"u": 0.26,
-				"v": 0.5111
+				"v": 0.5111,
+				"variant": "side"
 			},
 			{
 				"kind": "chair",
 				"u": 0.74,
-				"v": 0.5111
+				"v": 0.5111,
+				"variant": "side",
+				"flip": true
 			},
 			{
 				"kind": "floor_lamp",
@@ -248,6 +263,18 @@
 				"v": 0.8778,
 				"variant": "fern",
 				"decor": true
+			},
+			{
+				"kind": "chair",
+				"u": 0.42,
+				"v": 0.6778,
+				"variant": "back"
+			},
+			{
+				"kind": "chair",
+				"u": 0.58,
+				"v": 0.6778,
+				"variant": "back"
 			}
 		],
 		"kitchen": [
@@ -338,7 +365,11 @@
 			{
 				"kind": "rug",
 				"u": 0.5,
-				"v": 0.5778
+				"v": 0.5778,
+				"size_m": [
+					2.4,
+					1.7
+				]
 			},
 			{
 				"kind": "reading_chair",
@@ -359,10 +390,9 @@
 				"variant": "olive"
 			},
 			{
-				"kind": "globe",
-				"u": 0.87,
-				"v": 0.5111,
-				"decor": true
+				"kind": "desk",
+				"u": 0.86,
+				"v": 0.2889
 			},
 			{
 				"kind": "plant",
@@ -409,7 +439,11 @@
 			{
 				"kind": "rug",
 				"u": 0.52,
-				"v": 0.6667
+				"v": 0.6667,
+				"size_m": [
+					2.2,
+					1.5
+				]
 			},
 			{
 				"kind": "plant",
@@ -493,7 +527,11 @@
 			{
 				"kind": "rug",
 				"u": 0.5,
-				"v": 0.5
+				"v": 0.5,
+				"size_m": [
+					3.6,
+					0.9
+				]
 			},
 			{
 				"kind": "floor_lamp",
@@ -536,7 +574,11 @@
 			{
 				"kind": "rug",
 				"u": 0.5,
-				"v": 0.5778
+				"v": 0.5778,
+				"size_m": [
+					2.0,
+					1.4
+				]
 			},
 			{
 				"kind": "computer_desk",
@@ -572,7 +614,11 @@
 			{
 				"kind": "rug",
 				"u": 0.5429,
-				"v": 0.8
+				"v": 0.8,
+				"size_m": [
+					1.0,
+					0.6
+				]
 			},
 			{
 				"kind": "floor_lamp",

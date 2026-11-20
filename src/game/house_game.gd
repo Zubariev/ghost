@@ -127,6 +127,8 @@ func _ready() -> void:
 	if OS.get_cmdline_user_args().has("--code-art"):
 		style["sprites"] = {}   # comparison captures: every prop drawn in code (art Phase 3)
 	_stage.visuals = PropVisuals.new(style)
+	_stage.surfaces = RoomSurfaces.new(style.get("surfaces", {}))
+	_stage.texture_repeat = CanvasItem.TEXTURE_REPEAT_MIRROR   # painted surfaces tile seamlessly; sprites stay inside 0..1
 	_sim.clock.minute_advanced.connect(func(total: int) -> void:
 		if not _sim.is_over():
 			_stealth.on_minute(posmod(total - 1, GameClock.MINUTES_PER_DAY)))

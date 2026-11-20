@@ -47,7 +47,7 @@ func test_hud_points_follow_the_zoom_and_reset_restores_the_full_box() -> void:
 	RoomView.reset()
 	# Assert
 	assert_vector(hud).is_equal_approx(drawn, Vector2(0.01, 0.01))
-	assert_vector(RoomGeometry.BACK_LEFT).is_equal(RoomGeometry.FULL_BACK_LEFT)
+	assert_vector(RoomGeometry.BACK_LEFT).is_equal_approx(RoomGeometry.FULL_BACK_LEFT, Vector2(1, 1))
 	assert_vector(RoomGeometry.to_display(Vector2(5, 7))).is_equal(Vector2(5, 7))
 
 
@@ -55,10 +55,12 @@ func test_an_unknown_room_uses_the_full_box() -> void:
 	assert_vector(_view().floor_scale("attic")).is_equal(Vector2.ONE)
 
 
-func test_a_shallow_room_is_less_deep_than_wide() -> void:
-	# A room 4 m wide and 2 m deep in a 10 × 8 m full box: 0.4 of the width, a quarter of the depth
-	_view().apply("small", auto_free(Node2D.new()))
-	var depth: float = RoomGeometry.FRONT_LEFT.y - RoomGeometry.BACK_LEFT.y
-	var width: float = RoomGeometry.FRONT_RIGHT.x - RoomGeometry.FRONT_LEFT.x
-	assert_float(depth).is_equal_approx((RoomGeometry.FULL_FRONT_LEFT.y - RoomGeometry.FULL_BACK_LEFT.y) * 0.25, 0.01)
-	assert_float(width).is_equal_approx((RoomGeometry.FULL_FRONT_RIGHT.x - RoomGeometry.FULL_FRONT_LEFT.x) * 0.4, 0.01)
+func test_a_shallow_room_narrows_less_toward_the_back() -> void:
+	# A camera, not a stretched box: the front edge is the same distance away for every room, so a
+	# 2 m deep room's back edge is barely narrower than its front; a deep one's much narrower.
+	RoomGeometry.set_room(Vector2(4.0, 2.0))
+	var shallow: float = (RoomGeometry.FRONT_RIGHT.x - RoomGeometry.FRONT_LEFT.x) / (RoomGeometry.BACK_RIGHT.x - RoomGeometry.BACK_LEFT.x)
+	RoomGeometry.set_room(Vector2(4.0, 8.0))
+	var deep: float = (RoomGeometry.FRONT_RIGHT.x - RoomGeometry.FRONT_LEFT.x) / (RoomGeometry.BACK_RIGHT.x - RoomGeometry.BACK_LEFT.x)
+	assert_float(shallow).is_less(deep)
+	assert_float(shallow).is_equal_approx((RoomGeometry.FRONT_DISTANCE + 2.0) / RoomGeometry.FRONT_DISTANCE, 0.001)

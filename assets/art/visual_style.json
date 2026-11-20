@@ -310,7 +310,7 @@
 			"sprite": "res://assets/art/props/hall/stairs.png",
 			"anchor": [
 				0.5,
-				0.9885
+				0.991
 			],
 			"scale": 0.5
 		},
@@ -440,14 +440,6 @@
 				"scale": 0.842
 			}
 		},
-		"library/globe": {
-			"sprite": "res://assets/art/props/library/globe.png",
-			"anchor": [
-				0.5,
-				0.9722
-			],
-			"scale": 0.5
-		},
 		"library/reading_chair": {
 			"sprite": "res://assets/art/props/library/reading_chair.png",
 			"anchor": [
@@ -476,7 +468,7 @@
 			"sprite": "res://assets/art/props/living_room/gramophone.png",
 			"anchor": [
 				0.5,
-				0.9777
+				0.9828
 			],
 			"scale": 0.5
 		},
@@ -736,6 +728,30 @@
 				0.9733
 			],
 			"scale": 0.5
+		},
+		"library/desk": {
+			"sprite": "res://assets/art/props/library/desk.png",
+			"anchor": [
+				0.5,
+				0.981
+			],
+			"scale": 0.5
+		},
+		"chair:side": {
+			"sprite": "res://assets/art/props/chair_side.png",
+			"anchor": [
+				0.5,
+				0.9706
+			],
+			"scale": 0.5
+		},
+		"chair:back": {
+			"sprite": "res://assets/art/props/chair_back.png",
+			"anchor": [
+				0.5,
+				0.9748
+			],
+			"scale": 0.5
 		}
 	},
 	"_wall_portraits": "Art Phase 1 (2026-11-15): framed portraits on the side walls, per storybook room. Art config only: not furniture, never an obstacle, not in furniture.json. wall: left/right; v: [from, to] along the wall (0 back .. 1 front; side doors are at 0.39-0.61); h: [from, to] up the wall (0 floor .. 1 top; wainscot up to 0.36); variant: lady / child / gentleman.",
@@ -794,5 +810,180 @@
 				"variant": "child"
 			}
 		]
+	},
+	"surfaces": {
+		"_source": "Painted walls, floors and rugs (user review 2026-11-20; references in art/textures/, generated textures in art/concepts/textures_game/, game copies in assets/art/surfaces/). Per room: wall texture with its real tile size in metres (width, height), an optional wood-panel wainscot up to wainscot_m, the floor texture and its tile size; laid in the room camera's perspective (RoomSurfaces). rug: the rug texture; web: the corner cobweb (white on transparent).",
+		"rug": "res://assets/art/surfaces/rug_persian.png",
+		"web": "res://assets/art/surfaces/web_corner.png",
+		"rooms": {
+			"living_room": {
+				"wall": "res://assets/art/surfaces/wall_living_stripes.png",
+				"wall_tile_m": [
+					0.9,
+					0.9
+				],
+				"floor": "res://assets/art/surfaces/floor_wood_planks.png",
+				"floor_tile_m": [
+					2.4,
+					2.4
+				],
+				"wainscot": "res://assets/art/surfaces/wall_wood_panels.png",
+				"wainscot_m": 0.95,
+				"wainscot_tile_m": [
+					1.4,
+					1.4
+				]
+			},
+			"dining_room": {
+				"wall": "res://assets/art/surfaces/wall_dining_toile.png",
+				"wall_tile_m": [
+					1.0,
+					1.0
+				],
+				"floor": "res://assets/art/surfaces/floor_wood_planks.png",
+				"floor_tile_m": [
+					2.4,
+					2.4
+				],
+				"wainscot": "res://assets/art/surfaces/wall_wood_panels.png",
+				"wainscot_m": 0.9,
+				"wainscot_tile_m": [
+					1.4,
+					1.4
+				]
+			},
+			"kitchen": {
+				"wall": "res://assets/art/surfaces/wall_kitchen_tiles.png",
+				"wall_tile_m": [
+					1.2,
+					1.2
+				],
+				"floor": "res://assets/art/surfaces/floor_kitchen_quarry.png",
+				"floor_tile_m": [
+					1.6,
+					1.6
+				]
+			},
+			"hall": {
+				"wall": "res://assets/art/surfaces/wall_wood_panels.png",
+				"wall_tile_m": [
+					1.4,
+					1.4
+				],
+				"floor": "res://assets/art/surfaces/floor_hall_flagstones.png",
+				"floor_tile_m": [
+					2.6,
+					2.6
+				]
+			},
+			"library": {
+				"wall": "res://assets/art/surfaces/wall_library_stripes.png",
+				"wall_tile_m": [
+					1.2,
+					1.2
+				],
+				"floor": "res://assets/art/surfaces/floor_wood_planks.png",
+				"floor_tile_m": [
+					2.4,
+					2.4
+				],
+				"wainscot": "res://assets/art/surfaces/wall_wood_panels.png",
+				"wainscot_m": 0.9,
+				"wainscot_tile_m": [
+					1.4,
+					1.4
+				]
+			},
+			"workshop": {
+				"wall": "res://assets/art/surfaces/wall_workshop_planks.png",
+				"wall_tile_m": [
+					1.6,
+					1.6
+				],
+				"floor": "res://assets/art/surfaces/floor_wood_planks.png",
+				"floor_tile_m": [
+					2.4,
+					2.4
+				]
+			},
+			"parents_bedroom": {
+				"wall": "res://assets/art/surfaces/wall_parents_damask.png",
+				"wall_tile_m": [
+					1.0,
+					1.0
+				],
+				"floor": "res://assets/art/surfaces/floor_wood_planks.png",
+				"floor_tile_m": [
+					2.4,
+					2.4
+				],
+				"wainscot": "res://assets/art/surfaces/wall_wood_panels.png",
+				"wainscot_m": 0.9,
+				"wainscot_tile_m": [
+					1.4,
+					1.4
+				]
+			},
+			"grandparents_bedroom": {
+				"wall": "res://assets/art/surfaces/wall_grandparents_floral.png",
+				"wall_tile_m": [
+					0.9,
+					0.9
+				],
+				"floor": "res://assets/art/surfaces/floor_wood_planks.png",
+				"floor_tile_m": [
+					2.4,
+					2.4
+				],
+				"wainscot": "res://assets/art/surfaces/wall_wood_panels.png",
+				"wainscot_m": 0.9,
+				"wainscot_tile_m": [
+					1.4,
+					1.4
+				]
+			},
+			"children_bedroom": {
+				"wall": "res://assets/art/surfaces/wall_children_toile.png",
+				"wall_tile_m": [
+					1.0,
+					1.0
+				],
+				"floor": "res://assets/art/surfaces/floor_wood_planks.png",
+				"floor_tile_m": [
+					2.4,
+					2.4
+				]
+			},
+			"upper_bathroom": {
+				"wall": "res://assets/art/surfaces/wall_bathroom_tiles.png",
+				"wall_tile_m": [
+					1.0,
+					1.0
+				],
+				"floor": "res://assets/art/surfaces/floor_bathroom_checker.png",
+				"floor_tile_m": [
+					1.0,
+					1.0
+				]
+			},
+			"upper_corridor": {
+				"wall": "res://assets/art/surfaces/wall_library_stripes.png",
+				"wall_tile_m": [
+					1.2,
+					1.2
+				],
+				"floor": "res://assets/art/surfaces/floor_wood_planks.png",
+				"floor_tile_m": [
+					2.4,
+					2.4
+				],
+				"wainscot": "res://assets/art/surfaces/wall_wood_panels.png",
+				"wainscot_m": 0.9,
+				"wainscot_tile_m": [
+					1.4,
+					1.4
+				]
+			}
+		}
 	}
 }

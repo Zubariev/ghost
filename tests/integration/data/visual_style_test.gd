@@ -300,3 +300,19 @@ func test_every_shipped_sprite_loads_and_wall_sprites_fit_the_back_wall() -> voi
 			assert_object(mask).override_failure_message(key + " glass mask " + state + " does not load").is_not_null()
 			if mask != null:
 				assert_vector(mask.get_size()).override_failure_message(key + " glass mask size").is_equal(visuals.texture_for(kind, variant, StringName(state), room).get_size())
+
+
+func test_every_room_has_painted_walls_and_floor_and_every_texture_loads() -> void:
+	# Painted surfaces (user review 2026-11-20): a wall and a floor for every room, the rug and the
+	# cobweb; every path in the config is a texture that loads.
+	var surfaces: Dictionary = JsonData.read(PropVisuals.STYLE_PATH).get("surfaces", {})
+	var rooms: Dictionary = surfaces.get("rooms", {})
+	var paths: Array[String] = [String(surfaces.get("rug", "")), String(surfaces.get("web", ""))]
+	for room_id: String in _house().rooms:
+		assert_bool(rooms.has(room_id)).override_failure_message("no surfaces for " + room_id).is_true()
+		var cfg: Dictionary = rooms.get(room_id, {})
+		for key: String in ["wall", "floor", "wainscot"]:
+			if cfg.has(key) or key != "wainscot":
+				paths.append(String(cfg.get(key, "")))
+	for path: String in paths:
+		assert_bool(ResourceLoader.exists(path) and load(path) is Texture2D).override_failure_message("texture does not load: " + path).is_true()
