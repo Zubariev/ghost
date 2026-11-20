@@ -602,6 +602,10 @@ func _run_capture(dir: String) -> void:
 		await _run_hud_test(dir)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("--character-test=daughter"):
+		await _run_daughter_test(dir)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--character-test=son"):
 		await _run_son_test(dir)
 		get_tree().quit()
@@ -1092,6 +1096,53 @@ func _run_son_test(dir: String) -> void:
 	_navigator.place(_motion.room_of(B), Vector2(0.15, 0.95))
 	await _frames(dir, "s17-sweeping", 0.3, 0.0)
 	await _frames(dir, "s18-sweeping-frame", 0.6, 0.0)
+
+
+## The painted daughter (sixth family member, 2026-11-20): breakfast (from behind), dolls in her
+## room, drawing at the easel, walking, riding her tricycle in the hall, dolls in the living room, a
+## glimpse of the ghost (anxious), the fright.
+func _run_daughter_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	const K: int = 5   # daughter: sixth in the schedule order
+	await _show(dir, "d01-breakfast", "07:30", "dining_room", Vector2(0.5, 0.95))
+	await _show(dir, "d02-dolls-in-her-room", "08:30", "children_bedroom", Vector2(0.15, 0.95))
+	await _show(dir, "d03-drawing-at-easel", "10:00", "children_bedroom", Vector2(0.85, 0.95))
+	await _frames(dir, "d04-drawing-frame", 0.6, 0.0)
+	await _show(dir, "d05-before-lunch", "11:58", "children_bedroom", Vector2(0.85, 0.95))
+	var guard: int = 0
+	while not _motion.is_walking(K) and guard < 4000:
+		var step: float = _sim.clock.minutes_for(0.05)
+		_sim.advance(0.05)
+		_motion.update(step)
+		guard += 1
+	for i: int in 4:
+		_navigator.place(_motion.room_of(K), Vector2(0.15, 0.95))
+		await _frames(dir, "d%02d-walking-frame" % (i + 6), 0.12, 0.03)
+	await _show(dir, "d10-tricycle-in-hall", "14:30", "hall", Vector2(0.15, 0.95))
+	await _frames(dir, "d11-tricycle-frame", 1.5, 0.0)
+	await _show(dir, "d12-dolls-in-living-room", "17:30", "living_room", Vector2(0.15, 0.95))
+	var playing: Dictionary = _motion.person(K, "living_room")
+	var size: Vector2 = _stage.layout.size("living_room")
+	var look: Vector2 = (Vector2(playing["facing"]) * size).normalized()
+	_navigator.place("living_room", Vector2(playing["uv"]) + look * 2.0 / size)
+	_stealth.observe()
+	print("daughter glimpse: %s" % [_stealth.phase_of("daughter")])
+	await _frames(dir, "d13-glimpsed-anxious", 0.5, 0.002)
+	await _frames(dir, "d14-anxious-frame", 0.8, 0.002)
+	var waited: int = 0
+	while _stealth.phase_of("daughter") != StealthSystem.Phase.NONE and waited < 400:
+		var step2: float = _sim.clock.minutes_for(0.25)
+		_sim.advance(0.25)
+		_motion.update(step2)
+		waited += 1
+	var here: Dictionary = _motion.person(K, _motion.room_of(K))
+	var room_size: Vector2 = _stage.layout.size(_motion.room_of(K))
+	_navigator.place(_motion.room_of(K), Vector2(here["uv"]) + (Vector2(here["facing"]) * room_size).normalized() * 0.8 / room_size)
+	_stealth.observe()
+	_navigator.place(_motion.room_of(K), Vector2(0.15, 0.95))
+	await _frames(dir, "d15-fright", 0.12, 0.002)
+	await _frames(dir, "d16-fright-frame", 0.4, 0.002)
 
 
 ## Capture only: lets [param seconds] of real time pass for the animation (the family walks on by

@@ -15,6 +15,8 @@
 ##            mirrored for left; by the seat's direction, not a glance)
 ##   sit:     pose "sit" at the computer or eating, the seat facing away (a desk, the near side of the
 ##            table) → "sit_back" (resting in an armchair faces the chair but keeps the front pose)
+##   sit:     pose "sit" in an activity with its own clip (dolls, draw, read) → that clip
+##   tricycle: pose "tricycle"                   → "tricycle", mirrored when riding right
 ##   sit:     pose "sit" otherwise                → "sit" (painted seated view, facing the camera)
 ##   sleep:   pose "sleep"                        → drawn by the code on the bed (not rigged yet)
 ##   walk:    pose "walk"                         → "walk_side" / "walk_front" / "walk_back" by facing
@@ -49,6 +51,8 @@ var _from_pose: Dictionary = {}
 var _blend_left: float = 0.0
 var _turn_left: float = 0.0
 var _last_uv := Vector2(-99, -99)
+## Which way the tricycle last rolled (its sway reverses: the painting follows).
+var _ride_right: bool = false
 
 
 func _init(character_rig: CharacterRig, stride: float = 1.1) -> void:
@@ -85,12 +89,18 @@ func choose(state: Dictionary) -> Array:
 		var seat: String = ("left" if sm.x < 0.0 else "right") if sm.length() > 0.0001 and absf(sm.normalized().x) >= TABLE_END else ""
 		if seat == "left" or seat == "right":
 			return ["sit_side", seat == "left"]
+	if pose == "sit" and activity != "eat" and rig.has_clip(activity):
+		# a seated activity with its own painted pose (dolls, drawing, reading); a side-on painting
+		# faces the way the seat does (2026-11-20: she painted turned away from the easel)
+		return [activity, _side_view(activity) and _direction(state.get("seat_facing", Vector2(0, 1)), state.get("room_size", Vector2.ONE)) == "left"]
 	if pose == "sit" and rig.has_clip("sit"):
 		return ["sit", false]
+	if pose == "tricycle" and rig.has_clip("tricycle"):
+		return ["tricycle", dir == "right"]   # painted facing left; mirrored when riding right
 	if pose == "walk":
 		return [_by_direction("walk", dir), dir == "left"]
 	if not activity.is_empty() and rig.has_clip(activity):
-		return [activity, false]
+		return [activity, _side_view(activity) and _direction(state.get("seat_facing", state.get("facing", Vector2(0, 1))), state.get("room_size", Vector2.ONE)) == "left"]
 	return [_by_direction("idle", dir), dir == "left"]
 
 
@@ -101,6 +111,13 @@ func update(delta: float, state: Dictionary) -> void:
 	if _last_uv.x > -90.0 and String(state.get("pose", "")) == "walk":
 		var size: Vector2 = state.get("room_size", Vector2.ONE)
 		_walk_phase += ((uv - _last_uv) * size).length() / maxf(0.1, stride_m)
+	if _last_uv.x > -90.0 and String(state.get("pose", "")) == "tricycle":
+		# the tricycle sways back and forth on the spot: face the way it is actually rolling
+		var dx: float = uv.x - _last_uv.x
+		if absf(dx) > 0.00001:
+			_ride_right = dx > 0.0
+		state = state.duplicate()
+		state["facing"] = Vector2(1.0 if _ride_right else -1.0, 0.0)
 	_last_uv = uv
 	var choice: Array = choose(state)
 	var next: String = choice[0]
@@ -149,6 +166,12 @@ func draw(canvas: CanvasItem, foot: Vector2, s: float, tint: Color = Color.WHITE
 ## Screen point of the head (floats, breath).
 func head_point(foot: Vector2, s: float) -> Vector2:
 	return rig.part_point(view, current_pose(), "head" if view != "sit" else "body", foot, s, flip) + Vector2(0, -6.0 * s)
+
+
+# True when [param clip_name] is drawn in a side-on painting (it can face left or right).
+func _side_view(clip_name: String) -> bool:
+	var view: Dictionary = rig.views.get(rig.clip_view(clip_name), {})
+	return bool(view.get("faces_left", false)) or rig.clip_view(clip_name) == "side"
 
 
 # "left" / "right" when the facing is mostly sideways in metres, else "toward" (the camera) or "away".

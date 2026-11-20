@@ -25,6 +25,8 @@ func _rig() -> CharacterRig:
 			"sit": {"view": "front", "length": 1.0, "loop": true, "tracks": {}},
 			"sit_side": {"view": "side", "length": 1.0, "loop": true, "tracks": {}},
 			"sit_back": {"view": "front", "length": 1.0, "loop": true, "tracks": {}},
+			"dolls": {"view": "front", "length": 1.0, "loop": true, "tracks": {}},
+			"tricycle": {"view": "side", "length": 1.0, "loop": true, "tracks": {}},
 			"stride": {"view": "side", "length": 1.0, "loop": true, "ease": "linear", "tracks": {"body": [[0, 0], [1, 10]]}},
 		},
 	})
@@ -61,6 +63,11 @@ func test_the_animator_follows_the_games_states() -> void:
 	assert_array(anim.choose({"pose": "stand", "marker": "?", "room_size": size})).is_equal(["anxious", false])
 	assert_array(anim.choose({"pose": "walk", "marker": "!", "room_size": size})).is_equal(["fright", false])
 	assert_array(anim.choose({"pose": "sit", "room_size": size})).is_equal(["sit", false])
+	# a seated activity with its own painted pose; the tricycle mirrored by its direction
+	assert_array(anim.choose({"pose": "sit", "activity": "dolls", "room_size": size})).is_equal(["dolls", false])
+	# a side-on activity faces the way its seat does (drawing at the easel to her left)
+	assert_array(anim.choose({"pose": "sit", "activity": "tricycle", "seat_facing": Vector2(-1, 0), "room_size": size})).is_equal(["tricycle", true])
+	assert_array(anim.choose({"pose": "tricycle", "activity": "tricycle", "facing": Vector2(1, 0), "room_size": size})).is_equal(["tricycle", true])
 	# seated with the seat facing away from the camera (a desk, the near side of the table)
 	assert_array(anim.choose({"pose": "sit", "activity": "computer", "seat_facing": Vector2(0, -1), "room_size": size})).is_equal(["sit_back", false])
 	# off to one side of the desk (up and to the left): still from behind, not the front pose
@@ -84,6 +91,18 @@ func test_the_walk_advances_by_the_metres_walked() -> void:
 	assert_float(anim.current_pose()["body"][0]).is_equal_approx(2.0, 0.01)   # half way through 0 → 4
 
 
+func test_the_tricycle_faces_the_way_it_rolls() -> void:
+	# The game sways the tricycle back and forth with a fixed facing: the painting follows the motion
+	var anim := CharacterAnimator.new(_rig(), 1.0)
+	var size := Vector2(4, 4)
+	anim.update(0.1, {"pose": "tricycle", "activity": "tricycle", "uv": Vector2(0.4, 0.5), "facing": Vector2(0, 1), "room_size": size})
+	anim.update(0.1, {"pose": "tricycle", "activity": "tricycle", "uv": Vector2(0.45, 0.5), "facing": Vector2(0, 1), "room_size": size})
+	var riding_right: bool = anim.flip
+	anim.update(0.1, {"pose": "tricycle", "activity": "tricycle", "uv": Vector2(0.42, 0.5), "facing": Vector2(0, 1), "room_size": size})
+	assert_bool(riding_right).is_true()
+	assert_bool(anim.flip).is_false()
+
+
 func test_grandmas_rig_is_complete() -> void:
 	_check_rig("grandma", ["idle_front", "walk_side", "walk_front", "walk_back", "cook", "anxious", "fright", "sit", "sit_side", "slump"])
 
@@ -102,6 +121,10 @@ func test_grandpas_rig_is_complete() -> void:
 
 func test_sons_rig_is_complete() -> void:
 	_check_rig("son", ["idle_front", "idle_side", "idle_back", "walk_side", "walk_front", "walk_back", "read", "sit_back", "clean", "anxious", "fright", "slump"])
+
+
+func test_daughters_rig_is_complete() -> void:
+	_check_rig("daughter", ["idle_front", "idle_side", "idle_back", "walk_side", "walk_front", "walk_back", "dolls", "draw", "tricycle", "sit_back", "anxious", "fright", "slump"])
 
 
 func _check_rig(npc_id: String, required: Array) -> void:
