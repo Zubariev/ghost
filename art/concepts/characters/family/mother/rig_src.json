@@ -1,5 +1,5 @@
 {
-	"_source": "Mother's cutout rig (2026-11-20; docs/art/characters/MOTHER.md), built with the grandma and father lessons: side view from the straight profile (side_noarm, one whole leg side_leg for both legs split at the knee, a whole arm side_arm fitted by place.gd), mirrored to face right; front and back legs cut from rig_front / turn_back at the waistband and knee; bodies base_front / base_back cut at the waistband. Scale 719 px per metre: the family's drawn ratio (0.762 of real height, as grandma and the father) for 1.68 m. Stride 0.96 m from the leg (hip to sole 508 px). Hybrid poses: sofa (pose_sit), eating side-on at a table end (pose_sit_side, chair and table erased), cleaning (clean_side: wiping with a cloth, gloves on). Build: python3 tools/art/rig_build.py mother. white_parts: her white trainers are near-white areas enclosed by the outline; the cut-out keeps them (they had been cleared as holes). Sofa pose regenerated (user review: the first had sleeves ending at the waist and separate forearms — it read as four arms). Front and back bodies cut to the torso (user review: the generated armless bodies kept the puffy upper sleeves, so a raised arm showed four arms). Bodies now cut from rig_front / turn_back (the generated armless bodies had open-shoulder holes); arm cuts keep clear of the pocket glove; thigh cuts clear of the fingertips.",
+	"_source": "Mother's cutout rig (2026-11-20; docs/art/characters/MOTHER.md), built with the grandma and father lessons: side view from the straight profile (side_noarm, one whole leg side_leg for both legs split at the knee, a whole arm side_arm fitted by place.gd), mirrored to face right; front and back legs cut from rig_front / turn_back at the waistband and knee; bodies base_front / base_back cut at the waistband. Scale 719 px per metre: the family's drawn ratio (0.762 of real height, as grandma and the father) for 1.68 m. Stride 0.96 m from the leg (hip to sole 508 px). Hybrid poses: sofa (pose_sit), eating side-on at a table end (pose_sit_side, chair and table erased), cleaning (clean_side: wiping with a cloth, gloves on). Build: python3 tools/art/rig_build.py mother. white_parts: her white trainers are near-white areas enclosed by the outline; the cut-out keeps them (they had been cleared as holes). Sofa pose regenerated (user review: the first had sleeves ending at the waist and separate forearms — it read as four arms). Front and back bodies cut to the torso (user review: the generated armless bodies kept the puffy upper sleeves, so a raised arm showed four arms). Bodies now cut from rig_front / turn_back (the generated armless bodies had open-shoulder holes); arm cuts keep clear of the pocket glove; thigh cuts clear of the fingertips. sit_side anchor under the seat, not the hips' middle (user review: badly attached to the dining chair): the point below the buttocks at floor level.",
 	"height_m": 1.68,
 	"px_per_m": 719.0,
 	"stride_m": 0.96,
@@ -814,7 +814,7 @@
 		"sit_side": {
 			"faces_left": true,
 			"foot": [
-				480,
+				610,
 				963
 			],
 			"parts": {

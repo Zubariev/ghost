@@ -91,6 +91,10 @@ func test_mothers_rig_is_complete() -> void:
 	_check_rig("mother", ["idle_front", "idle_side", "idle_back", "walk_side", "walk_front", "walk_back", "clean", "anxious", "fright", "sit", "sit_side", "slump"])
 
 
+func test_grandpas_rig_is_complete() -> void:
+	_check_rig("grandpa", ["idle_front", "idle_side", "idle_back", "walk_side", "walk_front", "walk_back", "read", "anxious", "fright", "sit", "sit_side", "slump"])
+
+
 func _check_rig(npc_id: String, required: Array) -> void:
 	var rig: CharacterRig = CharacterRig.load_for(npc_id)
 	assert_object(rig).is_not_null()

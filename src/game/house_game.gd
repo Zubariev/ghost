@@ -602,6 +602,10 @@ func _run_capture(dir: String) -> void:
 		await _run_hud_test(dir)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("--character-test=grandpa"):
+		await _run_grandpa_test(dir)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--character-test=mother"):
 		await _run_mother_test(dir)
 		get_tree().quit()
@@ -982,6 +986,52 @@ func _run_mother_test(dir: String) -> void:
 	await _frames(dir, "m15-fright", 0.12, 0.002)
 	await _frames(dir, "m16-fright-frame", 0.4, 0.002)
 	await _show(dir, "m17-resting-on-sofa", "13:30", "living_room", Vector2(0.15, 0.95))
+
+
+## The painted grandpa (fourth family member, 2026-11-20): waking, walking to breakfast, eating,
+## reading in the library, a glimpse of the ghost while he reads (anxious), the fright of contact,
+## resting in the living room.
+func _run_grandpa_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	const P: int = 3   # grandpa: fourth in the schedule order
+	await _show(dir, "p01-waking-in-bedroom", "06:30", "grandparents_bedroom", Vector2(0.15, 0.95))
+	await _frames(dir, "p02-idle-frame", 1.2, 0.0)
+	var guard: int = 0
+	while not _motion.is_walking(P) and guard < 4000:
+		var step: float = _sim.clock.minutes_for(0.05)
+		_sim.advance(0.05)
+		_motion.update(step)
+		guard += 1
+	for i: int in 6:
+		_navigator.place(_motion.room_of(P), Vector2(0.15, 0.95))
+		await _frames(dir, "p%02d-walking-frame" % (i + 3), 0.12, 0.03)
+	await _show(dir, "p09-eating-at-table", "07:30", "dining_room", Vector2(0.5, 0.95))
+	await _show(dir, "p10-reading-in-library", "08:30", "library", Vector2(0.85, 0.95))
+	await _frames(dir, "p11-reading-frame", 1.0, 0.0)
+	# 2 m straight ahead of where he looks: inside side vision, outside direct (rules unchanged)
+	var reading: Dictionary = _motion.person(P, "library")
+	var size: Vector2 = _stage.layout.size("library")
+	var look: Vector2 = (Vector2(reading["facing"]) * size).normalized()
+	_navigator.place("library", Vector2(reading["uv"]) + look * 2.0 / size)
+	_stealth.observe()
+	print("grandpa glimpse: %s" % [_stealth.phase_of("grandpa")])
+	await _frames(dir, "p12-glimpsed-anxious", 0.5, 0.002)
+	await _frames(dir, "p13-anxious-frame", 0.8, 0.002)
+	var waited: int = 0
+	while _stealth.phase_of("grandpa") != StealthSystem.Phase.NONE and waited < 400:
+		var step2: float = _sim.clock.minutes_for(0.25)
+		_sim.advance(0.25)
+		_motion.update(step2)
+		waited += 1
+	var here: Dictionary = _motion.person(P, _motion.room_of(P))
+	var room_size: Vector2 = _stage.layout.size(_motion.room_of(P))
+	_navigator.place(_motion.room_of(P), Vector2(here["uv"]) + (Vector2(here["facing"]) * room_size).normalized() * 0.8 / room_size)
+	_stealth.observe()
+	_navigator.place(_motion.room_of(P), Vector2(0.85, 0.95))
+	await _frames(dir, "p14-fright", 0.12, 0.002)
+	await _frames(dir, "p15-fright-frame", 0.4, 0.002)
+	await _show(dir, "p16-resting-in-living-room", "13:30", "living_room", Vector2(0.15, 0.95))
 
 
 ## Capture only: lets [param seconds] of real time pass for the animation (the family walks on by
