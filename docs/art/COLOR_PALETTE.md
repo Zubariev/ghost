@@ -51,6 +51,9 @@ Derived tones (lighter/darker walnut, wall, floor, fire core, ember, ash, glass 
 moon, skin, shadow, and since Phase 1 fieldstone `SB_STONE #8A8379`, `SB_STONE_DARK #6A645C`,
 `SB_STONE_LIGHT #A49D90`) live in `palette.gd` next to the core set; they are mixes of it, not new
 hues. The rug uses darkened core colours so it stays below people and props in the hierarchy.
+Sprint 001 (2026-11-25), PROVISIONAL: the sky over the yards, `SB_SKY_DAY #9AA6B0` (dusk blue lifted
+toward cream) and `SB_SKY_NIGHT #2A2D3B` (night charcoal, darker); the code-drawn shed, woodpile and
+hedge use walnut, faded green, muted olive and brown-grey from the core set.
 
 ## 3. Cozy and haunted
 
