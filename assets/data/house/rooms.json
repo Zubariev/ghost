@@ -1,5 +1,5 @@
 {
-	"_source": "size_m: real floor width x depth in metres (user decision 2026-11-20: rooms of different sizes; RoomLayout converts distances in metres to the room's floor units). Demo Specification §4.2 / GDD §9.2; stage 3 rooms. walk_minutes: an adult (pace 1) in a room in perfect order, measured from the walking routes on screen by tools/measure_walks.gd (2026-11-15); slower people and run-down rooms take longer. plan_rect is for the debug view only; stage 5a: per-floor grid (col, row; row 0 = back), windows, a lamp per room (Demo Specification §8.7).",
+	"_source": "size_m: real floor width x depth in metres (user decision 2026-11-20: rooms of different sizes; RoomLayout converts distances in metres to the room's floor units). Demo Specification §4.2 / GDD §9.2; stage 3 rooms. walk_minutes: an adult (pace 1) in a room in perfect order, measured from the walking routes on screen by tools/measure_walks.gd (2026-11-15); slower people and run-down rooms take longer. plan_rect is for the debug view only; stage 5a: per-floor grid (col, row; row 0 = back), windows, a lamp per room (Demo Specification §8.7). Sprint 001 (2026-11-25): basement (floor -1, under the hall), attic (floor 2, over the upper corridor), back yard (behind the library) and front yard (in front of the hall). outdoor: open air, lit by daylight only, no floating up or down; family false: no doors, no tasks, the family never goes there. light/temperature/cleanliness: start values for rooms without lamps or windows.",
 	"rooms": [
 		{
 			"id": "parents_bedroom",
@@ -220,6 +220,100 @@
 				0
 			],
 			"has_window": false
+		},
+		{
+			"id": "basement",
+			"size_m": [
+				6.0,
+				5.0
+			],
+			"name": "Підвал",
+			"floor": -1,
+			"plan_rect": [
+				20,
+				500,
+				195,
+				150
+			],
+			"grid": [
+				2,
+				1
+			],
+			"has_window": false,
+			"family": false,
+			"light": "dark",
+			"temperature": "cold",
+			"cleanliness": "dirty"
+		},
+		{
+			"id": "attic",
+			"size_m": [
+				8.0,
+				5.0
+			],
+			"name": "Горище",
+			"floor": 2,
+			"plan_rect": [
+				225,
+				500,
+				195,
+				150
+			],
+			"grid": [
+				2,
+				1
+			],
+			"has_window": true,
+			"family": false,
+			"light": "dim",
+			"temperature": "cold",
+			"cleanliness": "dirty"
+		},
+		{
+			"id": "back_yard",
+			"size_m": [
+				10.5,
+				7.5
+			],
+			"name": "Задній двір",
+			"floor": 0,
+			"plan_rect": [
+				430,
+				500,
+				195,
+				150
+			],
+			"grid": [
+				2,
+				-1
+			],
+			"has_window": false,
+			"outdoor": true,
+			"family": false,
+			"temperature": "cold"
+		},
+		{
+			"id": "front_yard",
+			"size_m": [
+				10.0,
+				6.0
+			],
+			"name": "Передній двір",
+			"floor": 0,
+			"plan_rect": [
+				635,
+				500,
+				195,
+				150
+			],
+			"grid": [
+				2,
+				2
+			],
+			"has_window": false,
+			"outdoor": true,
+			"family": false,
+			"temperature": "cold"
 		}
 	],
 	"doors": [

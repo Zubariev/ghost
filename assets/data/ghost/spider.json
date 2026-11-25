@@ -1,0 +1,7 @@
+{
+	"_source": "The attic spider (sprint 001, phase F, user brief 2026-11-25 items 8-11). kind: the furniture piece (furniture.json, attic). reach_m: how near the ghost must be to trade (metres). give: what the spider asks (item -> units); get: what it gives. 'Six flies for spider nests' (brief): one nest per six flies is a provisional reading; change get to give more.",
+	"kind": "spider",
+	"reach_m": 1.6,
+	"give": {"fly": 6},
+	"get": {"spider_nest": 1}
+}

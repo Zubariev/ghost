@@ -67,7 +67,8 @@ func test_the_animator_follows_the_games_states() -> void:
 	assert_array(anim.choose({"pose": "sit", "activity": "dolls", "room_size": size})).is_equal(["dolls", false])
 	# a side-on activity faces the way its seat does (drawing at the easel to her left)
 	assert_array(anim.choose({"pose": "sit", "activity": "tricycle", "seat_facing": Vector2(-1, 0), "room_size": size})).is_equal(["tricycle", true])
-	assert_array(anim.choose({"pose": "tricycle", "activity": "tricycle", "facing": Vector2(1, 0), "room_size": size})).is_equal(["tricycle", true])
+	assert_array(anim.choose({"pose": "tricycle", "activity": "tricycle", "facing": Vector2(1, 0), "room_size": size})).is_equal(["tricycle", false])
+	assert_array(anim.choose({"pose": "tricycle", "activity": "tricycle", "facing": Vector2(-1, 0), "room_size": size})).is_equal(["tricycle", true])
 	# seated with the seat facing away from the camera (a desk, the near side of the table)
 	assert_array(anim.choose({"pose": "sit", "activity": "computer", "seat_facing": Vector2(0, -1), "room_size": size})).is_equal(["sit_back", false])
 	# off to one side of the desk (up and to the left): still from behind, not the front pose
@@ -97,10 +98,11 @@ func test_the_tricycle_faces_the_way_it_rolls() -> void:
 	var size := Vector2(4, 4)
 	anim.update(0.1, {"pose": "tricycle", "activity": "tricycle", "uv": Vector2(0.4, 0.5), "facing": Vector2(0, 1), "room_size": size})
 	anim.update(0.1, {"pose": "tricycle", "activity": "tricycle", "uv": Vector2(0.45, 0.5), "facing": Vector2(0, 1), "room_size": size})
-	var riding_right: bool = anim.flip
+	var flip_riding_right: bool = anim.flip
 	anim.update(0.1, {"pose": "tricycle", "activity": "tricycle", "uv": Vector2(0.42, 0.5), "facing": Vector2(0, 1), "room_size": size})
-	assert_bool(riding_right).is_true()
-	assert_bool(anim.flip).is_false()
+	# flip = facing left; the rig un-mirrors the left-painted tricycle, so riding right is not flipped
+	assert_bool(flip_riding_right).is_false()
+	assert_bool(anim.flip).is_true()
 
 
 func test_grandmas_rig_is_complete() -> void:

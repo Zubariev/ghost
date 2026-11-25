@@ -92,3 +92,24 @@ func test_space_with_s_held_floats_down_a_floor() -> void:
 func test_space_alone_or_with_both_held_does_not_change_floor() -> void:
 	assert_int(GhostNavigator.floor_direction(false, false)).is_equal(0)
 	assert_int(GhostNavigator.floor_direction(true, true)).is_equal(0)
+
+
+func test_room_without_a_neighbour_leaves_only_a_thin_margin_outside_the_walls() -> void:
+	# Arrange: "a" has nothing on its left, so the wall edge is a hard stop
+	var nav := _nav("a", Vector2(0.1, 0.5))
+	# Act: push far past every outer edge
+	nav.move(Vector2(-5.0, 0.0))
+	var left_edge: float = nav.uv.x
+	nav.move(Vector2(0.0, -5.0))
+	var back_edge: float = nav.uv.y
+	# Assert: the ghost cannot park in the black space outside the walls (2026-11-25, sprint 001 item 22)
+	assert_float(left_edge).is_greater_equal(-0.1)
+	assert_float(back_edge).is_greater_equal(-0.2)
+	assert_float(GhostNavigator.U_MAX).is_less_equal(1.1)
+
+
+func test_crossing_a_wall_still_lands_inside_the_next_room_with_the_thin_margin() -> void:
+	var nav := _nav("b", Vector2(0.95, 0.5))
+	nav.move(Vector2(0.3, 0.0))
+	assert_str(nav.room_id).is_equal("c")
+	assert_float(nav.uv.x).is_between(GhostNavigator.U_MIN, 0.2)

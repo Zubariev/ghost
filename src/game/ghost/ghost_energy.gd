@@ -132,6 +132,16 @@ func penalty(zone: String) -> float:
 	return float(_penalties.get(zone, 0))
 
 
+## Adds [param amount] (the energy elixir, sprint 001, phase E), never above the maximum. Refused
+## (false, nothing changes) for a non-positive amount or when energy is already full, so an
+## elixir is not used up for nothing.
+func restore(amount: float) -> bool:
+	if amount <= 0.0 or value >= _max:
+		return false
+	value = minf(_max, value + amount)
+	return true
+
+
 func _take(amount: float, reason: String) -> float:
 	var was_low: bool = is_low()
 	var taken: float = minf(maxf(amount, 0.0), value)

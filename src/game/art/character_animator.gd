@@ -16,7 +16,7 @@
 ##   sit:     pose "sit" at the computer or eating, the seat facing away (a desk, the near side of the
 ##            table) → "sit_back" (resting in an armchair faces the chair but keeps the front pose)
 ##   sit:     pose "sit" in an activity with its own clip (dolls, draw, read) → that clip
-##   tricycle: pose "tricycle"                   → "tricycle", mirrored when riding right
+##   tricycle: pose "tricycle"                   → "tricycle", flip = riding left (the rig un-mirrors faces_left art)
 ##   sit:     pose "sit" otherwise                → "sit" (painted seated view, facing the camera)
 ##   sleep:   pose "sleep"                        → drawn by the code on the bed (not rigged yet)
 ##   walk:    pose "walk"                         → "walk_side" / "walk_front" / "walk_back" by facing
@@ -96,7 +96,9 @@ func choose(state: Dictionary) -> Array:
 	if pose == "sit" and rig.has_clip("sit"):
 		return ["sit", false]
 	if pose == "tricycle" and rig.has_clip("tricycle"):
-		return ["tricycle", dir == "right"]   # painted facing left; mirrored when riding right
+		# flip means "facing left" for every clip; CharacterRig itself un-mirrors views painted facing
+		# left (faces_left). Mirroring here as well cancelled it and she rode backwards (2026-11-25).
+		return ["tricycle", dir == "left"]
 	if pose == "walk":
 		return [_by_direction("walk", dir), dir == "left"]
 	if not activity.is_empty() and rig.has_clip(activity):

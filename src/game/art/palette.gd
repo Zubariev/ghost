@@ -60,6 +60,9 @@ const SB_CONTOUR_SOFT := Color(0.384, 0.337, 0.302, 0.75)
 ## Derived tones (mixed from the palette above).
 const SB_WALNUT_DARK := Color("5a3a2c")
 const SB_WALNUT_LIGHT := Color("9a6c4e")
+## Sky over the yards (sprint 001, 2026-11-25): dusk blue lifted toward cream by day, night charcoal at night.
+const SB_SKY_DAY := Color("9aa6b0")
+const SB_SKY_NIGHT := Color("2a2d3b")
 const SB_WALL := Color("d9c6a0")
 const SB_WALL_SIDE := Color("c4ae88")
 const SB_WALLPAPER_MOTIF := Color(0.718, 0.486, 0.459, 0.22)

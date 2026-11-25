@@ -14,10 +14,11 @@ extends RefCounted
 
 signal room_changed(room_id: String)
 
-## How far into the side walls, the back wall and past the front edge the ghost may go.
-const U_MIN: float = -0.22
-const U_MAX: float = 1.22
-const V_MIN: float = -0.42
+## How far into the side walls, the back wall and past the front edge the ghost may go. Thin on purpose
+## (2026-11-25): a wide margin was black space outside the room where the ghost could hide.
+const U_MIN: float = -0.07
+const U_MAX: float = 1.07
+const V_MIN: float = -0.15
 const V_MAX: float = 1.08
 
 var room_id: String = ""
@@ -62,8 +63,8 @@ static func floor_direction(up_held: bool, down_held: bool) -> int:
 func change_floor(direction: int) -> bool:
 	var here: RoomState = _house.rooms[room_id]
 	var target: String = room_at(here.floor_level + direction, here.grid)
-	if target.is_empty():
-		return false
+	if target.is_empty() or here.outdoor or _house.rooms[target].outdoor:
+		return false   # open air has no ceiling or floor to float through (sprint 001, 2026-11-25)
 	room_id = target
 	room_changed.emit(room_id)
 	return true

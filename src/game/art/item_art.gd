@@ -63,5 +63,57 @@ static func draw(canvas: CanvasItem, icon: String, c: Vector2, size: float) -> v
 			canvas.draw_rect(Rect2(c + Vector2(-9, -6) * s, Vector2(10, 7) * s), Color(Palette.SB_CHARCOAL, 0.75), false, 1.2)
 			canvas.draw_rect(Rect2(c + Vector2(1, -6) * s, Vector2(8, 12) * s), Color(Palette.SB_CHARCOAL, 0.75), false, 1.2)
 			canvas.draw_colored_polygon(Ink.ellipse(c + Vector2(-5, 4) * s, 2 * s, 2 * s, 8), Palette.SB_TERRACOTTA)
+		# Sprint 001 (2026-11-26): crafting materials, spider nest, elixirs, monocle.
+		"bone":
+			canvas.draw_line(c + Vector2(-9, 7) * s, c + Vector2(9, -7) * s, Palette.SB_CREAM, 4.5 * s, true)
+			for end: Vector2 in [Vector2(-10, 8), Vector2(10, -8)]:
+				for side: Vector2 in [Vector2(-2.5, -2.5), Vector2(2.5, 2.5)]:
+					canvas.draw_colored_polygon(Ink.ellipse(c + (end + side) * s, 3.5 * s, 3.5 * s, 10), Palette.SB_CREAM)
+		"feather":
+			var vane := PackedVector2Array([c + Vector2(-11, 12) * s, c + Vector2(-6, -2) * s, c + Vector2(6, -13) * s,
+				c + Vector2(9, -9) * s, c + Vector2(2, 4) * s])
+			Ink.shape(canvas, vane, Palette.SB_CREAM.darkened(0.1), Ink.Tier.INTERACTIVE, 5.0)
+			canvas.draw_line(c + Vector2(-12, 13) * s, c + Vector2(8, -12) * s, Palette.SB_BROWN_GREY, 1.4, true)
+		"ectoplasm":
+			var blob := PackedVector2Array()
+			for i: int in 16:
+				var a: float = TAU * float(i) / 16.0
+				blob.append(c + Vector2(cos(a), sin(a)) * (11.0 + 2.5 * sin(a * 3.0)) * s)
+			canvas.draw_colored_polygon(blob, Color(Palette.SB_GHOST, 0.85))
+			canvas.draw_colored_polygon(Ink.ellipse(c + Vector2(-3, -4) * s, 3 * s, 2 * s, 8), Color(1, 1, 1, 0.6))
+		"ink":
+			Ink.shape(canvas, StorybookArt._rect(c.x - 8 * s, c.y - 4 * s, c.x + 8 * s, c.y + 12 * s), Palette.SB_CHARCOAL, Ink.Tier.INTERACTIVE, 6.0)
+			canvas.draw_rect(Rect2(c + Vector2(-4, -10) * s, Vector2(8, 6) * s), Palette.SB_WALNUT)
+			canvas.draw_line(c + Vector2(2, -6) * s, c + Vector2(13, -16) * s, Palette.SB_CREAM, 1.6 * s, true)
+		"fly":
+			for wing: float in [-1.0, 1.0]:
+				canvas.draw_colored_polygon(Ink.ellipse(c + Vector2(6 * wing, -6) * s, 6 * s, 3.5 * s, 10), Color(Palette.SB_CREAM, 0.6))
+			canvas.draw_colored_polygon(Ink.ellipse(c + Vector2(0, 2) * s, 5 * s, 8 * s, 12), Palette.SB_CHARCOAL)
+			canvas.draw_colored_polygon(Ink.ellipse(c + Vector2(0, -7) * s, 3.5 * s, 3 * s, 10), Palette.SB_CHARCOAL.lightened(0.15))
+		"nest":
+			for r: float in [13.0, 9.0, 5.0]:
+				canvas.draw_arc(c + Vector2(0, 3) * s, r * s, PI * 0.05, PI * 0.95, 10, Palette.SB_CREAM.darkened(0.15), 1.4, true)
+			for k: int in 5:
+				var a: float = PI * (0.1 + 0.2 * float(k))
+				canvas.draw_line(c + Vector2(0, 3) * s, c + Vector2(0, 3) * s + Vector2(cos(a), sin(a)) * 14 * s, Palette.SB_CREAM, 1.0, true)
+			canvas.draw_colored_polygon(Ink.ellipse(c + Vector2(0, -6) * s, 3 * s, 3 * s, 8), Palette.SB_CHARCOAL)
+		"elixir_energy", "elixir_speed":
+			var liquid: Color = Palette.SB_GHOST if icon == "elixir_energy" else Palette.SB_CANDLELIGHT
+			Ink.shape(canvas, Ink.ellipse(c + Vector2(0, 5) * s, 10 * s, 9 * s, 18), Color(Palette.SB_CREAM, 0.35), Ink.Tier.INTERACTIVE, 7.0)
+			canvas.draw_colored_polygon(Ink.ellipse(c + Vector2(0, 8) * s, 8 * s, 5.5 * s, 16), liquid)
+			canvas.draw_rect(Rect2(c + Vector2(-3, -11) * s, Vector2(6, 8) * s), Color(Palette.SB_CREAM, 0.5))
+			canvas.draw_rect(Rect2(c + Vector2(-4, -14) * s, Vector2(8, 4) * s), Palette.SB_WALNUT)
+			if icon == "elixir_speed":
+				canvas.draw_line(c + Vector2(-2, 2) * s, c + Vector2(2, 7) * s, Palette.SB_WALNUT_DARK, 1.5, true)
+				canvas.draw_line(c + Vector2(2, 7) * s, c + Vector2(-1, 8) * s, Palette.SB_WALNUT_DARK, 1.5, true)
+				canvas.draw_line(c + Vector2(-1, 8) * s, c + Vector2(3, 13) * s, Palette.SB_WALNUT_DARK, 1.5, true)
+		"monocle":
+			canvas.draw_colored_polygon(Ink.ellipse(c + Vector2(-3, -2) * s, 9 * s, 9 * s, 18), Color(Palette.SB_GHOST, 0.3))
+			canvas.draw_arc(c + Vector2(-3, -2) * s, 9 * s, 0, TAU, 20, Palette.SB_GOLD, 3.0 * s, true)
+			var chain := PackedVector2Array()
+			for i: int in 8:
+				var t: float = float(i) / 7.0
+				chain.append(c + Vector2(lerpf(5, 13, t), lerpf(4, 14, t) + sin(t * PI) * 3.0) * s)
+			canvas.draw_polyline(chain, Palette.SB_GOLD, 1.4, true)
 		_:
 			canvas.draw_colored_polygon(Ink.ellipse(c, 9 * s, 9 * s, 14), Palette.SB_GOLD)

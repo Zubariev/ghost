@@ -1,0 +1,16 @@
+{
+	"_source": "Crafting tree in the back yard (sprint 001, phase D, user brief 2026-11-25 items 3-7, 19-21). Demo Specification §2.3 had recipes OUT OF SCOPE; brought in by the user's sprint brief (see production/sprints/sprint-001.md). tree: the hollow tree piece (furniture.json kind crafting_tree) and how long E is held next to it to open the hollow (game minutes, like a search). slots: ingredient slots round the pentagram. start_tier: the tree's level at the start. upgrades: each next level of the tree, paid from the inventory (cost: item -> units), unlocks the recipes of that tier. recipes: id, result (item id in loot.json), amount made, tier (unlocked at that level), ingredients (item -> units; at most `slots` kinds), text (string key of the description). All numbers are provisional balance values.",
+	"tree": {"kind": "crafting_tree", "open_minutes": 2},
+	"slots": 5,
+	"start_tier": 0,
+	"upgrades": [
+		{"tier": 1, "cost": {"bone": 3, "feather": 2}},
+		{"tier": 2, "cost": {"ectoplasm": 2, "ink": 2}}
+	],
+	"recipes": [
+		{"id": "energy_elixir", "result": "elixir_energy", "amount": 1, "tier": 0, "ingredients": {"dust": 3, "cobweb": 2, "candle_stub": 1}, "text": "RECIPE_energy_elixir"},
+		{"id": "speed_elixir", "result": "elixir_speed", "amount": 1, "tier": 0, "ingredients": {"feather": 2, "old_thread": 2, "rusty_nail": 1}, "text": "RECIPE_speed_elixir"},
+		{"id": "distilled_ectoplasm", "result": "ectoplasm", "amount": 1, "tier": 1, "ingredients": {"bone": 2, "ink": 1, "dust": 2}, "text": "RECIPE_distilled_ectoplasm"},
+		{"id": "double_energy_elixir", "result": "elixir_energy", "amount": 2, "tier": 2, "ingredients": {"ectoplasm": 2, "bone": 1, "ink": 1}, "text": "RECIPE_double_energy_elixir"}
+	]
+}

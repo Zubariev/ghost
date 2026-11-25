@@ -81,3 +81,20 @@ func test_the_house_map_is_found_in_the_library_and_slots_are_set() -> void:
 		if (loot["spots"][spot_id]["unique"] as Array).has(maps[0]):
 			holders.append(spot_id)
 	assert_array(holders).is_equal(["hide_library_bookshelf"])
+
+
+func test_the_childrens_bedroom_toy_box_is_a_hiding_spot_and_can_be_searched() -> void:
+	# Arrange: the toy box piece in the children's bedroom, and its loot entry
+	var pieces: Array = JsonData.read(FURNITURE_PATH)["rooms"]["children_bedroom"]
+	var toy_box_hide_id: String = ""
+	for piece: Dictionary in pieces:
+		if piece.get("kind", "") == "toy_box":
+			toy_box_hide_id = String(piece.get("hide_id", ""))
+	var loot := GhostLoot.new(_loot())
+	# Act: search it like any hiding spot
+	loot.start_search(toy_box_hide_id)
+	loot.update(10.0, 0)
+	# Assert: sprint 001 item 16, reusing the existing hiding and search systems
+	assert_str(toy_box_hide_id).is_not_empty()
+	assert_bool(loot.is_open()).is_true()
+	assert_bool(loot.grid().any(func(item: String) -> bool: return not item.is_empty())).is_true()

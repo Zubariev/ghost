@@ -632,6 +632,113 @@
 				"v": 0.8667,
 				"decor": true
 			}
+		],
+		"basement": [
+			{
+				"kind": "stairs",
+				"u": 0.5,
+				"v": 0.09,
+				"hide_id": "hide_basement_stairs"
+			},
+			{
+				"kind": "barrel",
+				"u": 0.14,
+				"v": 0.22,
+				"hide_id": "hide_basement_barrel"
+			},
+			{
+				"kind": "crate",
+				"u": 0.84,
+				"v": 0.32,
+				"hide_id": "hide_basement_crate"
+			},
+			{
+				"kind": "barrel",
+				"u": 0.9,
+				"v": 0.8,
+				"decor": true
+			}
+		],
+		"attic": [
+			{
+				"kind": "chest",
+				"u": 0.26,
+				"v": 0.3,
+				"hide_id": "hide_attic_chest"
+			},
+			{
+				"kind": "wardrobe",
+				"u": 0.55,
+				"v": 0.05,
+				"blocks_sight": [
+					0.55,
+					0.3
+				],
+				"hide_id": "hide_attic_wardrobe"
+			},
+			{
+				"kind": "crate",
+				"u": 0.12,
+				"v": 0.75,
+				"decor": true
+			},
+			{
+				"kind": "spider",
+				"u": 0.86,
+				"v": 0.12
+			}
+		],
+		"back_yard": [
+			{
+				"kind": "shed",
+				"u": 0.16,
+				"v": 0.12,
+				"blocks_sight": [
+					1.2,
+					0.9
+				],
+				"hide_id": "hide_back_yard_shed"
+			},
+			{
+				"kind": "woodpile",
+				"u": 0.36,
+				"v": 0.72,
+				"hide_id": "hide_back_yard_woodpile"
+			},
+			{
+				"kind": "barrel",
+				"u": 0.93,
+				"v": 0.86,
+				"hide_id": "hide_back_yard_rain_barrel"
+			},
+			{
+				"kind": "crafting_tree",
+				"u": 0.7,
+				"v": 0.3,
+				"reach_m": 1.8
+			}
+		],
+		"front_yard": [
+			{
+				"kind": "hedge",
+				"u": 0.15,
+				"v": 0.5,
+				"blocks_sight": [
+					1.0,
+					0.4
+				],
+				"hide_id": "hide_front_yard_hedge_left"
+			},
+			{
+				"kind": "hedge",
+				"u": 0.85,
+				"v": 0.5,
+				"blocks_sight": [
+					1.0,
+					0.4
+				],
+				"hide_id": "hide_front_yard_hedge_right"
+			}
 		]
 	},
 	"seats": {

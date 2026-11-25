@@ -146,9 +146,13 @@ func test_every_ghost_action_has_a_prompt_text() -> void:
 			assert_str(TranslationServer.translate(key)).is_not_equal(key)
 
 
-func test_every_room_has_a_lamp_and_windows_only_where_daylight_enters() -> void:
+func test_every_family_room_has_a_lamp_and_windows_only_where_daylight_enters() -> void:
+	# Rooms the family uses (sprint 001, 2026-11-25: the basement, attic and yards are lit by daylight
+	# or not at all; a lamp there would make repair tasks nobody can reach).
 	var house: HouseState = _house()
 	for room: RoomState in house.rooms.values():
+		if not room.family_access:
+			continue
 		var lamps: int = 0
 		var windows: int = 0
 		for obj: ObjectState in house.objects.values():
@@ -223,6 +227,8 @@ func test_the_family_restores_the_house_on_the_first_day() -> void:
 	for obj: ObjectState in sim.house.objects.values():
 		assert_bool(obj.needs_repair()).override_failure_message(obj.id + " still needs repair").is_false()
 	for room: RoomState in sim.house.rooms.values():
+		if not room.family_access:
+			continue   # sprint 001: nobody cleans the basement, attic or yards
 		assert_int(room.cleanliness).override_failure_message(room.id + " still dirty").is_not_equal(RoomState.Cleanliness.DIRTY)
 
 

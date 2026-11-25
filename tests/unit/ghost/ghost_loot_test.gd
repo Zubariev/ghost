@@ -203,3 +203,15 @@ func test_lore_and_the_map_never_use_a_slot_and_the_map_is_known_once_taken() ->
 	assert_str(map).is_equal("map")
 	assert_bool(_loot.has_map()).is_true()
 	assert_array(_loot.slot_items()).is_empty()
+
+
+func test_a_spot_can_bring_an_item_back_sooner_than_its_usual_time() -> void:
+	# Sprint 001, phase F: flies come back faster in the kitchen (per-spot "respawn")
+	var config: Dictionary = _config()
+	config["spots"]["kitchen_shelf"] = {"size": "small", "unique": [], "renewable": ["dust"], "respawn": {"dust": 10}}
+	var loot := GhostLoot.new(config)
+	loot.start_search("kitchen_shelf"); loot.hold(true); loot.update(SEARCH, 0)
+	loot.take(0, 0)
+	loot.close()
+	loot.start_search("kitchen_shelf"); loot.hold(true); loot.update(SEARCH, 10)
+	assert_array(loot.grid()).contains(["dust"])

@@ -148,3 +148,35 @@ func test_low_warning_fires_once_when_energy_drops_to_the_level() -> void:
 	assert_int(after_first).is_equal(0)
 	assert_int(warnings[0]).is_equal(1)
 	assert_bool(energy.is_low()).is_true()
+
+
+# --- The energy elixir (sprint 001, phase E, 2026-11-26) ------------------------------------
+
+func test_restoring_adds_energy_up_to_the_maximum() -> void:
+	# Arrange
+	var energy := GhostEnergy.new(Ex.config(Ex.MAX - 30.0))
+	# Act
+	var ok: bool = energy.restore(40.0)
+	# Assert: clamped, never above the pool
+	assert_bool(ok).is_true()
+	assert_float(energy.value).is_equal(Ex.MAX)
+
+
+func test_restoring_when_already_full_is_refused_so_the_elixir_is_not_wasted() -> void:
+	var energy := GhostEnergy.new(Ex.config(Ex.MAX))
+	assert_bool(energy.restore(40.0)).is_false()
+	assert_float(energy.value).is_equal(Ex.MAX)
+
+
+func test_restoring_nothing_or_a_negative_amount_is_refused() -> void:
+	var energy := GhostEnergy.new(Ex.config(10.0))
+	assert_bool(energy.restore(0.0)).is_false()
+	assert_bool(energy.restore(-5.0)).is_false()
+	assert_float(energy.value).is_equal(10.0)
+
+
+func test_restoring_above_the_low_level_lifts_the_warning() -> void:
+	var energy := GhostEnergy.new(Ex.config(1.0))
+	assert_bool(energy.is_low()).is_true()
+	energy.restore(40.0)
+	assert_bool(energy.is_low()).is_false()

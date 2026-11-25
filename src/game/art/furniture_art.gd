@@ -245,6 +245,57 @@ static func _parts(kind: String, uv: Vector2, state: StringName, is_day: bool) -
 			return parts
 		"door_front":
 			return []
+		# Yards (sprint 001, 2026-11-25): code-drawn until painted sprites replace them (PropVisuals).
+		"shed":   # a garden shed, about 2.4 m wide, with a pitched roof and a plank door
+			return [
+				[_rect(-90, -120, 90, 0), Palette.SB_WALNUT],
+				[_quad(Vector2(-102, -118), Vector2(102, -118), Vector2(40, -168), Vector2(-40, -168)), Palette.SB_BROWN_GREY],
+				[_rect(-24, -96, 24, 0), Palette.SB_WALNUT_DARK],
+				[_rect(-70, -96, -38, -66), Palette.SB_CHARCOAL],
+			]
+		"woodpile":   # split logs stacked about 1.4 m long, log ends toward the camera
+			var parts: Array = [[_rect(-54, -58, 54, 0), Palette.SB_WALNUT_DARK]]
+			for row: int in 3:
+				for col: int in 5 - row:
+					var c := Vector2(-40.0 + col * 20.0 + row * 10.0, -10.0 - row * 19.0)
+					parts.append([_ellipse(c, 10, 9, 12), Palette.SB_WALNUT_LIGHT])
+			return parts
+		"hedge":   # a clipped, lumpy hedge about 2 m wide and 1.1 m high
+			var parts: Array = [[_rect(-74, -60, 74, 0), Palette.SB_GREEN.darkened(0.25)]]
+			for i: int in 5:
+				parts.append([_ellipse(Vector2(-60.0 + i * 30.0, -62.0 - (i % 2) * 8.0), 22, 20, 14), Palette.SB_GREEN if i % 2 == 0 else Palette.SB_OLIVE])
+			return parts
+		"spider":   # the attic spider (sprint 001): big, hanging on its thread from the rafters
+			var parts: Array = [[_rect(-1.5, -330, 1.5, -205), Palette.SB_CREAM.darkened(0.2)]]
+			for side: float in [-1.0, 1.0]:
+				for k: int in 4:
+					var y: float = -182.0 + float(k) * 9.0
+					var knee := Vector2(side * (40.0 + float(k) * 4.0), y - 26.0 + float(k) * 6.0)
+					var foot := Vector2(side * (62.0 + float(k) * 6.0), y + 24.0 + float(k) * 10.0)
+					parts.append([_quad(Vector2(side * 10.0, y - 2.0), knee - Vector2(0, 2), knee + Vector2(0, 2), Vector2(side * 10.0, y + 2.0)), Palette.SB_CHARCOAL])
+					parts.append([_quad(knee - Vector2(1.5, 0), foot - Vector2(1.0, 0), foot + Vector2(1.0, 0), knee + Vector2(1.5, 0)), Palette.SB_CHARCOAL])
+			parts.append([_ellipse(Vector2(0, -150), 30, 36, 20), Palette.SB_CHARCOAL.lightened(0.08)])
+			parts.append([_ellipse(Vector2(0, -196), 16, 14, 16), Palette.SB_CHARCOAL])
+			for eye: float in [-6.0, 6.0]:
+				parts.append([_ellipse(Vector2(eye, -192), 3.5, 3.5, 8), Palette.SB_CANDLELIGHT])
+			parts.append([_ellipse(Vector2(0, -150), 9, 13, 12), Palette.SB_TERRACOTTA.darkened(0.25)])
+			return parts
+		"crafting_tree":   # the old crafting tree (sprint 001): gnarled trunk, large dark hollow, crown
+			var parts: Array = []
+			for blob: Array in [[Vector2(-70, -330), 85.0], [Vector2(60, -345), 90.0], [Vector2(-5, -395), 95.0],
+					[Vector2(-115, -270), 60.0], [Vector2(110, -280), 65.0]]:
+				parts.append([_ellipse(blob[0], blob[1], blob[1] * 0.8, 18), Palette.SB_OLIVE.darkened(0.25)])
+			parts.append([PackedVector2Array([Vector2(-95, 0), Vector2(-70, -40), Vector2(-62, -200), Vector2(-90, -250),
+				Vector2(-30, -235), Vector2(0, -270), Vector2(35, -232), Vector2(95, -255), Vector2(64, -195),
+				Vector2(70, -40), Vector2(100, 0)]), Palette.SB_WALNUT_DARK])
+			parts.append([_ellipse(Vector2(4, -120), 38, 58, 22), Palette.SB_CHARCOAL.darkened(0.5)])
+			# 0.72: the full drawing's crown left the screen at the back of the yard (capture 2026-11-26)
+			for part: Array in parts:
+				var poly: PackedVector2Array = part[0]
+				for i: int in poly.size():
+					poly[i] *= 0.72
+				part[0] = poly
+			return parts
 	push_warning("FurnitureArt: no art for '%s'" % kind)
 	return [[_rect(-30, -60, 30, 0), Color("ff00ff")]]
 

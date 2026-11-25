@@ -1,5 +1,5 @@
 {
-	"_source": "Whimsical Gothic Storybook art direction (2026-11-15), living room art test. storybook_rooms: rooms drawn in the new style; others keep the placeholder look until approved. sprites: optional painted images replacing code-drawn props, keyed by furniture kind or kind:variant (variant = the piece's 'variant' in furniture.json). Each entry: sprite (res:// path to a PNG/WebP), states (visual state -> path; e.g. fireplace burning/out, lamp lit/out, window closed/open), anchor ([x, y] of the image, 0..1, that sits on the piece's floor position; default bottom centre [0.5, 1.0]), effects (art Phase 3, 2026-11-15: the code-drawn animation kept on top of a painted prop, e.g. the fire and smoke in a painted fireplace: offset [x, y] in screen px at depth 1 from the anchor point, and scale of that drawing; effects.states: per visual state a painted layer drawn there instead of the code shapes — e.g. the burning logs and flames — with its own sprite, anchor, scale and flicker, the strength of a gentle stretch and sway; the code glow stays), scale (size at the front of the room; depth scaling is applied on top). Empty or missing files fall back to the code drawing. Gameplay data (footprints, sight blockers, hiding spots, interaction range) never depends on these images. See assets/art/props/sprite_guide.md.",
+	"_source": "Whimsical Gothic Storybook art direction (2026-11-15), living room art test. storybook_rooms: rooms drawn in the new style; others keep the placeholder look until approved. sprites: optional painted images replacing code-drawn props, keyed by furniture kind or kind:variant (variant = the piece's 'variant' in furniture.json). Each entry: sprite (res:// path to a PNG/WebP), states (visual state -> path; e.g. fireplace burning/out, lamp lit/out, window closed/open), anchor ([x, y] of the image, 0..1, that sits on the piece's floor position; default bottom centre [0.5, 1.0]), effects (art Phase 3, 2026-11-15: the code-drawn animation kept on top of a painted prop, e.g. the fire and smoke in a painted fireplace: offset [x, y] in screen px at depth 1 from the anchor point, and scale of that drawing; effects.states: per visual state a painted layer drawn there instead of the code shapes — e.g. the burning logs and flames — with its own sprite, anchor, scale and flicker, the strength of a gentle stretch and sway; the code glow stays), scale (size at the front of the room; depth scaling is applied on top). Empty or missing files fall back to the code drawing. Gameplay data (footprints, sight blockers, hiding spots, interaction range) never depends on these images. See assets/art/props/sprite_guide.md. Sprint 001 (2026-11-26): back yard crafting_tree (hollow enlarged by an edit), shed, woodpile and front yard hedge painted with tools/art/kichat.py, cut out with tools/sprite_cutout.gd (shed and woodpile cropped above a stray title the model painted). door (sprint 001, phase H): the painted interior door, laid onto the drawn doors' frames on the side and back walls by DoorArt (anchor and scale unused: the frame sets its size); a room-scoped 'room/door' entry gives one room its own door.",
 	"storybook_rooms": [
 		"living_room"
 	],
@@ -752,6 +752,46 @@
 				0.9748
 			],
 			"scale": 0.5
+		},
+		"crafting_tree": {
+			"sprite": "res://assets/art/props/back_yard/crafting_tree.png",
+			"anchor": [
+				0.5,
+				0.97
+			],
+			"scale": 0.74
+		},
+		"shed": {
+			"sprite": "res://assets/art/props/back_yard/shed.png",
+			"anchor": [
+				0.5,
+				0.97
+			],
+			"scale": 0.62
+		},
+		"hedge": {
+			"sprite": "res://assets/art/props/front_yard/hedge.png",
+			"anchor": [
+				0.5,
+				0.97
+			],
+			"scale": 0.26
+		},
+		"woodpile": {
+			"sprite": "res://assets/art/props/back_yard/woodpile.png",
+			"anchor": [
+				0.5,
+				0.97
+			],
+			"scale": 0.25
+		},
+		"door": {
+			"sprite": "res://assets/art/props/house/door_interior.png",
+			"anchor": [
+				0.5,
+				1.0
+			],
+			"scale": 1.0
 		}
 	},
 	"_wall_portraits": "Art Phase 1 (2026-11-15): framed portraits on the side walls, per storybook room. Art config only: not furniture, never an obstacle, not in furniture.json. wall: left/right; v: [from, to] along the wall (0 back .. 1 front; side doors are at 0.39-0.61); h: [from, to] up the wall (0 floor .. 1 top; wainscot up to 0.36); variant: lady / child / gentleman.",
@@ -812,7 +852,7 @@
 		]
 	},
 	"surfaces": {
-		"_source": "Painted walls, floors and rugs (user review 2026-11-20; references in art/textures/, generated textures in art/concepts/textures_game/, game copies in assets/art/surfaces/). Per room: wall texture with its real tile size in metres (width, height), an optional wood-panel wainscot up to wainscot_m, the floor texture and its tile size; laid in the room camera's perspective (RoomSurfaces). rug: the rug texture; web: the corner cobweb (white on transparent).",
+		"_source": "Painted walls, floors and rugs (user review 2026-11-20; references in art/textures/, generated textures in art/concepts/textures_game/, game copies in assets/art/surfaces/). Per room: wall texture with its real tile size in metres (width, height), an optional wood-panel wainscot up to wainscot_m, the floor texture and its tile size; laid in the room camera's perspective (RoomSurfaces). rug: the rug texture; web: the corner cobweb (white on transparent). Sprint 001 (2026-11-25): basement (fieldstone, brick floor), attic (bare boards), back yard (garden brick wall, lawn), front yard (house front weatherboard, cobbles); generated with tools/art/kichat.py, concepts in art/concepts/textures_game/.",
 		"rug": "res://assets/art/surfaces/rug_persian.png",
 		"web": "res://assets/art/surfaces/web_corner.png",
 		"rooms": {
@@ -988,6 +1028,54 @@
 				"wainscot_tile_m": [
 					1.4,
 					1.4
+				]
+			},
+			"basement": {
+				"wall": "res://assets/art/surfaces/wall_basement_stone.png",
+				"wall_tile_m": [
+					1.8,
+					1.8
+				],
+				"floor": "res://assets/art/surfaces/floor_basement_brick.png",
+				"floor_tile_m": [
+					2.0,
+					2.0
+				]
+			},
+			"attic": {
+				"wall": "res://assets/art/surfaces/wall_attic_boards.png",
+				"wall_tile_m": [
+					1.6,
+					1.6
+				],
+				"floor": "res://assets/art/surfaces/floor_attic_boards.png",
+				"floor_tile_m": [
+					2.4,
+					2.4
+				]
+			},
+			"back_yard": {
+				"wall": "res://assets/art/surfaces/wall_garden_brick.png",
+				"wall_tile_m": [
+					2.0,
+					2.0
+				],
+				"floor": "res://assets/art/surfaces/floor_yard_grass.png",
+				"floor_tile_m": [
+					3.0,
+					3.0
+				]
+			},
+			"front_yard": {
+				"wall": "res://assets/art/surfaces/wall_facade_weatherboard.png",
+				"wall_tile_m": [
+					2.0,
+					2.0
+				],
+				"floor": "res://assets/art/surfaces/floor_front_cobbles.png",
+				"floor_tile_m": [
+					2.0,
+					2.0
 				]
 			}
 		}

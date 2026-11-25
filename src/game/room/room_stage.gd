@@ -42,6 +42,9 @@ var casting: GhostCasting
 var loot: GhostLoot
 ## Sight zones are drawn on the floor (Q, after the monocle is found).
 var show_cones: bool = false
+## Holding E at the crafting tree: 0..1 of the hold, and where the tree stands (sprint 001).
+var craft_progress: float = 0.0
+var craft_uv := Vector2(-1, -1)
 ## The monocle has been taken from the dresser.
 var monocle_taken: bool = false
 ## Sight zone sizes from stealth.json (for drawing the cones).
@@ -178,11 +181,13 @@ func _draw() -> void:
 			StorybookShell.draw_side_wall(self, true, float(_wall_alpha["left"]))
 			StorybookShell.draw_side_wall(self, false, float(_wall_alpha["right"]))
 		StorybookShell.draw_wall_portraits(self, visuals.wall_portraits(room_id), _wall_alpha)
-		StorybookShell.draw_doors(self, sim.house, room_id, _wall_alpha)
+		StorybookShell.draw_doors(self, sim.house, room_id, _wall_alpha, _door_texture(room_id))
 		_draw_wear_surfaces(room_id)
 		_draw_storybook_light(room_id)
 	else:
-		draw_rect(Rect2(-200, -200, 1680, 1120), Palette.BACKGROUND)
+		# open air (sprint 001): sky behind the garden wall / house front instead of the void
+		var backdrop: Color = Palette.SB_SKY_DAY.lerp(Palette.SB_SKY_NIGHT, _night) if room.outdoor else Palette.BACKGROUND
+		draw_rect(Rect2(-200, -200, 1680, 1120), backdrop)
 		if painted:
 			surfaces.draw_room(self, room_id, _wall_alpha)
 		else:
@@ -191,10 +196,12 @@ func _draw() -> void:
 			_draw_side_wall(true, float(_wall_alpha["left"]))
 			_draw_side_wall(false, float(_wall_alpha["right"]))
 		_draw_doors(room_id)
-		_draw_wear_surfaces(room_id)
+		if not room.outdoor:   # no dust, stains or corner cobwebs on a lawn or a garden wall
+			_draw_wear_surfaces(room_id)
 		_draw_lamp_glow(room_id)
-	_draw_cold_corners()
-	_draw_motes(room_id)
+	if not room.outdoor:
+		_draw_cold_corners()
+		_draw_motes(room_id)
 	# Depth-sorted content: [screen y, callable]
 	var items: Array = []
 	for piece: Dictionary in layout.pieces(room_id):
@@ -263,6 +270,8 @@ func _draw() -> void:
 			for spot: Dictionary in layout.hiding_spots(room_id):
 				if String(spot["id"]) == loot.searching_spot():
 					_draw_ring(spot["uv"], loot.search_progress())
+	if craft_progress > 0.0 and craft_uv.x > -1.0:
+		_draw_ring(craft_uv, craft_progress)
 	if harm_uv.x > -1.0:
 		_draw_wisps(ghost_uv, harm_uv, effort)
 		_draw_ring(harm_uv, effort)
@@ -797,7 +806,13 @@ func _draw_side_wall(left: bool, alpha: float) -> void:
 	draw_line(poly[0], poly[1], _a(Palette.WALL_CAP, alpha), 7.0)
 
 
+## The painted door for [param room_id] (sprite "door" or "room/door"), or null (sprint 001).
+func _door_texture(room_id: String) -> Texture2D:
+	return visuals.texture_for("door", "", &"", room_id) if visuals != null else null
+
+
 func _draw_doors(room_id: String) -> void:
+	var door_tex: Texture2D = _door_texture(room_id)
 	for other: String in sim.house.rooms:
 		if sim.house.walk_minutes(room_id, other) <= 0:
 			continue
@@ -809,6 +824,9 @@ func _draw_doors(room_id: String) -> void:
 		if step.x != 0:
 			var left: bool = step.x < 0
 			var alpha: float = float(_wall_alpha["left" if left else "right"])
+			if door_tex != null:
+				DoorArt.draw_side(self, door_tex, left, alpha)
+				continue
 			var frame := PackedVector2Array([
 				RoomGeometry.side_wall_point(left, 0.40, 0.62), RoomGeometry.side_wall_point(left, 0.60, 0.62),
 				RoomGeometry.side_wall_point(left, 0.60, 0.0), RoomGeometry.side_wall_point(left, 0.40, 0.0)])
@@ -820,6 +838,9 @@ func _draw_doors(room_id: String) -> void:
 			_outline(frame, _a(Palette.INK, alpha), 2.5)
 		elif step.y < 0:
 			var alpha_back: float = float(_wall_alpha["back"])
+			if door_tex != null:
+				DoorArt.draw_back(self, door_tex, alpha_back)
+				continue
 			var frame_back: PackedVector2Array = FurnitureArt._rect(
 				RoomGeometry.back_wall_point(RoomLayout.BACK_DOOR_U - 0.07, 0.0).x, RoomGeometry.back_wall_point(0, 0.8).y,
 				RoomGeometry.back_wall_point(RoomLayout.BACK_DOOR_U + 0.07, 0.0).x, RoomGeometry.BACK_LEFT.y)

@@ -32,6 +32,8 @@ const GRADE_SHADER_PATH: String = "res://assets/shaders/post_art_room_grade.gdsh
 ## Draw order: room (0), colour grade (1), HUD (2).
 const GRADE_LAYER: int = 1
 const HUD_LAYER: int = 2
+## Height above the floor (m) of the ghost's middle, where items are dropped on it (sprint 001).
+const GHOST_DROP_HEIGHT_M: float = 0.9
 const KEYS: Dictionary = {
 	&"ghost_left": KEY_A, &"ghost_right": KEY_D, &"ghost_up": KEY_W, &"ghost_down": KEY_S,
 	&"interact": KEY_E, &"change_floor": KEY_SPACE, &"hide": KEY_F, &"sight_view": KEY_Q,
@@ -62,8 +64,24 @@ var _motion: FamilyMotion
 var _energy: GhostEnergy
 var _casting: GhostCasting
 var _loot: GhostLoot
+## Items dragged from the slot bar onto the ghost (sprint 001, phase C).
+var _item_use: GhostItemUse
+## The crafting tree in the back yard (sprint 001, phase D): its board, its screen, its data, and
+## how long E has been held next to it (game minutes).
+var _crafting: CraftingBoard
+var _craft_screen: CraftingScreen
+var _craft_cfg: Dictionary = {}
+var _craft_hold: float = 0.0
+## Timed effects on the ghost: the speed elixir (phase E), the monocle (phase G).
+var _effects := GhostEffects.new()
+## The attic spider's trade (phase F) and its data (kind, reach).
+var _spider: SpiderTrade
+var _spider_cfg: Dictionary = {}
 var _hide_range: float = 0.16
-var _has_monocle: bool = false
+## Grandpa's monocle (sprint 001, phase G): found on the dresser, kept in the inventory, active
+## for a while when dropped on the ghost, then lost again in a random hiding spot.
+var _monocle: Monocle
+var _monocle_rng := RandomNumberGenerator.new()
 var _ghost_speed: float = 0.5
 ## Ghost speed factor in a room in perfect order (1 when fully run-down).
 var _ghost_slowest: float = 1.0
@@ -121,6 +139,13 @@ func _ready() -> void:
 	_stage.motion = _motion
 	_stage.casting = _casting
 	_loot = GhostLoot.new(JsonData.read(GhostLoot.LOOT_PATH))
+	_item_use = GhostItemUse.new(_loot)   # effects are registered by the systems that own them
+	_craft_cfg = JsonData.read(CraftingBoard.RECIPES_PATH)
+	_crafting = CraftingBoard.new(_craft_cfg, _loot)
+	_spider_cfg = JsonData.read(SpiderTrade.SPIDER_PATH)
+	_spider = SpiderTrade.new(_spider_cfg, _loot)
+	_monocle_rng.randomize()
+	_monocle = Monocle.new(_loot, _effects, _monocle_rng)
 	_stage.loot = _loot
 	_stage.sight_config = stealth_cfg
 	var style: Dictionary = JsonData.read(PropVisuals.STYLE_PATH)
@@ -154,7 +179,11 @@ func _ready() -> void:
 	_hud.layer = HUD_LAYER
 	add_child(_hud)
 	_hud.setup(_sim, _navigator)
+	_hud.ghost_point = func() -> Vector2: return RoomGeometry.to_display(RoomGeometry.project(_navigator.uv, GHOST_DROP_HEIGHT_M))
 	_hud.set_energy(_energy)
+	_craft_screen = CraftingScreen.new()
+	add_child(_craft_screen)
+	_craft_screen.closed.connect(_on_crafting_closed)
 	_connect_events()
 	_update_view()
 	_hud.show_day_card(_sim.clock.day_number())
@@ -179,6 +208,8 @@ func _process(delta: float) -> void:
 	_motion.update(minutes)
 	_update_energy(minutes)
 	_update_loot(minutes)
+	_update_crafting_hold(minutes)
+	_update_effects(minutes)
 	_hud.set_help_held(Input.is_action_pressed(&"help"))
 	_hud.tick(delta)
 	if not _sim.clock.paused and not _sim.is_over():
@@ -191,7 +222,8 @@ func _process(delta: float) -> void:
 		_casting.hold(Input.is_action_pressed(&"interact"))   # hold E to act (2026-11-15)
 		var room_factor: float = RoomCondition.ghost_factor(RoomCondition.run_down(_sim.house, _navigator.room_id), _ghost_slowest)
 		# speed in metres per second: the same pace in a small room as in a big one (2026-11-20)
-		_navigator.move(_stage.layout.to_uv(_navigator.room_id, direction * _ghost_speed * room_factor * delta))
+		var boost: float = _effects.speed_multiplier()   # the speed elixir (sprint 001); exactly 1 without it
+		_navigator.move(_stage.layout.to_uv(_navigator.room_id, direction * _ghost_speed * room_factor * boost * delta))
 		_stealth.observe()
 	_update_view()
 	_show_outcome_if_over()
@@ -206,7 +238,7 @@ func _show_outcome_if_over() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _pause_menu.is_open():
+	if _pause_menu.is_open() or _craft_screen.is_open():
 		return   # the pause menu has the keys (it resumes the clock when it closes)
 	if event.is_action_pressed(&"pause"):
 		if not _sim.is_over():
@@ -220,7 +252,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"hide"):
 		_toggle_hide()
 	elif event.is_action_pressed(&"sight_view"):
-		if _has_monocle:
+		if _monocle.is_active():   # sight zones while the monocle works (sprint 001: no longer for good)
 			_stage.show_cones = not _stage.show_cones
 		else:
 			_hud.add_log(tr("LOG_NEED_MONOCLE"))
@@ -261,7 +293,17 @@ func _update_view() -> void:
 		var object_id: String = String(piece.get("object", ""))
 		var at := Vector2(float(piece["u"]), float(piece["v"]))
 		var distance: float = _stage.layout.distance(room_id, _navigator.uv, at)
-		if piece.has("pickup") and not _has_monocle and distance <= best_distance:
+		if String(piece.get("kind", "")) == _tree_kind() and _stealth.hidden_in.is_empty() \
+				and distance <= maxf(best_distance, float(piece.get("reach_m", 0.0))):
+			best = "craft"   # the crafting tree (sprint 001): hold E to look into the hollow
+			best_distance = distance
+			continue
+		if String(piece.get("kind", "")) == String(_spider_cfg.get("kind", "spider")) and _stealth.hidden_in.is_empty() \
+				and distance <= maxf(best_distance, float(_spider_cfg.get("reach_m", 0.0))):
+			best = "spider"   # the attic spider (sprint 001): E trades flies for a nest
+			best_distance = distance
+			continue
+		if piece.has("pickup") and not _monocle.found and distance <= best_distance:
 			best = "pickup:" + String(piece["pickup"])
 			best_distance = distance
 			continue
@@ -272,7 +314,7 @@ func _update_view() -> void:
 			best_distance = distance
 	_target = best
 	_stage.target_object = best.trim_prefix("pickup:")
-	_stage.monocle_taken = _has_monocle
+	_stage.monocle_taken = _monocle.found
 	var hide_spot: String = _nearest_hiding_spot()
 	if not _stealth.hidden_in.is_empty():
 		var hidden_uv := Vector2(0.5, 0.5)
@@ -289,6 +331,17 @@ func _update_view() -> void:
 			if String(spot["id"]) == hide_spot:
 				spot_uv = spot["uv"]
 		_hud.set_prompt(tr("GHOST_HIDE"), RoomGeometry.to_display(RoomGeometry.to_screen(spot_uv) - Vector2(0, 150)), true)
+	elif best == "craft":
+		var tree_uv: Vector2 = _stage.layout.kind_uv(room_id, _tree_kind())
+		_hud.set_prompt(tr("CRAFT_OPEN"), RoomGeometry.to_display(RoomGeometry.to_screen(tree_uv) - Vector2(0, 150)), true)
+	elif best == "spider":
+		var spider_uv: Vector2 = _stage.layout.kind_uv(room_id, String(_spider_cfg.get("kind", "spider")))
+		# under the hanging spider, above the floor (2026-11-26 capture: higher was off the top)
+		var at_spider: Vector2 = RoomGeometry.to_display(RoomGeometry.to_screen(spider_uv) - Vector2(0, 40))
+		if _spider.can_trade():
+			_hud.set_prompt(tr("SPIDER_TRADE") % _loot.count("fly"), at_spider, true)
+		else:
+			_hud.set_prompt(tr("SPIDER_NEEDS") % [_spider.missing(), _loot.count("fly")], at_spider, false)
 	elif best.begins_with("pickup:"):
 		var pickup_uv: Vector2 = _stage.layout.kind_uv(room_id, "dresser")
 		_hud.set_prompt(tr("GHOST_TAKE_MONOCLE"), RoomGeometry.to_display(RoomGeometry.to_screen(pickup_uv) - Vector2(0, 150)), true)
@@ -371,11 +424,20 @@ func _act() -> void:
 			return
 		_loot.start_search(_stealth.hidden_in)   # hold E while hidden: search the spot
 		return
-	if _target.is_empty():
+	if _target == "spider":
+		_trade_with_spider()
 		return
+	if _target.is_empty() or _target == "craft":
+		return   # the tree opens by holding E (_update_crafting_hold)
 	if _target.begins_with("pickup:"):
-		_has_monocle = true
-		_hud.add_log(tr("LOG_MONOCLE"))
+		if _monocle.take_from_dresser():
+			_hud.show_discovery(tr("MONOCLE_FOUND_TITLE"), tr("MONOCLE_FOUND_TEXT"),
+				[tr("MONOCLE_HINT_BEFORE"), tr("MONOCLE_HINT_STRUCK"), tr("MONOCLE_HINT_AFTER")])
+			_hud.add_log(tr("LOG_MONOCLE"))
+		else:
+			_hud.flash_slots_full()
+			_hud.add_log(tr("LOG_MONOCLE_NO_ROOM"))
+		_update_view()
 		return
 	if _casting.object_id == _target:
 		return   # already at it
@@ -431,10 +493,75 @@ func _take_loot(slot: int) -> void:
 
 
 ## The HUD slot bar from the inventory (materials only, in the order first taken).
+## E at the attic spider: six flies for a nest, or what is still missing.
+func _trade_with_spider() -> void:
+	if _spider.trade():
+		_hud.add_log(tr("SPIDER_TRADED"))
+	elif _spider.missing() > 0:
+		_hud.add_log(tr("SPIDER_NEEDS") % [_spider.missing(), _loot.count("fly")])
+	else:
+		_hud.flash_slots_full()
+		_hud.add_log(tr("SPIDER_NO_ROOM"))
+	_update_view()
+
+
+## Runs the ghost's timed effects on with game time and shows them under the energy bar.
+func _update_effects(minutes: float) -> void:
+	_effects.update(minutes)
+	var lines: Array[String] = []
+	for id: String in _effects.active():
+		lines.append(tr("EFFECT_" + id) % ceili(_effects.remaining(id)))
+	_hud.set_effects(lines)
+
+
+func _tree_kind() -> String:
+	return String(_craft_cfg.get("tree", {}).get("kind", "crafting_tree"))
+
+
+## Holding E next to the crafting tree for the data's open_minutes opens the hollow (sprint 001,
+## phase D; the same hold-E convention as searching). Letting go starts again.
+func _update_crafting_hold(minutes: float) -> void:
+	var holding: bool = _target == "craft" and Input.is_action_pressed(&"interact") and not _sim.clock.paused \
+		and not _sim.is_over() and not _craft_screen.is_open()
+	_craft_hold = _craft_hold + minutes if holding else 0.0
+	var need: float = maxf(0.01, float(_craft_cfg.get("tree", {}).get("open_minutes", 2)))
+	_stage.craft_progress = clampf(_craft_hold / need, 0.0, 1.0) if holding else 0.0
+	_stage.craft_uv = _stage.layout.kind_uv(_navigator.room_id, _tree_kind())
+	if holding and _craft_hold >= need:
+		open_crafting()
+
+
+## Opens the tree's hollow (pauses the clock, like the pause menu).
+func open_crafting() -> void:
+	_craft_hold = 0.0
+	_stage.craft_progress = 0.0
+	_casting.cancel()
+	_sim.clock.paused = true
+	_hud.set_prompt("", Vector2.ZERO, false)
+	_craft_screen.open(_crafting, _loot)
+
+
+func _on_crafting_closed(all_returned: bool) -> void:
+	if not _pause_menu.is_open():
+		_sim.clock.paused = false
+	if not all_returned:
+		_hud.add_log(tr("CRAFT_LEFT_ON_BOARD"))
+
+
+## One unit of [param item_id] dropped on the ghost: used when its effect works, else it stays.
+func _use_item(item_id: String) -> void:
+	if _sim.is_over():
+		return
+	if _item_use.use(item_id):
+		_hud.add_log(tr("LOG_ITEM_USED") % tr(_loot.name_key(item_id)))
+	else:
+		_hud.add_log(tr("LOG_CANNOT_USE"))
+
+
 func _refresh_slots() -> void:
 	var entries: Array = []
 	for id: String in _loot.slot_items():
-		entries.append([_loot.icon(id), _loot.count(id), tr(_loot.name_key(id))])
+		entries.append([_loot.icon(id), _loot.count(id), tr(_loot.name_key(id)), id])
 	_hud.set_slots(_loot.slot_count(), entries)
 
 
@@ -492,6 +619,32 @@ func _connect_events() -> void:
 	# Loot (2026-11-15)
 	_loot.searched.connect(_show_loot_grid)
 	_hud.slot_clicked.connect(_take_loot)
+	# Items (sprint 001, phase C): the bar follows the inventory; drops on the ghost use one unit
+	_loot.inventory_changed.connect(_refresh_slots)
+	_hud.item_dropped_on_ghost.connect(_use_item)
+	# Elixirs (sprint 001, phase E): values from the item's "use" data in loot.json
+	_item_use.register("restore_energy", func(_item: String, params: Dictionary) -> bool:
+		return _energy.restore(float(params.get("amount", 0.0))))
+	_item_use.register("speed_boost", func(_item: String, params: Dictionary) -> bool:
+		_effects.start("speed", float(params.get("minutes", 0.0)), {"multiplier": float(params.get("multiplier", 1.0))})
+		return _effects.is_active("speed"))
+	_effects.ended.connect(func(effect_id: String) -> void: _hud.add_log(tr("LOG_EFFECT_ENDED_" + effect_id)))
+	# The monocle (sprint 001, phase G): dropped on the ghost it works for a while; sight zones on
+	_item_use.register("monocle", func(_item: String, params: Dictionary) -> bool:
+		var ok: bool = _monocle.activate(params)
+		if ok:
+			_stage.show_cones = true
+		return ok)
+	_effects.ended.connect(func(effect_id: String) -> void:
+		if effect_id == Monocle.EFFECT:
+			_stage.show_cones = false)
+	_monocle.hidden_again.connect(func(_spot: String) -> void: _hud.add_log(tr("LOG_MONOCLE_LOST")))
+	# Spider nests (sprint 001, phase F): dropped on the ghost, the room it is in turns dirty again
+	_item_use.register("dirty_room", func(_item: String, _params: Dictionary) -> bool:
+		var ok: bool = SpiderTrade.dirty_room(_sim.house, _navigator.room_id)
+		if ok:
+			_hud.add_log(tr("LOG_NEST_PLACED") % _sim.house.rooms[_navigator.room_id].display_name)
+		return ok)
 	_casting.completed.connect(func(object_id: String) -> void:
 		var obj: ObjectState = _sim.house.objects[object_id]
 		var what: String = tr("ACT_" + GhostEnergy.action_key(obj))
@@ -543,7 +696,9 @@ func _apply_game_settings(settings: GameSettings) -> void:
 func save_state() -> Dictionary:
 	return {"sim": _sim.save_state(), "ghost": _navigator.save_state(), "energy": _energy.save_state(),
 		"loot": _loot.save_state(), "stats": _stats.save_state(), "stealth": _stealth.save_state(),
-		"motion": _motion.save_state(), "game": {"monocle": _has_monocle, "key_events": _key_events.duplicate()}}
+		"motion": _motion.save_state(), "game": {"monocle": _monocle.found, "monocle_state": _monocle.save_state(), "monocle_rng": _monocle_rng.state,
+			"key_events": _key_events.duplicate()},
+		"crafting": _crafting.save_state(), "effects": _effects.save_state()}
 
 
 ## How the save shows in the list: day, time, the ghost's room, the family's resolve.
@@ -563,8 +718,18 @@ func load_state(data: Dictionary) -> void:
 	_stealth.load_state(data["stealth"])
 	_motion.load_state(data["motion"])
 	var game: Dictionary = data["game"]
-	_has_monocle = bool(game["monocle"])
+	if game.has("monocle_state"):
+		_monocle.load_state(game["monocle_state"])
+		_monocle_rng.state = int(game.get("monocle_rng", _monocle_rng.state))   # the same spot after a load
+	elif bool(game.get("monocle", false)):
+		# a save from before sprint 001 had the monocle for good: it comes back as an item
+		_monocle.load_state({"found": true})
+		if _loot.count(Monocle.ITEM) == 0:
+			_loot.add(Monocle.ITEM, 1)
 	_key_events.assign(game["key_events"])
+	if data.has("crafting"):   # saves from before sprint 001 have no crafting tree
+		_crafting.load_state(data["crafting"])
+	_effects.load_state(data.get("effects", {}))
 	_hud.hide_loot_grid()
 	_hud.hide_day_card()
 	_hud.show_map(_loot.has_map())
@@ -634,6 +799,14 @@ func _run_capture(dir: String) -> void:
 		await _run_character_test(dir)
 		get_tree().quit()
 		return
+	if OS.get_cmdline_user_args().has("--crafting-test"):
+		await _run_crafting_test(dir)
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("--areas-test"):
+		await _run_areas_test(dir)
+		get_tree().quit()
+		return
 	if OS.get_cmdline_user_args().has("--props-test"):
 		await _run_props_test(dir)
 		get_tree().quit()
@@ -657,7 +830,8 @@ func _run_capture(dir: String) -> void:
 	# Stage 5b: the monocle, sight zones, being glimpsed, hiding and a search, contact
 	await _show(dir, "10-monocle-on-dresser", "09:00", "grandparents_bedroom", Vector2(0.12, 0.22))
 	_act_now()
-	_stage.show_cones = true
+	_hud.hide_discovery()
+	_use_item(Monocle.ITEM)   # sprint 001: the monocle works while active (drag onto the ghost)
 	await _show(dir, "11-kitchen-sight-zones", "09:20", "kitchen", Vector2(0.15, 0.92))
 	var cook: Dictionary = _stage.layout.person(_sim.routines[2], 2, "kitchen", _sim.routines)
 	_navigator.place("kitchen", Vector2(cook["uv"]) + Vector2(cook["facing"]).rotated(deg_to_rad(-50.0)) * 0.3)
@@ -1262,6 +1436,68 @@ func _run_props_test(dir: String) -> void:
 				if (pass_states[0] as Dictionary).has(key):
 					_sim.house.set_object_state(object.id, pass_states[0][key])
 			await _show(dir, "%s-%02d-%s" % [pass_states[2], i + 1, rooms[i]], pass_states[1], rooms[i], Vector2(0.5, 0.95))
+
+
+## Sprint 001 phase D (2026-11-26): the crafting tree in the back yard and its hollow — the
+## hold ring, the empty board, ingredients on the star, a ready recipe, the result, a locked one.
+func _run_crafting_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	for item: Array in [["dust", 4], ["cobweb", 2], ["candle_stub", 1], ["feather", 2], ["old_thread", 3], ["rusty_nail", 1]]:
+		_loot.add(item[0], item[1])
+	var tree: Vector2 = _stage.layout.kind_uv("back_yard", _tree_kind())
+	await _show(dir, "c01-tree-in-back-yard", "10:00", "back_yard", tree + Vector2(0.0, 0.06))
+	_stage.craft_progress = 0.6
+	_stage.craft_uv = tree
+	await _frames(dir, "c02-holding-e", 0.2, 0.0)
+	open_crafting()
+	await _frames(dir, "c03-hollow-empty", 0.3, 0.0)
+	for i: int in 3:
+		_craft_screen.place(0, "dust")
+	_craft_screen.place(1, "cobweb")
+	await _frames(dir, "c04-ingredients-on-star", 0.3, 0.0)
+	_craft_screen.place(1, "cobweb")
+	_craft_screen.place(2, "candle_stub")
+	_craft_screen.select("energy_elixir")
+	await _frames(dir, "c05-recipe-ready", 0.3, 0.0)
+	_craft_screen.craft()
+	await _frames(dir, "c06-crafted-in-centre", 0.3, 0.0)
+	_craft_screen.take_result()
+	_craft_screen.select("distilled_ectoplasm")
+	await _frames(dir, "c07-result-in-bar-locked-recipe", 0.3, 0.0)
+	_craft_screen.close()
+	await _frames(dir, "c08-closed-back-in-yard", 0.3, 0.0)
+	# phase E: the energy elixir used on the ghost, the speed elixir running under the energy bar
+	_energy.value = 30.0
+	_use_item("elixir_energy")
+	_loot.add("elixir_speed", 1)
+	_use_item("elixir_speed")
+	_update_effects(0.0)
+	await _frames(dir, "c09-elixirs-used-speed-running", 0.3, 0.0)
+
+
+## Sprint 001 (2026-11-25): the basement, attic and yards by day and night, and the ghost pushed
+## against a wall with no room beyond it (the thin outside-wall margin, phase A).
+func _run_areas_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	var areas: Array[String] = ["basement", "attic", "back_yard", "front_yard"]
+	for pass_time: Array in [["10:00", "day"], ["22:10", "night"]]:
+		for i: int in areas.size():
+			await _show(dir, "%s-%02d-%s" % [pass_time[1], i + 1, areas[i]], pass_time[0], areas[i], Vector2(0.5, 0.8))
+	_loot.add("fly", 6)   # sprint 001 phase F: the spider and its trade prompt
+	await _show(dir, "spider-01-attic-trade", "10:00", "attic", _stage.layout.kind_uv("attic", "spider") + Vector2(0, 0.06))
+	# phase G: the monocle's first find, then working (sight zones), then the HUD timer
+	var dresser: Vector2 = _stage.layout.kind_uv("grandparents_bedroom", "dresser")
+	await _show(dir, "monocle-01-on-dresser", "10:00", "grandparents_bedroom", dresser + Vector2(0, 0.08))
+	_act_now()
+	await _frames(dir, "monocle-02-first-find-card", 0.3, 0.0)
+	_hud.hide_discovery()
+	_use_item(Monocle.ITEM)
+	_update_effects(0.0)
+	await _show(dir, "monocle-03-active-sight-zones", "10:20", "kitchen", Vector2(0.15, 0.92))
+	await _show(dir, "margin-01-workshop-left-wall", "10:00", "workshop", Vector2(GhostNavigator.U_MIN, 0.5))
+	await _show(dir, "margin-02-basement-back-wall", "10:00", "basement", Vector2(0.5, GhostNavigator.V_MIN))
 
 
 ## Art test only: lamp out and window open, through the ghost's own rules.

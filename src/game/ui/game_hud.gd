@@ -21,12 +21,20 @@ extends CanvasLayer
 
 ## A loot grid slot was clicked.
 signal slot_clicked(index: int)
+## One unit of [param item_id] was dragged from the slot bar and dropped on the ghost
+## (sprint 001, phase C, 2026-11-26). The game decides whether it is used; the bar never changes
+## by itself, so a refused drop simply leaves the unit where it was.
+signal item_dropped_on_ghost(item_id: String)
 ## The end summary's buttons.
 signal restart_requested()
 signal title_requested()
 
 const TOAST_SECONDS: float = 3.0
 const HELP_FIRST_SECONDS: float = 20.0
+## Drag data from the slot bar: one unit of an item (crafting reads the same shape).
+const DRAG_UNIT: String = "inventory_unit"
+## How near the ghost's middle (screen px) a dragged item must be let go to count as on it.
+const GHOST_DROP_RADIUS: float = 72.0
 const BAR_SLOT_SIZE := Vector2(46, 46)
 const BAR_SLOT_GAP: float = 6.0
 const SCREEN_RIGHT: float = 1266.0
@@ -62,10 +70,23 @@ var _short_flash: float = 0.0
 var _time: float = 0.0
 var _slot_panel: PanelContainer
 var _slot_row: HBoxContainer
-## Per bar slot: [icon, count, name]; empty array = empty slot.
+## Per bar slot: [icon, count, name, item id]; empty array = empty slot.
 var _slot_entries: Array = []
 ## Seconds left of the "slots full" flash.
 var _slots_full_flash: float = 0.0
+## Where the ghost is on the display, for drops (set by the game; returns Vector2).
+var ghost_point: Callable = func() -> Vector2: return Vector2(-9999, -9999)
+## Full-screen drop target for items dropped on the ghost; takes the mouse only while dragging.
+var _drop_layer: Control
+var _effects_label: Label
+## A find worth a moment: a card with a title, a message and a hint with one word crossed out
+## (drawn, so it shows in any font), closed by a click (sprint 001, phase G).
+var _discovery: PanelContainer
+var _discovery_title: Label
+var _discovery_body: Label
+var _discovery_before: Label
+var _discovery_struck: Label
+var _discovery_after: Label
 var _toast: Label
 var _toast_left: float = 0.0
 var _help: Label
@@ -113,6 +134,9 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_energy_bar.draw.connect(_draw_energy)
 	_energy_bar.visible = false
 	top.get_child(0).add_child(_energy_bar)
+	# running effects under the energy bar, e.g. "Еліксир швидкості — 42 хв" (sprint 001)
+	_effects_label = _label(top, 14, Palette.SB_GHOST)
+	_effects_label.visible = false
 	_loot_panel = _panel(Vector2.ZERO, Vector2.ZERO)
 	_loot_grid = GridContainer.new()
 	_loot_grid.add_theme_constant_override(&"h_separation", 4)
@@ -125,6 +149,33 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_note_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_note_text.custom_minimum_size = Vector2(580, 0)
 	_note.visible = false
+	# the monocle's first find (sprint 001, phase G): title, message, hint with a crossed-out word
+	_discovery = _panel(Vector2(340, 190), Vector2(600, 0))
+	(_discovery.get_theme_stylebox(&"panel") as StyleBoxFlat).bg_color = Color(0.07, 0.06, 0.09, 0.96)
+	var card := VBoxContainer.new()
+	card.add_theme_constant_override(&"separation", 12)
+	_discovery.add_child(card)
+	_discovery_title = _label(card, 22, Palette.SB_CANDLELIGHT)
+	UiFonts.use(_discovery_title, "title")
+	_discovery_body = _label(card, 18, Color(0.95, 0.9, 0.78))
+	_discovery_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_discovery_body.custom_minimum_size = Vector2(580, 0)
+	var hint := HBoxContainer.new()
+	hint.add_theme_constant_override(&"separation", 6)
+	card.add_child(hint)
+	_discovery_before = _label(hint, 18, Color(0.95, 0.9, 0.78))
+	_discovery_struck = _label(hint, 18, Color(0.95, 0.9, 0.78, 0.6))
+	_discovery_struck.draw.connect(func() -> void:
+		var y: float = _discovery_struck.size.y * 0.55
+		_discovery_struck.draw_line(Vector2(-1, y), Vector2(_discovery_struck.size.x + 1, y), Palette.SB_TERRACOTTA, 2.0, true))
+	_discovery_after = _label(hint, 18, Color(0.95, 0.9, 0.78))
+	var close := _label(card, 14, Color(0.75, 0.71, 0.61))
+	close.text = tr("NOTE_CLOSE")
+	_discovery.visible = false
+	_discovery.mouse_filter = Control.MOUSE_FILTER_STOP
+	_discovery.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+			hide_discovery())
 	_note.mouse_filter = Control.MOUSE_FILTER_STOP
 	_note.gui_input.connect(func(event: InputEvent) -> void:
 		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
@@ -173,6 +224,13 @@ func setup(sim: HouseSim, navigator: GhostNavigator) -> void:
 	_float_layer.draw.connect(_draw_floats)
 	add_child(_float_layer)
 	move_child(_float_layer, 0)   # under the panels
+	_drop_layer = Control.new()
+	_drop_layer.size = Vector2(1280, 720)
+	_drop_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_drop_layer.draw.connect(_draw_drop_hint)
+	_drop_layer.set_drag_forwarding(Callable(), _can_drop_on_ghost, _drop_on_ghost)
+	add_child(_drop_layer)
+	move_child(_drop_layer, 0)   # under the panels: the bar and the grid keep their own drops
 	_map = Control.new()
 	_map.position = MAP_POS
 	_map.size = MAP_SIZE
@@ -303,6 +361,7 @@ func set_slots(slot_count: int, entries: Array) -> void:
 			slot.custom_minimum_size = BAR_SLOT_SIZE
 			slot.mouse_filter = Control.MOUSE_FILTER_PASS
 			slot.draw.connect(_draw_bar_slot.bind(slot, i))
+			slot.set_drag_forwarding(_drag_from_bar.bind(slot, i), Callable(), Callable())
 			_slot_row.add_child(slot)
 		_slot_panel.reset_size()
 		var width: float = slot_count * BAR_SLOT_SIZE.x + maxi(0, slot_count - 1) * BAR_SLOT_GAP + 16.0
@@ -388,6 +447,77 @@ func _draw_bar_slot(slot: Control, index: int) -> void:
 	slot.draw_string(font, at, count, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Palette.SB_CREAM)
 
 
+# --- Dragging items (sprint 001, phase C, 2026-11-26) --------------------------------------
+
+## The drag data for one unit from bar [param entries] slot [param index], or null (empty slot).
+static func unit_drag_data(entries: Array, index: int) -> Variant:
+	if index < 0 or index >= entries.size() or (entries[index] as Array).size() < 4 or int(entries[index][1]) <= 0:
+		return null
+	return {"type": DRAG_UNIT, "item": String(entries[index][3]), "from_slot": index}
+
+
+## True when [param data] is one inventory unit let go within [param radius] px of [param ghost_at].
+static func accepts_ghost_drop(data: Variant, at: Vector2, ghost_at: Vector2, radius: float) -> bool:
+	return data is Dictionary and String((data as Dictionary).get("type", "")) == DRAG_UNIT \
+		and at.distance_to(ghost_at) <= radius
+
+
+func _drag_from_bar(_at: Vector2, slot: Control, index: int) -> Variant:
+	var data: Variant = unit_drag_data(_slot_entries, index)
+	if data == null:
+		return null
+	var preview := Control.new()
+	var icon: String = String(_slot_entries[index][0])
+	preview.draw.connect(func() -> void: ItemArt.draw(preview, icon, Vector2.ZERO, BAR_SLOT_SIZE.x * 0.78))
+	slot.set_drag_preview(preview)
+	return data
+
+
+func _can_drop_on_ghost(at: Vector2, data: Variant) -> bool:
+	return accepts_ghost_drop(data, at, ghost_point.call(), GHOST_DROP_RADIUS)
+
+
+func _drop_on_ghost(at: Vector2, data: Variant) -> void:
+	if _can_drop_on_ghost(at, data):
+		item_dropped_on_ghost.emit(String(data["item"]))
+
+
+# While an item is dragged, a soft ring around the ghost shows where to let go.
+func _draw_drop_hint() -> void:
+	if _drop_layer.mouse_filter == Control.MOUSE_FILTER_IGNORE:
+		return
+	var at: Vector2 = ghost_point.call()
+	var near: bool = _drop_layer.get_local_mouse_position().distance_to(at) <= GHOST_DROP_RADIUS
+	_drop_layer.draw_arc(at, GHOST_DROP_RADIUS, 0, TAU, 48, Color(Palette.SB_GHOST, 0.85 if near else 0.4), 3.0 if near else 2.0, true)
+
+
+## The ghost's running effects, one line each ("" hides the line) (sprint 001, phase E).
+func set_effects(lines: Array[String]) -> void:
+	_effects_label.text = "\n".join(lines)
+	_effects_label.visible = not lines.is_empty()
+
+
+## Shows a card until clicked: [param title], [param body], and a hint line [param hint]:
+## [before, crossed-out word, after] (e.g. "drag onto the ghost to ~~wear~~ activate").
+func show_discovery(title: String, body: String, hint: Array[String] = []) -> void:
+	_discovery_title.text = title
+	_discovery_body.text = body
+	var parts: Array[Label] = [_discovery_before, _discovery_struck, _discovery_after]
+	for i: int in parts.size():
+		parts[i].text = hint[i] if i < hint.size() else ""
+		parts[i].visible = not parts[i].text.is_empty()
+	_discovery.reset_size()
+	_discovery.visible = true
+
+
+func hide_discovery() -> void:
+	_discovery.visible = false
+
+
+func is_discovery_shown() -> bool:
+	return _discovery.visible
+
+
 ## Shows a found lore note until clicked.
 func show_note(title: String, text: String) -> void:
 	_note_text.text = "%s\n\n%s\n\n%s" % [title, text, tr("NOTE_CLOSE")]
@@ -419,6 +549,11 @@ func flash_not_enough_energy() -> void:
 ## Animates the energy bar's flashes and pulse; call every frame with real seconds.
 func tick(delta: float) -> void:
 	_time += delta
+	var dragging: bool = get_viewport() != null and get_viewport().gui_is_dragging()
+	var filter: Control.MouseFilter = Control.MOUSE_FILTER_PASS if dragging else Control.MOUSE_FILTER_IGNORE
+	if _drop_layer.mouse_filter != filter or dragging:
+		_drop_layer.mouse_filter = filter
+		_drop_layer.queue_redraw()
 	_lost_flash = maxf(0.0, _lost_flash - delta)
 	_short_flash = maxf(0.0, _short_flash - delta)
 	_energy_bar.queue_redraw()
@@ -564,27 +699,44 @@ func show_outcome(won: bool, key_events: Array[String], stats: GhostStats) -> vo
 
 
 func _draw_map() -> void:
-	var cell := Vector2(36, 26)
-	var font: Font = ThemeDB.fallback_font
+	# Every floor, top floor first, stacked down the panel; each floor as tall as its rows
+	# (sprint 001, 2026-11-25: attic, basement and the yards' extra rows).
+	var cell_w: float = 36.0
+	var gap: float = 4.0
+	var rows: Dictionary = {}   # floor -> Vector2i(min row, max row)
+	for room: RoomState in _sim.house.rooms.values():
+		var r: Vector2i = rows.get(room.floor_level, Vector2i(room.grid.y, room.grid.y))
+		rows[room.floor_level] = Vector2i(mini(r.x, room.grid.y), maxi(r.y, room.grid.y))
+	var floors: Array = rows.keys()
+	floors.sort()
+	floors.reverse()
+	var total_rows: int = 0
+	for f: int in floors:
+		total_rows += rows[f].y - rows[f].x + 1
+	var row_h: float = minf(16.0, (_map.size.y - 12.0 - gap * float(floors.size() - 1)) / float(maxi(1, total_rows)))
 	_map.draw_rect(Rect2(Vector2.ZERO, _map.size), Color(0.05, 0.05, 0.08, 0.85))
-	for floor_level: int in [1, 0]:
-		var origin := Vector2(6, 6 + (1 - floor_level) * 60)
+	var y: float = 6.0
+	for f: int in floors:
+		var span: Vector2i = rows[f]
 		for room: RoomState in _sim.house.rooms.values():
-			if room.floor_level != floor_level:
+			if room.floor_level != f:
 				continue
-			var rect := Rect2(origin + Vector2(float(room.grid.x) * cell.x, float(room.grid.y) * cell.y * 0.62),
-				Vector2(cell.x - 3.0, cell.y * 0.58))
+			var rect := Rect2(Vector2(6.0 + float(room.grid.x) * cell_w, y + float(room.grid.y - span.x) * row_h),
+				Vector2(cell_w - 3.0, row_h - 2.0))
 			var here: bool = room.id == _navigator.room_id
-			_map.draw_rect(rect, Color(0.25, 0.23, 0.3) if not here else Color(0.45, 0.42, 0.55))
+			var fill := Color(0.25, 0.23, 0.3) if not here else Color(0.45, 0.42, 0.55)
+			if room.outdoor:
+				fill = Color(0.2, 0.28, 0.22) if not here else Color(0.36, 0.5, 0.4)
+			_map.draw_rect(rect, fill)
 			_map.draw_rect(rect, Color(0.6, 0.58, 0.7), false, 1.0)
 			var dots: int = 0
 			for routine: NpcRoutine in _sim.routines:
 				if routine.room_id == room.id:
-					_map.draw_rect(Rect2(rect.position + Vector2(3 + (dots % 5) * 6, 3 + (dots / 5) * 6), Vector2(4, 4)), NPC_COLORS.get(routine.schedule.npc_id, Color.WHITE))
+					_map.draw_rect(Rect2(rect.position + Vector2(3 + (dots % 5) * 6, 2), Vector2(4, 4)), NPC_COLORS.get(routine.schedule.npc_id, Color.WHITE))
 					dots += 1
 			if here:
-				_map.draw_rect(Rect2(rect.end - Vector2(9, 9), Vector2(6, 6)), Color(0.93, 0.96, 1.0))
-	_map.draw_string(font, Vector2(6, 116), "2 / 1", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, 0.5))
+				_map.draw_rect(Rect2(rect.end - Vector2(8, 8), Vector2(6, 6)), Color(0.93, 0.96, 1.0))
+		y += float(span.y - span.x + 1) * row_h + gap
 
 
 func _panel(pos: Vector2, min_size: Vector2) -> PanelContainer:

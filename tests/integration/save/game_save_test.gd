@@ -47,11 +47,13 @@ func _incident_running(game: HouseGame) -> bool:
 
 
 func test_a_loaded_game_continues_frame_for_frame_like_the_original() -> void:
-	# Arrange: the ghost in the kitchen, a find in its pocket, the monocle taken
+	# Arrange: the ghost in the kitchen, a find in its pocket, the monocle taken and working
+	# (sprint 001: a timed effect, so the save holds it running)
 	var original: HouseGame = _start_game()
 	original._navigator.place("kitchen", Vector2(0.55, 0.55))
 	original._loot.inventory["dust"] = 2
-	original._has_monocle = true
+	original._monocle.take_from_dresser()
+	original._use_item(Monocle.ITEM)
 	# Run until someone is mid-incident (noticing, searching…), so the save holds one
 	var frames: int = 0
 	while frames < BEFORE_SAVE or (not _incident_running(original) and frames < BEFORE_SAVE * 4):

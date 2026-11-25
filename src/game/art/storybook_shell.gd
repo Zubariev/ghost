@@ -88,7 +88,8 @@ static func draw_side_wall(canvas: CanvasItem, left: bool, alpha: float) -> void
 
 ## Doors where the family's doors are: wooden doors ajar on the side walls, an arched door
 ## on the back wall, an open gap at the front.
-static func draw_doors(canvas: CanvasItem, house: HouseState, room_id: String, wall_alpha: Dictionary) -> void:
+## [param door_tex]: the painted door (sprint 001); null keeps the drawn doors.
+static func draw_doors(canvas: CanvasItem, house: HouseState, room_id: String, wall_alpha: Dictionary, door_tex: Texture2D = null) -> void:
 	for other: String in house.rooms:
 		if house.walk_minutes(room_id, other) <= 0:
 			continue
@@ -99,9 +100,15 @@ static func draw_doors(canvas: CanvasItem, house: HouseState, room_id: String, w
 		var step: Vector2i = there.grid - here.grid
 		if step.x != 0:
 			var left: bool = step.x < 0
-			_side_door(canvas, left, float(wall_alpha["left" if left else "right"]))
+			if door_tex != null:
+				DoorArt.draw_side(canvas, door_tex, left, float(wall_alpha["left" if left else "right"]))
+			else:
+				_side_door(canvas, left, float(wall_alpha["left" if left else "right"]))
 		elif step.y < 0:
-			_back_door(canvas, float(wall_alpha["back"]))
+			if door_tex != null:
+				DoorArt.draw_back(canvas, door_tex, float(wall_alpha["back"]))
+			else:
+				_back_door(canvas, float(wall_alpha["back"]))
 		else:
 			var a: Vector2 = RoomGeometry.to_screen(Vector2(0.44, 1.0))
 			var b: Vector2 = RoomGeometry.to_screen(Vector2(0.56, 1.0))

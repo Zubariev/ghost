@@ -10,6 +10,8 @@
 #   bash tools/play.sh character-test ghost   the painted ghost: idle in each view, gliding, turning, settling, reaching, hiding, behind/in front of the sofa, fright, dark room → production/qa/evidence/character-ghost-game/
 #   bash tools/play.sh character-test father  the painted father: waking, walking, eating, workbench, anxious, repairing, fright, sofa → production/qa/evidence/character-father/
 #   bash tools/play.sh character-test  the painted grandma pilot: cooking, walking, anxious, fright, armchair → production/qa/evidence/character-pilot-grandma/
+#   bash tools/play.sh crafting-test  the crafting tree, hold E, the hollow: star, recipes, crafting, result → production/qa/evidence/sprint-001-crafting/
+#   bash tools/play.sh areas-test  basement, attic, back and front yard by day and night, ghost at an outer wall → production/qa/evidence/sprint-001-areas/
 #   bash tools/play.sh props-test  every room with its painted props, by day (cozy) and night (haunted) → production/qa/evidence/art-phase4-props/
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -43,6 +45,10 @@ elif [[ "${1:-}" == "character-test" && "${2:-}" == "father" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/character-father" --character-test=father
 elif [[ "${1:-}" == "character-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-character-pilot-grandma}" --character-test
+elif [[ "${1:-}" == "crafting-test" ]]; then
+	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-sprint-001-crafting}" --crafting-test "${@:3}"
+elif [[ "${1:-}" == "areas-test" ]]; then
+	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-sprint-001-areas}" --areas-test "${@:3}"
 elif [[ "${1:-}" == "props-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-art-phase4-props}" --props-test "${@:3}"
 elif [[ "${1:-}" == "art-test" ]]; then

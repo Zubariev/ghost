@@ -46,6 +46,7 @@ func set_daylight(day: bool) -> void:
 		_update_room_conditions(room_id)
 
 
+## Outdoor rooms are bright by day and dark at night (sprint 001, 2026-11-25).
 ## Lamps set the light (stage 5a): any lamp lit → bright; all out → dim by day in a room
 ## with a window, otherwise dark. Windows set the temperature: any open → cold, else
 ## comfortable. Rooms without lamps or windows keep what they have.
@@ -63,6 +64,9 @@ func _update_room_conditions(room_id: String) -> void:
 		elif obj.kind == "window":
 			windows += 1
 			open = open or obj.state == obj.condition_state
+	if rooms[room_id].outdoor:
+		# open air (sprint 001): daylight, else dark; no lamps or windows of its own
+		set_room_light(room_id, RoomState.Light.BRIGHT if is_day else RoomState.Light.DARK)
 	if lamps > 0:
 		var light: RoomState.Light = RoomState.Light.BRIGHT
 		if not lit:

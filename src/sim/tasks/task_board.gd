@@ -54,8 +54,8 @@ func tasks_for_role(role: String) -> Array[HouseTask]:
 			result.append(task)
 	if role == ROLE_CLEAN:
 		for room: RoomState in _house.rooms.values():
-			if room.cleanliness == RoomState.Cleanliness.CLEAN:
-				continue
+			if room.cleanliness == RoomState.Cleanliness.CLEAN or not room.family_access:
+				continue   # nobody cleans where the family never goes (sprint 001: basement, attic, yards)
 			var task := HouseTask.new()
 			task.key = "clean:%s" % room.id
 			task.type = HouseTask.Type.CLEAN

@@ -37,8 +37,8 @@ ACT_grocery_basket,продукти сховано
 ACT_computer,комп'ютер зламано
 GHOST_HIDE,F — Сховатися
 GHOST_TAKE_MONOCLE,E — Взяти монокль
-LOG_MONOCLE,Привид знайшов монокль — тепер Q показує поля зору.
-LOG_NEED_MONOCLE,Щоб бачити поля зору, знайдіть монокль.
+LOG_MONOCLE,Монокль у торбині. Перетягніть його на привида — і Q покаже поля зору.
+LOG_NEED_MONOCLE,Поля зору видно, лише поки діє монокль: перетягніть його на привида.
 LOG_HIDDEN,Привид сховався.
 LOG_UNHIDDEN,Привид вийшов зі схованки.
 LOG_NOTICED,%s щось помітив(-ла) краєм ока…
@@ -72,6 +72,17 @@ ITEM_lore_diary_1,Сторінка щоденника I
 ITEM_lore_diary_2,Сторінка щоденника II
 ITEM_lore_diary_3,Сторінка щоденника III
 ITEM_lore_toy_horse,Дерев'яна конячка
+ITEM_bone,Кістка
+ITEM_feather,Пір'їна
+ITEM_ectoplasm,Ектоплазма
+ITEM_ink,Чорнило
+ITEM_fly,Муха
+ITEM_spider_nest,Павуче гніздо
+ITEM_elixir_energy,Еліксир снаги
+ITEM_elixir_speed,Еліксир швидкості
+ITEM_monocle,Монокль
+LOG_CANNOT_USE,Це не вийде використати зараз.
+LOG_ITEM_USED,Використано: %s
 LORE_letter,"«Любий Матвію, ключі лишаю під ґанком. Не вмикай світла на горищі — воно не любить світла.» Підпису немає. [ЧЕРНЕТКА]"
 LORE_photo,"Родина на ґанку цього самого будинку. Усі всміхаються, крім маленької постаті збоку — її обличчя розмите, наче вона поворухнулася. [ЧЕРНЕТКА]"
 LORE_diary_1,"«15 жовтня. Знову хтось відчиняв вікна вночі. Мама каже — протяг. Але протяг не розставляє чашки рядочком.» [ЧЕРНЕТКА]"
@@ -174,3 +185,43 @@ LOAD_BUTTON,Завантажити
 LOAD_DELETE,Видалити
 LOAD_DELETE_CONFIRM,Видалити це збереження?
 LOAD_UNUSABLE,Збереження зі старої версії гри — завантажити не можна.
+CRAFT_TITLE,Дупло старого дерева
+CRAFT_OPEN,Утримуйте E — зазирнути в дупло
+CRAFT_RECIPES,Рецепти
+CRAFT_BUTTON,Створити
+CRAFT_CLOSE,Закрити (E / Esc)
+CRAFT_LOCKED,??? — відкриється на рівні дерева %d
+CRAFT_NEEDS,Потрібно:
+CRAFT_READY,Усе на місці — можна створювати.
+CRAFT_NOT_READY,Покладіть інгредієнти на пентаграму.
+CRAFT_RESULT_BLOCKED,Спершу заберіть те, що лежить у центрі.
+CRAFT_TREE_LEVEL,Рівень дерева: %d
+CRAFT_UPGRADE,Виростити дупло
+CRAFT_UPGRADE_COST,Наступний рівень: %s
+CRAFT_UPGRADE_MAX,Дупло виросло до краю.
+CRAFT_UPGRADED,Дупло стало глибшим — відкрилися нові рецепти.
+CRAFT_MADE,Створено: %s
+CRAFT_RESULT_FULL,Немає місця в торбині — предмет лишився в дуплі.
+CRAFT_LEFT_ON_BOARD,Частина інгредієнтів лишилася в дуплі: у торбині немає місця.
+CRAFT_HINT,Перетягуйте по одному предмету на вершини пентаграми. Клацніть вершину, щоб забрати один назад.
+RECIPE_energy_elixir,Повертає привидові снагу.
+RECIPE_speed_elixir,Ненадовго робить привида швидшим.
+RECIPE_distilled_ectoplasm,Перегнати кістки й чорнило на рідкісну ектоплазму.
+RECIPE_double_energy_elixir,Два еліксири снаги з одного варива.
+CRAFT_ONE_KIND,На вершині вже лежить інше — один вид на вершину.
+EFFECT_speed,Еліксир швидкості — ще %d хв
+LOG_EFFECT_ENDED_speed,Дія еліксиру швидкості минула.
+SPIDER_TRADE,E — Віддати павукові 6 мух за гніздо (мух: %d)
+SPIDER_NEEDS,Павук хоче ще %d мух (у вас: %d)
+SPIDER_TRADED,Павук забрав мух і віддав гніздо.
+SPIDER_NO_ROOM,Немає місця для гнізда в торбині.
+LOG_NEST_PLACED,Павуче гніздо в кімнаті «%s» — тут знову брудно.
+MONOCLE_FOUND_TITLE,Монокль дідуся
+MONOCLE_FOUND_TEXT,О! Це ж монокль дідуся. Він вічно його губив.
+MONOCLE_HINT_BEFORE,"Перетягніть на привида, щоб"
+MONOCLE_HINT_STRUCK,надіти
+MONOCLE_HINT_AFTER,активувати.
+LOG_MONOCLE_NO_ROOM,Немає місця в торбині — монокль лишився на комоді.
+LOG_MONOCLE_LOST,Монокль знову кудись подівся… Пошукайте у схованках.
+EFFECT_monocle,Монокль — ще %d хв
+LOG_EFFECT_ENDED_monocle,Дія монокля скінчилася.

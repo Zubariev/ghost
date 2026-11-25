@@ -45,7 +45,11 @@
 		"nightstand": [0.25, 0.22],
 		"rocking_horse": [0.45, 0.25],
 		"laundry_basket": [0.25, 0.2],
-		"desk": [0.6, 0.35]
+		"desk": [0.6, 0.35],
+		"shed": [1.2, 0.9],
+		"woodpile": [0.7, 0.35],
+		"hedge": [1.0, 0.4],
+		"crafting_tree": [0.8, 0.6]
 	},
 	"cell_m": 0.125
 }
