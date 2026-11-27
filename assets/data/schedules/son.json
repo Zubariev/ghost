@@ -1,5 +1,5 @@
 {
-	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7); morale categories and affected_by: Demo Specification §7.6; anxiety: Demo Specification §8.8; pace: walking pace, 1 = adult (user decision 2026-11-15).",
+	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7); morale categories and affected_by: Demo Specification §7.6; anxiety: Demo Specification §8.8; pace: walking pace, 1 = adult (user decision 2026-11-15). Bathroom visits (sprint 002, task S2-02, user approval 2026-11-26): one person at a time in upper_bathroom, windows sized for the walk there (tests/integration/data/bathroom_schedule_test.gd).",
 	"npc_id": "son",
 	"name": "Син",
 	"start_room": "children_bedroom",
@@ -35,6 +35,39 @@
 			"id": "son_play_morning",
 			"name": "Грає на комп'ютері",
 			"start": "08:00",
+			"end": "08:30",
+			"kind": "span",
+			"room": "children_bedroom",
+			"animation": "computer",
+			"requires": [
+				{
+					"object": "computer",
+					"state": "working"
+				}
+			],
+			"affected_by": [
+				"temperature",
+				"cleanliness",
+				"light"
+			]
+		},
+		{
+			"id": "son_wash_morning",
+			"name": "Ранкове вмивання",
+			"start": "08:30",
+			"end": "08:45",
+			"kind": "span",
+			"room": "upper_bathroom",
+			"animation": "wash",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
+		},
+		{
+			"id": "son_play_morning_late",
+			"name": "Грає на комп'ютері",
+			"start": "08:45",
 			"end": "12:00",
 			"kind": "span",
 			"room": "children_bedroom",
@@ -166,13 +199,27 @@
 			"id": "son_bedtime",
 			"name": "Готується до сну",
 			"start": "21:00",
-			"end": "22:00",
+			"end": "21:15",
 			"kind": "span",
 			"room": "upper_bathroom",
 			"animation": "wash",
 			"affected_by": [
 				"temperature",
 				"cleanliness"
+			]
+		},
+		{
+			"id": "son_read_in_bed",
+			"name": "Читає перед сном",
+			"start": "21:15",
+			"end": "22:00",
+			"kind": "span",
+			"room": "children_bedroom",
+			"animation": "read",
+			"affected_by": [
+				"temperature",
+				"cleanliness",
+				"light"
 			]
 		},
 		{

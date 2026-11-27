@@ -1,5 +1,5 @@
 {
-	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7); morale categories and affected_by: Demo Specification §7.6; anxiety: Demo Specification §8.8; pace: walking pace, 1 = adult (user decision 2026-11-15).",
+	"_source": "GDD §7.1 times; rooms and work windows approved for stage 3 (Demo Specification §5.7); morale categories and affected_by: Demo Specification §7.6; anxiety: Demo Specification §8.8; pace: walking pace, 1 = adult (user decision 2026-11-15). Bathroom visits (sprint 002, task S2-02, user approval 2026-11-26): one person at a time in upper_bathroom, windows sized for the walk there (tests/integration/data/bathroom_schedule_test.gd).",
 	"npc_id": "grandpa",
 	"name": "Дідусь",
 	"start_room": "grandparents_bedroom",
@@ -8,10 +8,23 @@
 			"id": "grandpa_wake",
 			"name": "Прокидання",
 			"start": "06:00",
-			"end": "07:00",
+			"end": "06:30",
 			"kind": "span",
 			"room": "grandparents_bedroom",
 			"animation": "wake",
+			"affected_by": [
+				"temperature",
+				"cleanliness"
+			]
+		},
+		{
+			"id": "grandpa_wash_morning",
+			"name": "Ранкове вмивання",
+			"start": "06:30",
+			"end": "07:00",
+			"kind": "span",
+			"room": "upper_bathroom",
+			"animation": "wash",
 			"affected_by": [
 				"temperature",
 				"cleanliness"

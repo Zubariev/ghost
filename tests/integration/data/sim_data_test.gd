@@ -24,9 +24,11 @@ func test_every_schedule_covers_the_whole_day() -> void:
 		assert_array(Array(schedule.validate())).is_empty()
 
 
-func test_grandma_keeps_her_agreed_ten_activities() -> void:
+## Demo Specification §5.6: ten agreed activities, plus a morning and an evening bathroom visit and the
+## evening rest split round the second (sprint 002, S2-02, user approval 2026-11-26).
+func test_grandma_keeps_her_agreed_activities_plus_bathroom_visits() -> void:
 	var grandma: Schedule = Schedule.from_dict(JsonData.read("res://assets/data/schedules/grandma.json"))
-	assert_int(grandma.activities.size()).is_equal(10)
+	assert_int(grandma.activities.size()).is_equal(13)
 
 
 func test_every_scheduled_room_is_reachable_from_the_start_room() -> void:
