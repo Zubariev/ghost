@@ -1,0 +1,3 @@
+Overall Summary: 419 test cases | 0 errors | 0 failures | 0 flaky | 0 skipped | 0 orphans |
+Executed test cases : (419/419)
+Run 2026-11-26, before any sprint 002 change. Godot 4.7.2, gdUnit4, full suite (res://tests).

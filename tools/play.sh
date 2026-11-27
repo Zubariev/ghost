@@ -12,6 +12,9 @@
 #   bash tools/play.sh character-test  the painted grandma pilot: cooking, walking, anxious, fright, armchair → production/qa/evidence/character-pilot-grandma/
 #   bash tools/play.sh crafting-test  the crafting tree, hold E, the hollow: star, recipes, crafting, result → production/qa/evidence/sprint-001-crafting/
 #   bash tools/play.sh areas-test  basement, attic, back and front yard by day and night, ghost at an outer wall → production/qa/evidence/sprint-001-areas/
+#   bash tools/play.sh spider-test  the attic spider: idle, lowering, eating, grown, hostile wind-up, web, hit → production/qa/evidence/sprint-002-spider/
+#   bash tools/play.sh roots-test  the roots screen from the hollow: first visit, short, unlock, mid-progress, all owned → production/qa/evidence/sprint-002-progression/
+#   bash tools/play.sh routines-test  every bathroom visit of day 1, the father dressing, the children's bedtime → production/qa/evidence/sprint-002-routines/
 #   bash tools/play.sh props-test  every room with its painted props, by day (cozy) and night (haunted) → production/qa/evidence/art-phase4-props/
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -49,6 +52,12 @@ elif [[ "${1:-}" == "crafting-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-sprint-001-crafting}" --crafting-test "${@:3}"
 elif [[ "${1:-}" == "areas-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-sprint-001-areas}" --areas-test "${@:3}"
+elif [[ "${1:-}" == "spider-test" ]]; then
+	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-sprint-002-spider}" --spider-test "${@:3}"
+elif [[ "${1:-}" == "roots-test" ]]; then
+	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-sprint-002-progression}" --roots-test "${@:3}"
+elif [[ "${1:-}" == "routines-test" ]]; then
+	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-sprint-002-routines}" --routines-test "${@:3}"
 elif [[ "${1:-}" == "props-test" ]]; then
 	exec "$GODOT" "${BASE[@]}" "$GAME" -- "--capture=$PWD/production/qa/evidence/${2:-art-phase4-props}" --props-test "${@:3}"
 elif [[ "${1:-}" == "art-test" ]]; then

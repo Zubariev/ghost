@@ -69,6 +69,10 @@ var _item_use: GhostItemUse
 ## The crafting tree in the back yard (sprint 001, phase D): its board, its screen, its data, and
 ## how long E has been held next to it (game minutes).
 var _crafting: CraftingBoard
+## The tree's roots (sprint 002, P3): owned nodes, and the value changes they give the ghost's
+## systems (energy, inventory, stealth, speed, monocle).
+var _progression: CraftingProgression
+var _modifiers := GhostModifiers.new()
 var _craft_screen: CraftingScreen
 var _craft_cfg: Dictionary = {}
 var _craft_hold: float = 0.0
@@ -77,6 +81,11 @@ var _effects := GhostEffects.new()
 ## The attic spider's trade (phase F) and its data (kind, reach).
 var _spider: SpiderTrade
 var _spider_cfg: Dictionary = {}
+## Sprint 002 (P4): the spider's appetite and mood, its web attack and how it moves.
+var _spider_eco: SpiderEcology
+var _spider_web: SpiderWeb
+var _spider_move: SpiderBehaviour
+var _spider_room_id: String = "?"
 var _hide_range: float = 0.16
 ## Grandpa's monocle (sprint 001, phase G): found on the dresser, kept in the inventory, active
 ## for a while when dropped on the ghost, then lost again in a random hiding spot.
@@ -142,11 +151,26 @@ func _ready() -> void:
 	_item_use = GhostItemUse.new(_loot)   # effects are registered by the systems that own them
 	_craft_cfg = JsonData.read(CraftingBoard.RECIPES_PATH)
 	_crafting = CraftingBoard.new(_craft_cfg, _loot)
+	var prog_cfg: Dictionary = JsonData.read(CraftingProgression.PROGRESSION_PATH)
+	for problem: String in CraftingProgression.check(prog_cfg, _craft_cfg):
+		push_error("progression.json: " + problem)
+	_progression = CraftingProgression.new(prog_cfg, _crafting, _loot)
+	_progression.changed.connect(func() -> void: _modifiers.set_effects(_progression.active_effects()))
+	_energy.modifiers = _modifiers
+	_loot.modifiers = _modifiers
+	_stealth.modifiers = _modifiers
 	_spider_cfg = JsonData.read(SpiderTrade.SPIDER_PATH)
 	_spider = SpiderTrade.new(_spider_cfg, _loot)
+	_spider_eco = SpiderEcology.new(_spider_cfg.get("ecology", {}))
+	_spider_web = SpiderWeb.new(_spider_cfg.get("web", {}))
+	_spider_move = SpiderBehaviour.new(_spider_cfg.get("behaviour", {}))
 	_monocle_rng.randomize()
 	_monocle = Monocle.new(_loot, _effects, _monocle_rng)
 	_stage.loot = _loot
+	_stage.spider_draw = _draw_spider
+	_stage.spider_overlay = _draw_spider_web
+	_spider_eco.mood_changed.connect(func(mood: int) -> void:
+		_hud.add_log(tr(["LOG_SPIDER_FRIENDLY", "LOG_SPIDER_GROWN", "LOG_SPIDER_HOSTILE", "LOG_SPIDER_RECOVERING"][mood])))
 	_stage.sight_config = stealth_cfg
 	var style: Dictionary = JsonData.read(PropVisuals.STYLE_PATH)
 	if OS.get_cmdline_user_args().has("--code-art"):
@@ -184,6 +208,10 @@ func _ready() -> void:
 	_craft_screen = CraftingScreen.new()
 	add_child(_craft_screen)
 	_craft_screen.closed.connect(_on_crafting_closed)
+	# the roots (sprint 002, P5): a node unlocked there is logged, and the bar may have grown (G6)
+	_craft_screen.node_unlocked.connect(func(id: String) -> void:
+		_hud.add_log(tr("ROOTS_UNLOCKED") % tr(String(_progression.node(id).get("name", id))))
+		_refresh_slots())
 	_connect_events()
 	_update_view()
 	_hud.show_day_card(_sim.clock.day_number())
@@ -210,6 +238,8 @@ func _process(delta: float) -> void:
 	_update_loot(minutes)
 	_update_crafting_hold(minutes)
 	_update_effects(minutes)
+	_spider_eco.advance(minutes)
+	_update_spider(delta)
 	_hud.set_help_held(Input.is_action_pressed(&"help"))
 	_hud.tick(delta)
 	if not _sim.clock.paused and not _sim.is_over():
@@ -220,7 +250,8 @@ func _process(delta: float) -> void:
 		if direction != Vector2.ZERO:
 			_casting.cancel()   # floating off interrupts harm
 		_casting.hold(Input.is_action_pressed(&"interact"))   # hold E to act (2026-11-15)
-		var room_factor: float = RoomCondition.ghost_factor(RoomCondition.run_down(_sim.house, _navigator.room_id), _ghost_slowest)
+		var room_factor: float = RoomCondition.ghost_factor(RoomCondition.run_down(_sim.house, _navigator.room_id),
+			_modifiers.value("ghost.slowest_in_order", _ghost_slowest))
 		# speed in metres per second: the same pace in a small room as in a big one (2026-11-20)
 		var boost: float = _effects.speed_multiplier()   # the speed elixir (sprint 001); exactly 1 without it
 		_navigator.move(_stage.layout.to_uv(_navigator.room_id, direction * _ghost_speed * room_factor * boost * delta))
@@ -338,8 +369,10 @@ func _update_view() -> void:
 		var spider_uv: Vector2 = _stage.layout.kind_uv(room_id, String(_spider_cfg.get("kind", "spider")))
 		# under the hanging spider, above the floor (2026-11-26 capture: higher was off the top)
 		var at_spider: Vector2 = RoomGeometry.to_display(RoomGeometry.to_screen(spider_uv) - Vector2(0, 40))
-		if _spider.can_trade():
-			_hud.set_prompt(tr("SPIDER_TRADE") % _loot.count("fly"), at_spider, true)
+		if not _spider_eco.accepts_food():   # sprint 002: overfed, it will not trade
+			_hud.set_prompt(tr("SPIDER_HOSTILE_PROMPT" if _spider_eco.mood == SpiderEcology.Mood.HOSTILE else "SPIDER_RECOVERING_PROMPT"), at_spider, false)
+		elif _spider.can_trade():
+			_hud.set_prompt(tr("SPIDER_TRADE_GROWN" if _spider_eco.mood == SpiderEcology.Mood.GROWN else "SPIDER_TRADE") % _loot.count("fly"), at_spider, true)
 		else:
 			_hud.set_prompt(tr("SPIDER_NEEDS") % [_spider.missing(), _loot.count("fly")], at_spider, false)
 	elif best.begins_with("pickup:"):
@@ -495,14 +528,79 @@ func _take_loot(slot: int) -> void:
 ## The HUD slot bar from the inventory (materials only, in the order first taken).
 ## E at the attic spider: six flies for a nest, or what is still missing.
 func _trade_with_spider() -> void:
-	if _spider.trade():
+	if not _spider_eco.accepts_food():
+		_hud.add_log(tr("SPIDER_REFUSES"))
+	elif _spider.trade():
 		_hud.add_log(tr("SPIDER_TRADED"))
+		_spider_eco.feed(int(_spider.price().get("fly", 0)))   # sprint 002: the trade is the feeding (D4)
+		_spider_move.feed()
 	elif _spider.missing() > 0:
 		_hud.add_log(tr("SPIDER_NEEDS") % [_spider.missing(), _loot.count("fly")])
 	else:
 		_hud.flash_slots_full()
 		_hud.add_log(tr("SPIDER_NO_ROOM"))
 	_update_view()
+
+
+## The attic spider each frame (sprint 002, P4): how it moves (real seconds), and the hostile
+## spider's web while the clock runs — only at a ghost in the attic and not hidden. A hit drains a
+## share of the energy maximum once per web.
+func _update_spider(delta: float) -> void:
+	var spider_room: String = _spider_room()
+	var exposed: bool = _navigator.room_id == spider_room and _stealth.hidden_in.is_empty()
+	var size_m: Vector2 = _sim.house.rooms[spider_room].size_m if not spider_room.is_empty() else Vector2.ONE
+	var spider_m: Vector2 = _stage.layout.kind_uv(spider_room, _spider_kind()) * size_m if not spider_room.is_empty() else Vector2.ZERO
+	var ghost_m: Vector2 = _navigator.uv * size_m
+	var running: bool = not _sim.clock.paused and not _sim.is_over()
+	if running and not spider_room.is_empty():
+		var hostile: bool = _spider_eco.mood == SpiderEcology.Mood.HOSTILE
+		if _spider_web.update(delta, hostile, exposed, ghost_m, spider_m, _sim.clock.day_number()):
+			var lost: float = _energy.drain(_spider_web.damage_for(_energy.max_value()), "web")
+			_hud.add_log(tr("SPIDER_WEB_HIT") % roundi(lost))
+	if not _sim.clock.paused:
+		_spider_move.update(delta, ghost_m.distance_to(spider_m) if exposed else INF,
+			_spider_eco.mood == SpiderEcology.Mood.HOSTILE, _spider_web.phase == SpiderWeb.Phase.TELEGRAPH)
+
+
+func _spider_kind() -> String:
+	return String(_spider_cfg.get("kind", "spider"))
+
+
+## The room the spider lives in (the one whose furniture has the spider piece), or ""; found once.
+func _spider_room() -> String:
+	if _spider_room_id == "?":
+		_spider_room_id = _find_spider_room()
+	return _spider_room_id
+
+
+func _find_spider_room() -> String:
+	for room_id: String in _sim.house.rooms:
+		for piece: Dictionary in _stage.layout.pieces(room_id):
+			if String(piece["kind"]) == _spider_kind():
+				return room_id
+	return ""
+
+
+## Draws the spider (the room stage calls this for the spider piece).
+func _draw_spider(canvas: CanvasItem, foot: Vector2, depth: float, highlighted: bool) -> void:
+	var pose: Dictionary = SpiderPose.compute(_spider_move.anim(), _stage.elapsed(), _spider_eco.size(), _spider_move.drop,
+		float(_spider_cfg.get("behaviour", {}).get("drop_px", 0.0)))
+	SpiderArt.draw(canvas, foot, depth, pose, _spider_eco.size(), _spider_eco.mood == SpiderEcology.Mood.HOSTILE, highlighted)
+
+
+## Draws the web's wind-up mark or the web in flight, over everything, in the spider's room.
+func _draw_spider_web(canvas: CanvasItem) -> void:
+	var room: String = _spider_room()
+	if _navigator.room_id != room or _spider_web.phase == SpiderWeb.Phase.READY:
+		return
+	var size_m: Vector2 = _sim.house.rooms[room].size_m
+	var spider_uv: Vector2 = _stage.layout.kind_uv(room, _spider_kind())
+	var target_uv: Vector2 = _spider_web.target / size_m
+	var pose: Dictionary = SpiderPose.compute(_spider_move.anim(), _stage.elapsed(), _spider_eco.size(), _spider_move.drop,
+		float(_spider_cfg.get("behaviour", {}).get("drop_px", 0.0)))
+	var mouth: Vector2 = RoomGeometry.to_screen(spider_uv) + Vector2(pose["mouth"]) * RoomGeometry.scale_at(spider_uv.y)
+	SpiderArt.draw_web(canvas, _spider_web.phase, mouth, RoomGeometry.to_screen(target_uv), RoomGeometry.scale_at(target_uv.y),
+		_spider_web.flight_progress(), _stage.elapsed())
 
 
 ## Runs the ghost's timed effects on with game time and shows them under the energy bar.
@@ -538,7 +636,7 @@ func open_crafting() -> void:
 	_casting.cancel()
 	_sim.clock.paused = true
 	_hud.set_prompt("", Vector2.ZERO, false)
-	_craft_screen.open(_crafting, _loot)
+	_craft_screen.open(_crafting, _loot, _progression)
 
 
 func _on_crafting_closed(all_returned: bool) -> void:
@@ -575,6 +673,7 @@ func _journal_entries() -> Array[String]:
 ## Energy refills (stage 5d): faster hidden, in a dark or cold room; not while acting. The
 ## running action moves on by the same game minutes.
 func _update_energy(minutes: float) -> void:
+	_energy.room_id = _navigator.room_id   # room bonds (sprint 002) apply where the ghost is
 	if minutes <= 0.0:
 		return
 	var room: RoomState = _sim.house.rooms[_navigator.room_id]
@@ -609,8 +708,8 @@ func _connect_events() -> void:
 	_sim.morale.npc_broke.connect(func(npc: String) -> void: _key_event(tr("LOG_BROKEN") % names[npc]))
 	_sim.morale.npc_recovered.connect(func(npc: String) -> void: _key_event(tr("LOG_RECOVERED") % names[npc]))
 	# Stage 5d: energy
-	_stealth.ghost_energy_penalty.connect(func(zone: String, _amount: int) -> void:
-		var lost: float = _energy.penalize(zone)
+	_stealth.ghost_energy_penalty.connect(func(zone: String, amount: int) -> void:
+		var lost: float = _energy.drain(float(amount), zone)   # amount after owned nodes (sprint 002)
 		if lost > 0.0:
 			_hud.add_log(tr("LOG_ENERGY_LOST") % roundi(lost)))
 	_stealth.contact.connect(func(_npc: String, _how: String) -> void: _casting.cancel())
@@ -631,7 +730,9 @@ func _connect_events() -> void:
 	_effects.ended.connect(func(effect_id: String) -> void: _hud.add_log(tr("LOG_EFFECT_ENDED_" + effect_id)))
 	# The monocle (sprint 001, phase G): dropped on the ghost it works for a while; sight zones on
 	_item_use.register("monocle", func(_item: String, params: Dictionary) -> bool:
-		var ok: bool = _monocle.activate(params)
+		var timed: Dictionary = params.duplicate()   # Grandpa's habit (sprint 002, node G7) lengthens it
+		timed["minutes"] = _modifiers.value("monocle.minutes", float(params.get("minutes", 0.0)))
+		var ok: bool = _monocle.activate(timed)
 		if ok:
 			_stage.show_cones = true
 		return ok)
@@ -685,6 +786,7 @@ func _morale_float(delta: int, reason: String) -> String:
 ## The player settings that act inside a game (the floating morale texts); display settings are
 ## applied by the settings screen itself.
 func _apply_game_settings(settings: GameSettings) -> void:
+	_craft_screen.reduced_motion = settings.reduced_motion   # the roots screen (sprint 002, P5)
 	_hud.set_float_source(_stage.visible_floats if settings.show_morale_floats else Callable())
 
 
@@ -698,7 +800,8 @@ func save_state() -> Dictionary:
 		"loot": _loot.save_state(), "stats": _stats.save_state(), "stealth": _stealth.save_state(),
 		"motion": _motion.save_state(), "game": {"monocle": _monocle.found, "monocle_state": _monocle.save_state(), "monocle_rng": _monocle_rng.state,
 			"key_events": _key_events.duplicate()},
-		"crafting": _crafting.save_state(), "effects": _effects.save_state()}
+		"crafting": _crafting.save_state(), "progression": _progression.save_state(), "effects": _effects.save_state(),
+		"spider": _spider_eco.save_state()}
 
 
 ## How the save shows in the list: day, time, the ghost's room, the family's resolve.
@@ -712,6 +815,10 @@ func load_state(data: Dictionary) -> void:
 	_casting.cancel()
 	_sim.load_state(data["sim"])
 	_navigator.load_state(data["ghost"])
+	# the tree and its roots first: owned nodes change the energy maximum and the inventory's slots
+	if data.has("crafting"):   # saves from before sprint 001 have no crafting tree
+		_crafting.load_state(data["crafting"])
+	_progression.load_state(data.get("progression", {}))   # none before sprint 002
 	_energy.load_state(data["energy"])
 	_loot.load_state(data["loot"])
 	_stats.load_state(data["stats"])
@@ -727,9 +834,8 @@ func load_state(data: Dictionary) -> void:
 		if _loot.count(Monocle.ITEM) == 0:
 			_loot.add(Monocle.ITEM, 1)
 	_key_events.assign(game["key_events"])
-	if data.has("crafting"):   # saves from before sprint 001 have no crafting tree
-		_crafting.load_state(data["crafting"])
 	_effects.load_state(data.get("effects", {}))
+	_spider_eco.load_state(data.get("spider", {}))   # none before sprint 002: a friendly, hungry spider
 	_hud.hide_loot_grid()
 	_hud.hide_day_card()
 	_hud.show_map(_loot.has_map())
@@ -805,6 +911,18 @@ func _run_capture(dir: String) -> void:
 		return
 	if OS.get_cmdline_user_args().has("--areas-test"):
 		await _run_areas_test(dir)
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("--spider-test"):
+		await _run_spider_test(dir)
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("--roots-test"):
+		await _run_roots_test(dir)
+		get_tree().quit()
+		return
+	if OS.get_cmdline_user_args().has("--routines-test"):
+		await _run_routines_test(dir)
 		get_tree().quit()
 		return
 	if OS.get_cmdline_user_args().has("--props-test"):
@@ -1476,13 +1594,13 @@ func _run_crafting_test(dir: String) -> void:
 	await _frames(dir, "c09-elixirs-used-speed-running", 0.3, 0.0)
 
 
-## Sprint 001 (2026-11-25): the basement, attic and yards by day and night, and the ghost pushed
+## Sprint 001 (2026-11-25): the basement, attic and yards by day, evening (sprint 002 QA, 18:30) and night, and the ghost pushed
 ## against a wall with no room beyond it (the thin outside-wall margin, phase A).
 func _run_areas_test(dir: String) -> void:
 	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
 	_hud.tick(0.0)
 	var areas: Array[String] = ["basement", "attic", "back_yard", "front_yard"]
-	for pass_time: Array in [["10:00", "day"], ["22:10", "night"]]:
+	for pass_time: Array in [["10:00", "day"], ["18:30", "evening"], ["22:10", "night"]]:   # in clock order: _show only moves forward
 		for i: int in areas.size():
 			await _show(dir, "%s-%02d-%s" % [pass_time[1], i + 1, areas[i]], pass_time[0], areas[i], Vector2(0.5, 0.8))
 	_loot.add("fly", 6)   # sprint 001 phase F: the spider and its trade prompt
@@ -1498,6 +1616,139 @@ func _run_areas_test(dir: String) -> void:
 	await _show(dir, "monocle-03-active-sight-zones", "10:20", "kitchen", Vector2(0.15, 0.92))
 	await _show(dir, "margin-01-workshop-left-wall", "10:00", "workshop", Vector2(GhostNavigator.U_MIN, 0.5))
 	await _show(dir, "margin-02-basement-back-wall", "10:00", "basement", Vector2(0.5, GhostNavigator.V_MIN))
+
+
+## Capture only (sprint 002, P4, S2-05): the attic spider idle from afar, lowering itself as the
+## ghost comes near, eating after a trade, grown, hostile with the web's wind-up mark, the web in
+## flight and a hit. Calories are set through real trades. Captures run with [method _process] off,
+## so [method _spider_frames] drives the spider frame by frame in real time.
+func _run_spider_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	var spider: Vector2 = _stage.layout.kind_uv("attic", _spider_kind())
+	await _show(dir, "s01-idle-from-afar", "10:00", "attic", Vector2(0.15, 0.85))
+	await _spider_frames(dir, "s02-idle-later", 0.8)
+	_navigator.place("attic", spider + Vector2(-0.05, 0.22))
+	await _spider_frames(dir, "s03-lowering", 0.5)
+	await _spider_frames(dir, "s04-lowered-near-ghost", 1.2)
+	_loot.add("fly", 6)
+	_trade_with_spider()
+	await _spider_frames(dir, "s05-eating", 0.6)
+	await _spider_frames(dir, "s06-eating-later", 0.8)
+	_loot.add("fly", 6)
+	_trade_with_spider()
+	_navigator.place("attic", Vector2(0.15, 0.85))
+	await _spider_frames(dir, "s07-grown-and-high-again", 4.0)
+	# feed until hostile (a few more trades if the calories have decayed a little meanwhile)
+	for i: int in 4:
+		if _spider_eco.mood == SpiderEcology.Mood.HOSTILE:
+			break
+		_navigator.place("attic", spider + Vector2(-0.05, 0.22))
+		_loot.add("fly", 6)
+		_trade_with_spider()
+	_navigator.place("attic", spider + Vector2(-0.1, 0.3))
+	if not await _spider_until(SpiderWeb.Phase.TELEGRAPH, 15.0):
+		push_warning("spider-test: no wind-up (mood %d)" % _spider_eco.mood)
+		return
+	await _spider_frames(dir, "s08-hostile-wind-up-mark", 0.4)
+	if not await _spider_until(SpiderWeb.Phase.FLIGHT, 5.0):
+		push_warning("spider-test: the web never flew")
+		return
+	await _spider_frames(dir, "s09-web-in-flight", 0.1)
+	await _spider_frames(dir, "s10-hit-log", 1.2)
+
+
+## Capture only: [param seconds] of real time with the spider updated each frame, then a screenshot.
+func _spider_frames(dir: String, shot_name: String, seconds: float) -> void:
+	var left: float = seconds
+	while left > 0.0:
+		await get_tree().process_frame
+		var dt: float = get_process_delta_time()
+		_update_spider(dt)
+		_update_view()
+		left -= dt
+	await _frames(dir, shot_name, 0.0, 0.0)
+
+
+## Capture only: runs the spider frame by frame until the web reaches [param phase]; false after
+## [param limit] real seconds without it.
+func _spider_until(phase: SpiderWeb.Phase, limit: float) -> bool:
+	var left: float = limit
+	while _spider_web.phase != phase:
+		if left <= 0.0:
+			return false
+		await get_tree().process_frame
+		var dt: float = get_process_delta_time()
+		_update_spider(dt)
+		_update_view()
+		left -= dt
+	return true
+
+
+## Capture only (sprint 002, P5, S2-06): the roots screen from the hollow — first visit, short of
+## materials, the first unlock and its light, mid-progress, a selected room bond, everything owned,
+## and back in the hollow. Material counts are set directly; each unlock goes through the screen.
+func _run_roots_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	var tree: Vector2 = _stage.layout.kind_uv("back_yard", _tree_kind())
+	await _show(dir, "r00-back-yard", "10:00", "back_yard", tree + Vector2(0.0, 0.06))
+	open_crafting()
+	await _frames(dir, "r01-hollow-with-roots-button", 0.3, 0.0)
+	_craft_screen.open_roots()
+	await _frames(dir, "r02-roots-sliding-in", 0.15, 0.0)
+	await _frames(dir, "r03-first-visit-T1-selected", 0.5, 0.0)
+	var roots: RootsScreen = _craft_screen.roots_screen()
+	roots.select("G1")
+	await _frames(dir, "r04-locked-node-selected", 0.3, 0.0)
+	roots.select("T1")
+	_loot.add("bone", 1)
+	await _frames(dir, "r05-short-of-materials", 0.3, 0.0)
+	_loot.add("bone", 2)
+	_loot.add("feather", 2)
+	roots.unlock_selected()
+	await _frames(dir, "r06-T1-unlocking-light", 0.15, 0.0)
+	await _frames(dir, "r07-T1-owned-branches-open", 0.6, 0.0)
+	for item: String in ["dust", "cobweb", "candle_stub", "rusty_nail", "old_thread", "bone", "feather", "ink", "fly", "ectoplasm"]:
+		_loot.add(item, 40)
+	for id: String in ["R1", "R2", "R7", "G1", "G4", "K1"]:
+		roots.select(id)
+		roots.unlock_selected()
+	roots.select("R8")
+	await _frames(dir, "r08-mid-progress-room-bond-selected", 0.6, 0.0)
+	for id: String in _progression.nodes().map(func(n: Dictionary) -> String: return String(n["id"])):
+		roots.select(id)
+		roots.unlock_selected()
+	roots.select("R11")
+	await _frames(dir, "r09-everything-owned-coffin", 0.6, 0.0)
+	roots.close()
+	await _frames(dir, "r10-back-in-the-hollow", 0.5, 0.0)
+
+
+## Capture only (sprint 002, S2-02): each bathroom visit of day 1 a few minutes before its slot
+## ends (the person has arrived), the father dressing after his wash and the children's bedtime in
+## their room. The ghost waits in the room's far corner.
+func _run_routines_test(dir: String) -> void:
+	_hud._time = GameHud.HELP_FIRST_SECONDS + 1.0
+	_hud.tick(0.0)
+	var corner := Vector2(0.12, 0.18)
+	var shots: Array[Array] = [
+		["01-mother-wash-morning", "06:12", "upper_bathroom"],
+		["02-father-wash-morning", "06:27", "upper_bathroom"],
+		["03-father-dressing", "06:40", "parents_bedroom"],
+		["04-grandpa-wash-morning", "06:52", "upper_bathroom"],
+		["05-grandma-wash-morning", "08:25", "upper_bathroom"],
+		["06-son-wash-morning", "08:42", "upper_bathroom"],
+		["07-daughter-wash-morning", "08:57", "upper_bathroom"],
+		["08-father-wash-evening", "20:25", "upper_bathroom"],
+		["09-grandma-wash-evening", "20:55", "upper_bathroom"],
+		["10-son-wash-evening", "21:12", "upper_bathroom"],
+		["11-daughter-wash-evening", "21:27", "upper_bathroom"],
+		["12-children-bedtime-room", "21:40", "children_bedroom"],
+		["13-mother-wash-evening", "21:55", "upper_bathroom"],
+	]
+	for shot: Array in shots:
+		await _show(dir, shot[0], shot[1], shot[2], corner)
 
 
 ## Art test only: lamp out and window open, through the ghost's own rules.
