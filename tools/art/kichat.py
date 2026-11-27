@@ -19,7 +19,10 @@ def call(endpoint, body):
     json.dump(body, open(path, "w"))
     r = subprocess.run([CURL, "-s", "-m", "900", "-X", "POST", "-H", f"Authorization: Bearer {TOKEN}",
         "-H", "Content-Type: application/json", "--data", "@" + path, BASE + endpoint], capture_output=True, text=True)
-    return json.loads(r.stdout)[0]["url"]
+    reply = json.loads(r.stdout) if r.stdout.strip() else {}
+    if not isinstance(reply, list) or not reply:   # an error from the service: show what it said
+        raise RuntimeError("service: " + (r.stdout.strip() or ("curl exit %d" % r.returncode))[:300])
+    return reply[0]["url"]
 
 
 for job in json.load(open(sys.argv[1])):

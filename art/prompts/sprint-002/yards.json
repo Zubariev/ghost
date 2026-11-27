@@ -1,0 +1,74 @@
+[
+	{
+		"out": "sprint002/yards/back_wall_fence.png",
+		"prompt": "A seamless horizontally tileable texture of an old weathered wooden plank garden fence with ivy, dark tree silhouettes and dusk sky above the fence top, straight-on, filling the whole image. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/side_wall_hedge_fence.png",
+		"prompt": "A seamless tileable texture of a weathered plank fence half covered by a dark overgrown hedge, straight-on, filling the whole image. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/lawn.png",
+		"prompt": "A seamless tileable top-down texture of a slightly overgrown dusk lawn with a few fallen leaves and clover, even tone so it tiles without visible seams, filling the whole image. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/front_side_wall_picket.png",
+		"prompt": "A seamless horizontally tileable texture of a white wooden picket fence, slightly worn, with dark blue hydrangea bushes behind it and a dusk sky above, straight-on, filling the whole image. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/shed.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A small old wooden garden shed with a plank door and a little square window, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/woodpile.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A low wide stack of split firewood logs under a small slanted plank roof, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/rain_barrel.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. An old wooden rain barrel with iron hoops, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/crafting_tree.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. An ancient gnarled oak tree with a huge dark hollow in its trunk, wide crown, twisting roots at the base, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/clothesline.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A garden clothesline between two wooden posts with a white sheet and a faded red towel hanging, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/sandbox.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A small square wooden children's sandbox with a toy bucket and spade, seen slightly from above. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/tricycle.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A small red children's tricycle, side view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/garden_bed.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A raised wooden garden bed with leafy vegetables, seen slightly from above. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/birdhouse.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A small wooden birdhouse on a tall post, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/watering_can.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. An old metal watering can, side view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/hedge_long.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A long low clipped garden hedge, about twice as wide as it is tall, rectangular with rounded edges, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/mailbox.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. An old rounded metal mailbox on a wooden post with a little red flag, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/swing_oak.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A big leafy oak tree with a wooden rope swing hanging from a branch, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/yards/hydrangea.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A round bush of dusty blue and mauve hydrangea flowers, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	}
+]

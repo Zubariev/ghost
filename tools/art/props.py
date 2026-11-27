@@ -87,6 +87,22 @@ T = {
  "children_bedroom/easel": ({"": "children_bedroom/easel.png"}, 0.6, 1.4, 0, {}),
  "upper_bathroom/bathtub": ({"": "upper_bathroom/bathtub.png"}, 1.7, 1.05, 0, {"white": True}),
  "upper_bathroom/sink": ({"": "upper_bathroom/sink.png"}, 0.6, 1.75, 0, {"white": True}),
+ # sprint 002 (P7, S2-08): the yards repainted from Reference A in the storybook style (art/prompts/sprint-002/yards.json)
+ "back_yard/crafting_tree": ({"": "sprint002/yards/crafting_tree.png"}, 4.6, 4.6, 0, {"out": "back_yard/crafting_tree_v2"}),
+ "back_yard/shed": ({"": "sprint002/yards/shed.png"}, 2.4, 2.6, 0, {"out": "back_yard/shed_v2"}),
+ "back_yard/woodpile": ({"": "sprint002/yards/woodpile.png"}, 1.6, 1.0, 0, {"out": "back_yard/woodpile_v2"}),
+ "back_yard/barrel": ({"": "sprint002/yards/rain_barrel.png"}, 0.7, 1.0, 0, {"out": "back_yard/rain_barrel"}),
+ "front_yard/hedge": ({"": "sprint002/yards/hedge_long.png"}, 2.2, 1.2, 0, {"out": "front_yard/hedge_long"}),
+ # decor only ("decor": true in furniture.json: drawn, never an obstacle, spot or object)
+ "clothesline": ({"": "sprint002/yards/clothesline.png"}, 3.0, 2.0, 0, {"out": "back_yard/clothesline"}),
+ "sandbox": ({"": "sprint002/yards/sandbox.png"}, 1.5, 0.75, 0, {"out": "back_yard/sandbox"}),
+ "tricycle_toy": ({"": "sprint002/yards/tricycle.png"}, 0.8, 0.65, 0, {"out": "back_yard/tricycle"}),
+ "garden_bed": ({"": "sprint002/yards/garden_bed.png"}, 1.8, 0.8, 0, {"out": "back_yard/garden_bed"}),
+ "watering_can": ({"": "sprint002/yards/watering_can.png"}, 0.5, 0.4, 0, {"out": "back_yard/watering_can"}),
+ "birdhouse": ({"": "sprint002/yards/birdhouse.png"}, 0.5, 2.0, 0, {"out": "back_yard/birdhouse"}),
+ "swing_oak": ({"": "sprint002/yards/swing_oak.png"}, 3.5, 4.2, 0, {"out": "front_yard/swing_oak"}),
+ "hydrangea": ({"": "sprint002/yards/hydrangea.png"}, 1.2, 1.1, 0, {"out": "front_yard/hydrangea"}),
+ "mailbox": ({"": "sprint002/yards/mailbox.png"}, 0.5, 1.2, 0, {"out": "front_yard/mailbox"}),
 }
 # Where the code draws on a painted prop, as fractions of its image (x right, y down).
 FRAC = {

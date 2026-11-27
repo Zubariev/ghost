@@ -1,12 +1,25 @@
-## Small code-drawn icons for collectable items (loot grid, journal), in the storybook style.
-## Placeholder art like the rest: an icon key from loot.json picks the drawing; unknown keys
-## get a plain token.
+## Icons for collectable items (loot grid, slot bar, hollow, journal), in the storybook style.
+## An icon key from loot.json picks the art: the painted image [code]assets/art/items/<key>.png[/code]
+## when it exists (sprint 002, P6, task S2-07), otherwise the code drawing below; unknown keys get a
+## plain token. Item definitions never change for art: a new painting is a file, nothing else.
 class_name ItemArt
 extends RefCounted
+
+const PAINTED_DIR: String = "res://assets/art/items/"
+## Icon keys with a code drawing (the fallback for every item without a painting).
+const CODE_ICONS: Array[String] = ["dust", "cobweb", "candle", "nail", "thread", "key", "letter", "page", "photo",
+	"horse", "map", "bone", "feather", "ectoplasm", "ink", "fly", "nest", "elixir_energy", "elixir_speed", "monocle"]
+
+## icon key -> Texture2D or null (looked up once per run).
+static var _painted: Dictionary = {}
 
 
 ## Draws icon [param icon] centred at [param c], fitting a square of [param size] px.
 static func draw(canvas: CanvasItem, icon: String, c: Vector2, size: float) -> void:
+	var texture: Texture2D = painted(icon)
+	if texture != null:
+		canvas.draw_texture_rect(texture, fit_rect(texture.get_size(), c, size), false)
+		return
 	var s: float = size / 40.0
 	match icon:
 		"dust":
@@ -117,3 +130,27 @@ static func draw(canvas: CanvasItem, icon: String, c: Vector2, size: float) -> v
 			canvas.draw_polyline(chain, Palette.SB_GOLD, 1.4, true)
 		_:
 			canvas.draw_colored_polygon(Ink.ellipse(c, 9 * s, 9 * s, 14), Palette.SB_GOLD)
+
+
+## True when [param icon] has a code drawing.
+static func has_code_drawing(icon: String) -> bool:
+	return CODE_ICONS.has(icon)
+
+
+static func painted_path(icon: String) -> String:
+	return PAINTED_DIR + icon + ".png"
+
+
+## The painted image for [param icon], or null when there is none.
+static func painted(icon: String) -> Texture2D:
+	if not _painted.has(icon):
+		var path: String = painted_path(icon)
+		_painted[icon] = load(path) as Texture2D if not icon.is_empty() and ResourceLoader.exists(path) else null
+	return _painted[icon]
+
+
+## A rectangle of [param image_size]'s shape, as large as fits a [param size] square centred at [param c].
+static func fit_rect(image_size: Vector2, c: Vector2, size: float) -> Rect2:
+	var scale: float = size / maxf(maxf(image_size.x, image_size.y), 1.0)
+	var fitted: Vector2 = image_size * scale
+	return Rect2(c - fitted * 0.5, fitted)

@@ -792,6 +792,118 @@
 				1.0
 			],
 			"scale": 1.0
+		},
+		"back_yard/crafting_tree": {
+			"sprite": "res://assets/art/props/back_yard/crafting_tree_v2.png",
+			"anchor": [
+				0.5,
+				0.9943
+			],
+			"scale": 0.5
+		},
+		"back_yard/shed": {
+			"sprite": "res://assets/art/props/back_yard/shed_v2.png",
+			"anchor": [
+				0.5,
+				0.9899
+			],
+			"scale": 0.5
+		},
+		"back_yard/woodpile": {
+			"sprite": "res://assets/art/props/back_yard/woodpile_v2.png",
+			"anchor": [
+				0.5,
+				0.9747
+			],
+			"scale": 0.5
+		},
+		"back_yard/barrel": {
+			"sprite": "res://assets/art/props/back_yard/rain_barrel.png",
+			"anchor": [
+				0.5,
+				0.9732
+			],
+			"scale": 0.5
+		},
+		"front_yard/hedge": {
+			"sprite": "res://assets/art/props/front_yard/hedge_long.png",
+			"anchor": [
+				0.5,
+				0.9755
+			],
+			"scale": 0.5
+		},
+		"clothesline": {
+			"sprite": "res://assets/art/props/back_yard/clothesline.png",
+			"anchor": [
+				0.5,
+				0.987
+			],
+			"scale": 0.5
+		},
+		"sandbox": {
+			"sprite": "res://assets/art/props/back_yard/sandbox.png",
+			"anchor": [
+				0.5,
+				0.9669
+			],
+			"scale": 0.5
+		},
+		"tricycle_toy": {
+			"sprite": "res://assets/art/props/back_yard/tricycle.png",
+			"anchor": [
+				0.5,
+				0.9623
+			],
+			"scale": 0.5
+		},
+		"garden_bed": {
+			"sprite": "res://assets/art/props/back_yard/garden_bed.png",
+			"anchor": [
+				0.5,
+				0.9688
+			],
+			"scale": 0.5
+		},
+		"watering_can": {
+			"sprite": "res://assets/art/props/back_yard/watering_can.png",
+			"anchor": [
+				0.5,
+				0.9412
+			],
+			"scale": 0.5
+		},
+		"birdhouse": {
+			"sprite": "res://assets/art/props/back_yard/birdhouse.png",
+			"anchor": [
+				0.5,
+				0.969
+			],
+			"scale": 0.5
+		},
+		"swing_oak": {
+			"sprite": "res://assets/art/props/front_yard/swing_oak.png",
+			"anchor": [
+				0.5,
+				0.9932
+			],
+			"scale": 0.5
+		},
+		"hydrangea": {
+			"sprite": "res://assets/art/props/front_yard/hydrangea.png",
+			"anchor": [
+				0.5,
+				0.9769
+			],
+			"scale": 0.5
+		},
+		"mailbox": {
+			"sprite": "res://assets/art/props/front_yard/mailbox.png",
+			"anchor": [
+				0.5,
+				0.964
+			],
+			"scale": 0.5
 		}
 	},
 	"_wall_portraits": "Art Phase 1 (2026-11-15): framed portraits on the side walls, per storybook room. Art config only: not furniture, never an obstacle, not in furniture.json. wall: left/right; v: [from, to] along the wall (0 back .. 1 front; side doors are at 0.39-0.61); h: [from, to] up the wall (0 floor .. 1 top; wainscot up to 0.36); variant: lady / child / gentleman.",
@@ -852,7 +964,7 @@
 		]
 	},
 	"surfaces": {
-		"_source": "Painted walls, floors and rugs (user review 2026-11-20; references in art/textures/, generated textures in art/concepts/textures_game/, game copies in assets/art/surfaces/). Per room: wall texture with its real tile size in metres (width, height), an optional wood-panel wainscot up to wainscot_m, the floor texture and its tile size; laid in the room camera's perspective (RoomSurfaces). rug: the rug texture; web: the corner cobweb (white on transparent). Sprint 001 (2026-11-25): basement (fieldstone, brick floor), attic (bare boards), back yard (garden brick wall, lawn), front yard (house front weatherboard, cobbles); generated with tools/art/kichat.py, concepts in art/concepts/textures_game/.",
+		"_source": "Painted walls, floors and rugs (user review 2026-11-20; references in art/textures/, generated textures in art/concepts/textures_game/, game copies in assets/art/surfaces/). Per room: wall texture with its real tile size in metres (width, height), an optional wood-panel wainscot up to wainscot_m, the floor texture and its tile size; laid in the room camera's perspective (RoomSurfaces). rug: the rug texture; web: the corner cobweb (white on transparent). Sprint 001 (2026-11-25): basement (fieldstone, brick floor), attic (bare boards), back yard (garden brick wall, lawn), front yard (house front weatherboard, cobbles); generated with tools/art/kichat.py, concepts in art/concepts/textures_game/. Sprint 002 (P7, S2-08, 2026-11-27): back yard fence (back wall), fence with hedge (side walls; new side_wall key), seamless lawn; front yard picket fence with hydrangeas on the side walls; fence textures span the whole wall height (tile = wall height 2.9 m) so their sky band stays at the top. Generated with tools/art/kichat.py (art/prompts/sprint-002/yards.json).",
 		"rug": "res://assets/art/surfaces/rug_persian.png",
 		"web": "res://assets/art/surfaces/web_corner.png",
 		"rooms": {
@@ -1055,15 +1167,20 @@
 				]
 			},
 			"back_yard": {
-				"wall": "res://assets/art/surfaces/wall_garden_brick.png",
+				"wall": "res://assets/art/surfaces/wall_back_yard_fence.png",
 				"wall_tile_m": [
-					2.0,
-					2.0
+					2.9,
+					2.9
 				],
-				"floor": "res://assets/art/surfaces/floor_yard_grass.png",
+				"floor": "res://assets/art/surfaces/floor_back_yard_lawn.png",
 				"floor_tile_m": [
 					3.0,
 					3.0
+				],
+				"side_wall": "res://assets/art/surfaces/wall_back_yard_side_hedge.png",
+				"side_wall_tile_m": [
+					2.9,
+					2.9
 				]
 			},
 			"front_yard": {
@@ -1076,6 +1193,11 @@
 				"floor_tile_m": [
 					2.0,
 					2.0
+				],
+				"side_wall": "res://assets/art/surfaces/wall_front_yard_side_picket.png",
+				"side_wall_tile_m": [
+					2.9,
+					2.9
 				]
 			}
 		}

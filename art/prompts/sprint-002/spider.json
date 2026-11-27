@@ -1,0 +1,14 @@
+[
+	{
+		"out": "sprint002/spider/spider_full.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A large whimsical attic spider seen straight from the front, hanging head-up: round dark charcoal abdomen with a faded terracotta mark, smaller head with two small glowing amber eyes and tiny fangs, eight long jointed legs spread symmetrically out to the sides, two shorter front feelers. Unsettling but charming, not realistic, no hair detail. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/spider/spider_body.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. Only the body of a whimsical storybook spider, no legs at all: a round dark charcoal abdomen with a faded terracotta mark joined to a smaller head with two small amber eyes and tiny fangs, seen from the front, head up. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/spider/spider_leg.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A single long jointed spider leg lying horizontally, dark charcoal with a dark-brown outline, two segments meeting at a knee, thin at the tip. Nothing else in the image. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	}
+]

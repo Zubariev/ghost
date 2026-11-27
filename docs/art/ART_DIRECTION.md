@@ -108,6 +108,7 @@ Starve* block in §13.4 (proposed in `proposals/PHASE0_REVIEW.md` §2, not appli
 | Room-state visuals (dirt, polish, cold, embers) | GDD §13.3 visual language, every room | APPROVED — art Phase 2, approved 2026-11-15 | `environments/ENVIRONMENT_GUIDELINES.md` §4 |
 | Painted props (sprite path) | Fireplace trial with a painted flame layer; images by kind, animation as code or `effects` layers | APPROVED (trial) — art Phase 3, 2026-11-15 | `SPRITE_SPEC.md`, `environments/LIVING_ROOM.md` §8 |
 | Other ten rooms | Painted; one brief per room (identity, layout from data, states, concept and prop briefs) | PROVISIONAL — briefs drafted, art Phase 4 | `environments/ENVIRONMENT_GUIDELINES.md` §6, §8; `environments/<ROOM>.md` |
+| Yards (back and front) | Painted in the storybook style from Reference A (D1, 2026-11-26); briefs `environments/BACK_YARD.md`, `environments/FRONT_YARD.md`; back-yard backdrop vs. camera direction | PROVISIONAL (art generated and wired 2026-11-27, awaiting capture review); back-yard backdrop: garden fence and trees (user, 2026-11-27) | `environments/BACK_YARD.md` §3 |
 | Shared prop kinds across rooms | Room-scoped sprite keys (`"kitchen/window"`); the house-wide `"window"` image is the fallback | APPROVED — user decision 2026-11-15 | `environments/ENVIRONMENT_GUIDELINES.md` §8 |
 
 ## 6. Characters, ghost, UI

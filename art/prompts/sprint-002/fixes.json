@@ -1,0 +1,10 @@
+[
+ {
+  "out": "sprint002/yards/lawn_calm.png",
+  "prompt": "A seamless tileable top-down texture of short uniform lawn grass: fine evenly spread grass blades and a few tiny clover leaves, the same density and brightness everywhere, no large shapes, no dark patches, no roots, no paths, no stones, so it tiles without any visible repeat, filling the whole image. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+ },
+ {
+  "out": "sprint002/yards/front_porch.png",
+  "prompt": "Isolated single object, whole object in frame, centred, plain flat white background. The front porch of an old wooden family house seen straight-on: a small covered porch with a little gabled roof on two white turned posts, a white railing at both sides, two wooden steps, and a dark green panelled front door with a round dried-flower wreath and a brass knob, a small lantern beside the door, a patch of weatherboard wall around the door. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+ }
+]

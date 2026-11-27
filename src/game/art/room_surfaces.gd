@@ -102,7 +102,7 @@ func draw_back_wall(canvas: CanvasItem, cfg: Dictionary, alpha: float) -> void:
 
 func draw_side_wall(canvas: CanvasItem, cfg: Dictionary, left: bool, alpha: float) -> void:
 	var d: float = RoomGeometry.ROOM_SIZE_M.y
-	for band: Array in _bands(cfg):
+	for band: Array in _bands(cfg, true):
 		var tex: Texture2D = band[0]
 		var h0: float = band[1]
 		var h1: float = band[2]
@@ -170,9 +170,10 @@ func _room(room_id: String) -> Dictionary:
 # Wall bands: [texture, low, high (0..1 of the wall's height, 0 = floor), tile in metres]. A
 # wainscot (when given) up to wainscot_m, the wallpaper above. Texture rows run down from the
 # ceiling, so a pattern lines up along the top of every wall.
-func _bands(cfg: Dictionary) -> Array:
-	var wall: Texture2D = texture(String(cfg.get("wall", "")))
-	var tile: Vector2 = _tile(cfg, "wall_tile_m", Vector2(1.0, 1.0))
+func _bands(cfg: Dictionary, side: bool = false) -> Array:
+	var key: String = wall_key(cfg, side)
+	var wall: Texture2D = texture(String(cfg.get(key, "")))
+	var tile: Vector2 = _tile(cfg, key + "_tile_m", _tile(cfg, "wall_tile_m", Vector2(1.0, 1.0)))
 	var wainscot: Texture2D = texture(String(cfg.get("wainscot", "")))
 	if wainscot == null:
 		return [[wall, 0.0, 1.0, tile]]
@@ -191,6 +192,12 @@ func _rail(canvas: CanvasItem, cfg: Dictionary, line: PackedVector2Array, alpha:
 	if _wainscot(cfg) <= 0.0:
 		return
 	Ink.line(canvas, line, Ink.Tier.FURNITURE, 5.0, Color(Palette.SB_WALNUT_DARK, alpha), 2.5)
+
+
+## The config key of the texture for the back wall ([param side] false) or a side wall: a side wall
+## uses "side_wall" when the room gives one (sprint 002, the yards), else "wall" like the back wall.
+static func wall_key(cfg: Dictionary, side: bool) -> String:
+	return "side_wall" if side and not String(cfg.get("side_wall", "")).is_empty() else "wall"
 
 
 static func _tile(cfg: Dictionary, key: String, fallback: Vector2) -> Vector2:

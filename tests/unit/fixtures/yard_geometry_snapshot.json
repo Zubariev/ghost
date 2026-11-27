@@ -1,0 +1,128 @@
+{
+	"_source": "Sprint 002 (P7, S2-08): the yards' gameplay geometry before the yard art pass, taken 2026-11-27 from rooms.json, furniture.json and movement.json. tests/integration/data/yard_geometry_test.gd fails if art work changes any of it.",
+	"rooms": {
+		"back_yard": {
+			"id": "back_yard",
+			"size_m": [
+				10.5,
+				7.5
+			],
+			"name": "Задній двір",
+			"floor": 0,
+			"plan_rect": [
+				430,
+				500,
+				195,
+				150
+			],
+			"grid": [
+				2,
+				-1
+			],
+			"has_window": false,
+			"outdoor": true,
+			"family": false,
+			"temperature": "cold"
+		},
+		"front_yard": {
+			"id": "front_yard",
+			"size_m": [
+				10.0,
+				6.0
+			],
+			"name": "Передній двір",
+			"floor": 0,
+			"plan_rect": [
+				635,
+				500,
+				195,
+				150
+			],
+			"grid": [
+				2,
+				2
+			],
+			"has_window": false,
+			"outdoor": true,
+			"family": false,
+			"temperature": "cold"
+		}
+	},
+	"pieces": {
+		"back_yard": [
+			{
+				"kind": "shed",
+				"u": 0.16,
+				"v": 0.12,
+				"blocks_sight": [
+					1.2,
+					0.9
+				],
+				"hide_id": "hide_back_yard_shed"
+			},
+			{
+				"kind": "woodpile",
+				"u": 0.36,
+				"v": 0.72,
+				"hide_id": "hide_back_yard_woodpile"
+			},
+			{
+				"kind": "barrel",
+				"u": 0.93,
+				"v": 0.86,
+				"hide_id": "hide_back_yard_rain_barrel"
+			},
+			{
+				"kind": "crafting_tree",
+				"u": 0.7,
+				"v": 0.3,
+				"reach_m": 1.8
+			}
+		],
+		"front_yard": [
+			{
+				"kind": "hedge",
+				"u": 0.15,
+				"v": 0.5,
+				"blocks_sight": [
+					1.0,
+					0.4
+				],
+				"hide_id": "hide_front_yard_hedge_left"
+			},
+			{
+				"kind": "hedge",
+				"u": 0.85,
+				"v": 0.5,
+				"blocks_sight": [
+					1.0,
+					0.4
+				],
+				"hide_id": "hide_front_yard_hedge_right"
+			}
+		]
+	},
+	"footprints": {
+		"barrel": [
+			0.3,
+			0.3
+		],
+		"crafting_tree": [
+			0.8,
+			0.6
+		],
+		"hedge": [
+			1.0,
+			0.4
+		],
+		"shed": [
+			1.2,
+			0.9
+		],
+		"woodpile": [
+			0.7,
+			0.35
+		]
+	},
+	"doors": []
+}

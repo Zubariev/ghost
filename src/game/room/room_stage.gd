@@ -78,6 +78,11 @@ const HAUNTED_SHADOW_STRETCH: float = 1.3
 const NIGHT_EASE_PER_SECOND: float = 0.8
 
 var _time: float = 0.0
+
+## The attic spider (sprint 002, P4): drawn by the game's callable instead of the furniture art
+## (args: canvas, floor point, depth, highlighted); its web on top of everything (args: canvas).
+var spider_draw: Callable
+var spider_overlay: Callable
 var _walk_phase: float = 0.0
 var _wall_alpha: Dictionary = {"left": 1.0, "right": 1.0, "back": 1.0}
 var _warmth: float = 1.0
@@ -99,6 +104,11 @@ var _floats: Array[Dictionary] = []
 const FLOAT_SECONDS: float = 1.6
 const FLOAT_RISE: float = 22.0
 const FLOATS_PER_PERSON: int = 2
+
+
+## Real seconds the stage has been animating (the clock for code-drawn animation, e.g. the spider).
+func elapsed() -> float:
+	return _time
 
 
 ## True when the room on screen is drawn in the storybook style.
@@ -264,6 +274,8 @@ func _draw() -> void:
 	items.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
 	for item: Array in items:
 		(item[1] as Callable).call()
+	if spider_overlay.is_valid():
+		spider_overlay.call(self)
 	if hidden and (_ghost_anim == null or _ghost_anim.presence() < 0.5):
 		_draw_hidden_glint(ghost_uv)
 		if loot != null and loot.is_searching():
@@ -296,6 +308,9 @@ func _draw_piece(piece: Dictionary, uv: Vector2, state: StringName, highlighted:
 	var variant: String = String(piece.get("variant", ""))
 	var hearth: Vector2 = RoomGeometry.to_screen(uv)
 	var painted: bool = false
+	if kind == "spider" and spider_draw.is_valid():
+		spider_draw.call(self, hearth, RoomGeometry.scale_at(uv.y), highlighted)
+		return
 	if kind == "rug" and surfaces != null:
 		var size: Array = piece.get("size_m", [2.5, 1.8])
 		if surfaces.draw_rug(self, uv, Vector2(float(size[0]), float(size[1]))):

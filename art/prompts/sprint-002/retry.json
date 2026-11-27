@@ -1,0 +1,34 @@
+[
+	{
+		"out": "sprint002/items/dust.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A small game inventory icon of a small grey heap of dust and fluffy dust bunnies on the floor (just dust, no building). Simple bold shape that reads at 40 pixels, thick outline, few details. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/items/nest.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A small game inventory icon of a round white silk spider egg sac wrapped in fine threads (not a bird nest). Simple bold shape that reads at 40 pixels, thick outline, few details. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/items/monocle.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A small game inventory icon of a single round gold monocle lens on a thin chain, no handle. Simple bold shape that reads at 40 pixels, thick outline, few details. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/items/photo.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. A small game inventory icon of an old sepia photograph in a white border showing a small house, slightly torn corner. Simple bold shape that reads at 40 pixels, thick outline, few details. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	},
+	{
+		"out": "sprint002/spider/spider_full.png",
+		"prompt": "A big friendly cartoon spider seen from the front, round charcoal body, two amber eyes, eight long legs spread out to both sides. Whimsical storybook illustration, hand-inked dark-brown outline, muted painted colours, plain flat white background, no text."
+	},
+	{
+		"out": "sprint002/spider/spider_body.png",
+		"prompt": "The round body of a cartoon spider seen from the front with no legs: a big charcoal abdomen with a terracotta spot and a small head with two amber eyes. Whimsical storybook illustration, hand-inked dark-brown outline, muted painted colours, plain flat white background, no text."
+	},
+	{
+		"out": "sprint002/spider/spider_leg.png",
+		"prompt": "One single thin jointed insect leg, dark charcoal, drawn horizontally, bent once in the middle like an elbow. Only the leg, nothing else. Whimsical storybook illustration, hand-inked dark-brown outline, muted painted colours, plain flat white background, no text."
+	},
+	{
+		"out": "sprint002/yards/crafting_tree.png",
+		"prompt": "Isolated single object, whole object in frame, centred, plain flat white background. An ancient gnarled oak tree whose thick trunk has one huge dark oval hollow opening in its middle, clearly visible, big enough for a child to climb into, wide crown, twisting roots at the base, front view. Whimsical gothic storybook illustration: hand-inked organic dark-brown outlines of varying width, muted hand-painted textures with light paper grain, warm desaturated palette (walnut brown, parchment, olive, dusty rose, antique gold, charcoal), slightly worn and lived-in, cozy but a little eerie. Even neutral light, no cast shadows, no glow. No text, no letters, no watermark, no frame."
+	}
+]
