@@ -202,6 +202,11 @@ func take_result() -> bool:
 	return true
 
 
+## Every level of the tree above the start ({tier, cost}), lowest first (a copy).
+func upgrades() -> Array[Dictionary]:
+	return _upgrades.duplicate(true)
+
+
 ## The next upgrade ({tier, cost}), or {} when the tree is at its top level.
 func next_upgrade() -> Dictionary:
 	for u: Dictionary in _upgrades:

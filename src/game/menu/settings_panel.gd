@@ -1,5 +1,5 @@
 ## The Settings screen (2026-11-15), shared by the main menu and the pause menu: display mode,
-## window size, the controls help at the start of a game, morale changes above people. It edits
+## window size, the controls help at the start of a game, morale changes above people, less motion. It edits
 ## a copy of the saved [GameSettings]; Apply saves, applies the display settings and emits
 ## [signal applied]; Restore defaults fills in the defaults (applied only by Apply); Back
 ## discards. Emits [signal closed] after Apply or Back.
@@ -16,6 +16,7 @@ var _mode_choice: OptionButton
 var _size_choice: OptionButton
 var _help_box: CheckBox
 var _floats_box: CheckBox
+var _motion_box: CheckBox
 
 
 ## A settings screen showing the saved settings.
@@ -53,6 +54,8 @@ func _build_settings() -> void:
 	_help_box.toggled.connect(func(on: bool) -> void: _editing.show_help_at_start = on)
 	_floats_box = _check(tr("SET_MORALE_FLOATS"))
 	_floats_box.toggled.connect(func(on: bool) -> void: _editing.show_morale_floats = on)
+	_motion_box = _check(tr("SET_REDUCED_MOTION"))
+	_motion_box.toggled.connect(func(on: bool) -> void: _editing.reduced_motion = on)
 	add_text(tr("SET_AUDIO_LATER"), 14, Color(Palette.SB_CREAM, 0.55))
 	add_button(PlaqueButton.create(tr("SET_APPLY"), 200.0, 21)).pressed.connect(func() -> void:
 		_editing.save()
@@ -73,6 +76,7 @@ func _show() -> void:
 	_size_choice.disabled = _editing.fullscreen
 	_help_box.set_pressed_no_signal(_editing.show_help_at_start)
 	_floats_box.set_pressed_no_signal(_editing.show_morale_floats)
+	_motion_box.set_pressed_no_signal(_editing.reduced_motion)
 
 
 func _choice(grid: GridContainer, caption: String, items: Array) -> OptionButton:

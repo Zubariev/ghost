@@ -43,3 +43,21 @@ func test_a_copy_can_be_edited_without_changing_the_original() -> void:
 	copy.fullscreen = true
 	assert_bool(s.fullscreen).is_false()
 	assert_bool(copy.equals(s)).is_false()
+
+
+# --- Sprint 002 (P5): "Менше руху" (reduced motion), user decision 2026-11-27 ---
+
+func test_reduced_motion_is_off_by_default_and_survives_the_saved_format() -> void:
+	var s := GameSettings.defaults()
+	assert_bool(s.reduced_motion).is_false()
+	s.reduced_motion = true
+	var back := GameSettings.from_config(s.to_config())
+	assert_bool(back.reduced_motion).is_true()
+	assert_bool(back.equals(s)).is_true()
+	assert_bool(GameSettings.defaults().equals(s)).is_false()
+
+
+func test_a_settings_file_from_before_reduced_motion_loads_with_it_off() -> void:
+	var config := ConfigFile.new()
+	config.set_value("game", "show_help_at_start", false)
+	assert_bool(GameSettings.from_config(config).reduced_motion).is_false()

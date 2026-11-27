@@ -3,7 +3,8 @@
 ## `assets/art/ui/menu/`). Normal: muted parchment; hover and keyboard focus: the warm, glowing
 ## plaque; pressed: the warm plaque darkened; disabled: muted and faded. The ornamented ends keep
 ## their shape (nine-patch margins) whatever the width. Alegreya label, dark brown ink.
-## Hovering with the mouse moves the keyboard focus here, so only one plaque is ever lit.
+## Hovering with the mouse moves the keyboard focus here, so only one plaque is ever lit (not when the
+## plaque's focus_mode is FOCUS_NONE: a screen whose own selection is the keyboard focus, like the roots).
 class_name PlaqueButton
 extends Button
 
@@ -41,7 +42,7 @@ func _init() -> void:
 	if font != null:
 		add_theme_font_override(&"font", font)
 	mouse_entered.connect(func() -> void:
-		if not disabled:
+		if not disabled and focus_mode != Control.FOCUS_NONE:   # a screen with its own keyboard focus turns this off
 			grab_focus())
 
 

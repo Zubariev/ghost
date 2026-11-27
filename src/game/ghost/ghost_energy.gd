@@ -25,6 +25,10 @@ signal low_warning()
 
 ## Current energy, 0..[method max_value].
 var value: float = 0.0
+## Value changes from the crafting tree's owned nodes (sprint 002, P3); null: configured values.
+var modifiers: GhostModifiers = null
+## The room the ghost is in (set by the game each frame): room bonds apply only there.
+var room_id: String = ""
 
 var _max: float
 var _regen: float
@@ -53,7 +57,7 @@ func _init(config: Dictionary) -> void:
 
 
 func max_value() -> float:
-	return _max
+	return _mod("energy.max", _max)
 
 
 ## True at or below the low-warning level.
@@ -63,13 +67,13 @@ func is_low() -> bool:
 
 ## Energy per game minute right now, for a ghost that is not acting.
 func rate(hidden: bool, dark: bool, cold: bool) -> float:
-	var per_minute: float = _regen
+	var per_minute: float = _mod("energy.regen", _regen, {"room": room_id})
 	if hidden:
-		per_minute *= _hidden
+		per_minute *= _mod("energy.hidden_multiplier", _hidden)
 	if dark:
-		per_minute *= _dark
+		per_minute *= _mod("energy.dark_multiplier", _dark)
 	if cold:
-		per_minute *= _cold
+		per_minute *= _mod("energy.cold_multiplier", _cold)
 	return per_minute
 
 
@@ -81,7 +85,7 @@ func regenerate(minutes: float, hidden: bool, dark: bool, cold: bool, acting: bo
 		var paused: float = minf(_pause_left, minutes)
 		_pause_left -= paused
 		minutes -= paused
-	value = minf(_max, value + rate(hidden, dark, cold) * minutes)
+	value = minf(max_value(), value + rate(hidden, dark, cold) * minutes)
 
 
 ## Game minutes of the no-refill pause still to run.
@@ -98,13 +102,14 @@ func has_action(key: String) -> bool:
 	return _actions.has(key)
 
 
+## Energy the action costs, after owned nodes (in the ghost's room, for this action).
 func action_cost(key: String) -> float:
-	return float(_actions.get(key, {}).get("cost", 0))
+	return _mod("energy.action_cost", float(_actions.get(key, {}).get("cost", 0)), {"room": room_id, "action": key})
 
 
 ## How long the action takes, in game minutes.
 func action_minutes(key: String) -> float:
-	return float(_actions.get(key, {}).get("minutes", 0))
+	return _mod("energy.action_minutes", float(_actions.get(key, {}).get("minutes", 0)), {"room": room_id, "action": key})
 
 
 func can_afford(key: String) -> bool:
@@ -136,10 +141,19 @@ func penalty(zone: String) -> float:
 ## (false, nothing changes) for a non-positive amount or when energy is already full, so an
 ## elixir is not used up for nothing.
 func restore(amount: float) -> bool:
-	if amount <= 0.0 or value >= _max:
+	if amount <= 0.0 or value >= max_value():
 		return false
-	value = minf(_max, value + amount)
+	value = minf(max_value(), value + amount)
 	return true
+
+
+## Energy taken by something in the world, such as the hostile spider's web (sprint 002, P2):
+## never below zero, nothing for a negative [param amount]; emits [signal lost] with
+## [param reason]. Returns what was actually taken.
+func drain(amount: float, reason: String) -> float:
+	if amount <= 0.0:
+		return 0.0
+	return _take(amount, reason)
 
 
 func _take(amount: float, reason: String) -> float:
@@ -162,5 +176,10 @@ func save_state() -> Dictionary:
 
 ## Restores [method save_state]'s data, without emitting signals.
 func load_state(data: Dictionary) -> void:
-	value = clampf(float(data["value"]), 0.0, _max)
+	value = clampf(float(data["value"]), 0.0, max_value())
 	_pause_left = float(data["pause_left"])
+
+
+## [param base] after the owned nodes' changes (unchanged without [member modifiers]).
+func _mod(key: String, base: float, context: Dictionary = {}) -> float:
+	return base if modifiers == null else modifiers.value(key, base, context)

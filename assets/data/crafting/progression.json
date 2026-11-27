@@ -1,0 +1,726 @@
+{
+	"_source": "Crafting tree roots (sprint 002, P3, task S2-04). Content: design/crafting-progression-catalog.md (approved by the user 2026-11-26). branches: id, name (string key), colour (palette key, drawn by the roots screen). nodes: id, branch, parents (all must be owned), name (string key); trunk nodes carry tier = the tree's existing level (recipes.json upgrades; cost and recipe unlocks live there); other nodes: cost (item -> units, provisional amounts by the catalog's S/M/L sizes) and effects (GhostModifiers entries: key, op add|mul, value, optional room / npcs / action). Room bonds: action energy cost x0.7 and energy regeneration x1.5 in that room; a new room is one more node. The coffin is not a node (the roots screen draws it at the end of the rooms branch). Layout (P5, design/ux/roots-progression.md): node layout {x, y} in screen pixels (1280x720; soil 150-560), hand-placed after reference B (art/references/sprint-002/reference_b_root_progression.png); a node without layout is placed automatically along its branch's direction; branch colour = palette key (RootsStyle); the rooms branch names the coffin's place (landmark only).",
+	"branches": [
+		{
+			"id": "trunk",
+			"name": "BRANCH_trunk",
+			"colour": "amber",
+			"direction": [
+				0,
+				1
+			]
+		},
+		{
+			"id": "rooms",
+			"name": "BRANCH_rooms",
+			"colour": "gold",
+			"direction": [
+				-1,
+				0.3
+			],
+			"coffin": {
+				"x": 110,
+				"y": 488
+			}
+		},
+		{
+			"id": "ghost",
+			"name": "BRANCH_ghost",
+			"colour": "green",
+			"direction": [
+				1,
+				0.35
+			]
+		},
+		{
+			"id": "children",
+			"name": "BRANCH_children",
+			"colour": "mauve",
+			"direction": [
+				1,
+				-0.2
+			]
+		}
+	],
+	"nodes": [
+		{
+			"id": "T0",
+			"branch": "trunk",
+			"parents": [],
+			"name": "NODE_T0",
+			"tier": 0,
+			"layout": {
+				"x": 640,
+				"y": 205
+			}
+		},
+		{
+			"id": "T1",
+			"branch": "trunk",
+			"parents": [
+				"T0"
+			],
+			"name": "NODE_T1",
+			"tier": 1,
+			"layout": {
+				"x": 650,
+				"y": 300
+			}
+		},
+		{
+			"id": "T2",
+			"branch": "trunk",
+			"parents": [
+				"T1"
+			],
+			"name": "NODE_T2",
+			"tier": 2,
+			"layout": {
+				"x": 640,
+				"y": 400
+			}
+		},
+		{
+			"id": "R1",
+			"branch": "rooms",
+			"parents": [
+				"T1"
+			],
+			"name": "NODE_R1",
+			"cost": {
+				"dust": 3,
+				"candle_stub": 2
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "living_room"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "living_room"
+				}
+			],
+			"layout": {
+				"x": 565,
+				"y": 265
+			}
+		},
+		{
+			"id": "R2",
+			"branch": "rooms",
+			"parents": [
+				"R1"
+			],
+			"name": "NODE_R2",
+			"cost": {
+				"dust": 3,
+				"cobweb": 2
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "hall"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "hall"
+				}
+			],
+			"layout": {
+				"x": 480,
+				"y": 250
+			}
+		},
+		{
+			"id": "R3",
+			"branch": "rooms",
+			"parents": [
+				"R2"
+			],
+			"name": "NODE_R3",
+			"cost": {
+				"candle_stub": 2,
+				"old_thread": 3
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "dining_room"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "dining_room"
+				}
+			],
+			"layout": {
+				"x": 420,
+				"y": 320
+			}
+		},
+		{
+			"id": "R4",
+			"branch": "rooms",
+			"parents": [
+				"R3"
+			],
+			"name": "NODE_R4",
+			"cost": {
+				"fly": 3,
+				"rusty_nail": 2,
+				"dust": 2
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "kitchen"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "kitchen"
+				},
+				{
+					"key": "energy.action_minutes",
+					"op": "add",
+					"value": -1,
+					"room": "kitchen",
+					"action": "stove"
+				},
+				{
+					"key": "energy.action_minutes",
+					"op": "add",
+					"value": -1,
+					"room": "kitchen",
+					"action": "grocery_basket"
+				}
+			],
+			"layout": {
+				"x": 360,
+				"y": 395
+			}
+		},
+		{
+			"id": "R5",
+			"branch": "rooms",
+			"parents": [
+				"R2"
+			],
+			"name": "NODE_R5",
+			"cost": {
+				"old_thread": 2,
+				"dust": 3
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "library"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "library"
+				}
+			],
+			"layout": {
+				"x": 455,
+				"y": 182
+			}
+		},
+		{
+			"id": "R6",
+			"branch": "rooms",
+			"parents": [
+				"R1"
+			],
+			"name": "NODE_R6",
+			"cost": {
+				"rusty_nail": 3,
+				"bone": 1
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "workshop"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "workshop"
+				}
+			],
+			"layout": {
+				"x": 540,
+				"y": 360
+			}
+		},
+		{
+			"id": "R7",
+			"branch": "rooms",
+			"parents": [
+				"R2"
+			],
+			"name": "NODE_R7",
+			"cost": {
+				"cobweb": 3,
+				"feather": 2
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "upper_corridor"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "upper_corridor"
+				}
+			],
+			"layout": {
+				"x": 390,
+				"y": 250
+			}
+		},
+		{
+			"id": "R8",
+			"branch": "rooms",
+			"parents": [
+				"R7"
+			],
+			"name": "NODE_R8",
+			"cost": {
+				"old_thread": 3,
+				"feather": 1,
+				"candle_stub": 1
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "parents_bedroom"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "parents_bedroom"
+				}
+			],
+			"layout": {
+				"x": 290,
+				"y": 265
+			}
+		},
+		{
+			"id": "R9",
+			"branch": "rooms",
+			"parents": [
+				"R7"
+			],
+			"name": "NODE_R9",
+			"cost": {
+				"dust": 3,
+				"bone": 2
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "grandparents_bedroom"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "grandparents_bedroom"
+				}
+			],
+			"layout": {
+				"x": 330,
+				"y": 188
+			}
+		},
+		{
+			"id": "R10",
+			"branch": "rooms",
+			"parents": [
+				"R7"
+			],
+			"name": "NODE_R10",
+			"cost": {
+				"old_thread": 2,
+				"feather": 2,
+				"cobweb": 2
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "children_bedroom"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "children_bedroom"
+				}
+			],
+			"layout": {
+				"x": 310,
+				"y": 340
+			}
+		},
+		{
+			"id": "R11",
+			"branch": "rooms",
+			"parents": [
+				"R8"
+			],
+			"name": "NODE_R11",
+			"cost": {
+				"ectoplasm": 1,
+				"cobweb": 3,
+				"fly": 2
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "mul",
+					"value": 0.7,
+					"room": "upper_bathroom"
+				},
+				{
+					"key": "energy.regen",
+					"op": "mul",
+					"value": 1.5,
+					"room": "upper_bathroom"
+				}
+			],
+			"layout": {
+				"x": 190,
+				"y": 330
+			}
+		},
+		{
+			"id": "G1",
+			"branch": "ghost",
+			"parents": [
+				"T1"
+			],
+			"name": "NODE_G1",
+			"cost": {
+				"candle_stub": 2,
+				"bone": 2
+			},
+			"effects": [
+				{
+					"key": "energy.max",
+					"op": "add",
+					"value": 20
+				}
+			],
+			"layout": {
+				"x": 745,
+				"y": 320
+			}
+		},
+		{
+			"id": "G2",
+			"branch": "ghost",
+			"parents": [
+				"G1"
+			],
+			"name": "NODE_G2",
+			"cost": {
+				"cobweb": 3,
+				"feather": 2
+			},
+			"effects": [
+				{
+					"key": "energy.hidden_multiplier",
+					"op": "add",
+					"value": 1
+				}
+			],
+			"layout": {
+				"x": 835,
+				"y": 335
+			}
+		},
+		{
+			"id": "G3",
+			"branch": "ghost",
+			"parents": [
+				"G2"
+			],
+			"name": "NODE_G3",
+			"cost": {
+				"ectoplasm": 2,
+				"dust": 3
+			},
+			"effects": [
+				{
+					"key": "energy.dark_multiplier",
+					"op": "add",
+					"value": 0.25
+				},
+				{
+					"key": "energy.cold_multiplier",
+					"op": "add",
+					"value": 0.25
+				}
+			],
+			"layout": {
+				"x": 925,
+				"y": 360
+			}
+		},
+		{
+			"id": "G4",
+			"branch": "ghost",
+			"parents": [
+				"T1"
+			],
+			"name": "NODE_G4",
+			"cost": {
+				"old_thread": 3,
+				"cobweb": 2
+			},
+			"effects": [
+				{
+					"key": "ghost.slowest_in_order",
+					"op": "add",
+					"value": 0.15
+				}
+			],
+			"layout": {
+				"x": 720,
+				"y": 430
+			}
+		},
+		{
+			"id": "G5",
+			"branch": "ghost",
+			"parents": [
+				"G4"
+			],
+			"name": "NODE_G5",
+			"cost": {
+				"rusty_nail": 2,
+				"ink": 1,
+				"dust": 2
+			},
+			"effects": [
+				{
+					"key": "loot.search_minutes",
+					"op": "add",
+					"value": -1
+				}
+			],
+			"layout": {
+				"x": 800,
+				"y": 470
+			}
+		},
+		{
+			"id": "G6",
+			"branch": "ghost",
+			"parents": [
+				"G5"
+			],
+			"name": "NODE_G6",
+			"cost": {
+				"ectoplasm": 1,
+				"old_thread": 4,
+				"bone": 2
+			},
+			"effects": [
+				{
+					"key": "loot.inventory_slots",
+					"op": "add",
+					"value": 2
+				}
+			],
+			"layout": {
+				"x": 890,
+				"y": 500
+			}
+		},
+		{
+			"id": "G7",
+			"branch": "ghost",
+			"parents": [
+				"G4"
+			],
+			"name": "NODE_G7",
+			"cost": {
+				"ink": 2,
+				"candle_stub": 2
+			},
+			"effects": [
+				{
+					"key": "monocle.minutes",
+					"op": "mul",
+					"value": 1.5
+				}
+			],
+			"layout": {
+				"x": 735,
+				"y": 515
+			}
+		},
+		{
+			"id": "G8",
+			"branch": "ghost",
+			"parents": [
+				"G1"
+			],
+			"name": "NODE_G8",
+			"cost": {
+				"cobweb": 3,
+				"ink": 1
+			},
+			"effects": [
+				{
+					"key": "energy.detection_penalty.peripheral",
+					"op": "add",
+					"value": -3
+				}
+			],
+			"layout": {
+				"x": 820,
+				"y": 395
+			}
+		},
+		{
+			"id": "K1",
+			"branch": "children",
+			"parents": [
+				"T1"
+			],
+			"name": "NODE_K1",
+			"cost": {
+				"rusty_nail": 3,
+				"ink": 1
+			},
+			"effects": [
+				{
+					"key": "energy.action_cost",
+					"op": "add",
+					"value": -10,
+					"action": "computer"
+				}
+			],
+			"layout": {
+				"x": 760,
+				"y": 205
+			}
+		},
+		{
+			"id": "K2",
+			"branch": "children",
+			"parents": [
+				"K1"
+			],
+			"name": "NODE_K2",
+			"cost": {
+				"rusty_nail": 2,
+				"fly": 2
+			},
+			"effects": [
+				{
+					"key": "energy.action_minutes",
+					"op": "add",
+					"value": -2,
+					"action": "computer"
+				}
+			],
+			"layout": {
+				"x": 865,
+				"y": 185
+			}
+		},
+		{
+			"id": "K3",
+			"branch": "children",
+			"parents": [
+				"T1"
+			],
+			"name": "NODE_K3",
+			"cost": {
+				"feather": 2,
+				"old_thread": 2
+			},
+			"effects": [
+				{
+					"key": "energy.detection_penalty.peripheral",
+					"op": "add",
+					"value": -5,
+					"npcs": [
+						"son",
+						"daughter"
+					]
+				}
+			],
+			"layout": {
+				"x": 960,
+				"y": 232
+			}
+		},
+		{
+			"id": "K4",
+			"branch": "children",
+			"parents": [
+				"K3"
+			],
+			"name": "NODE_K4",
+			"cost": {
+				"ectoplasm": 1,
+				"bone": 2,
+				"cobweb": 2
+			},
+			"effects": [
+				{
+					"key": "stealth.contact_morale_penalty",
+					"op": "add",
+					"value": 2,
+					"npcs": [
+						"son",
+						"daughter"
+					]
+				}
+			],
+			"layout": {
+				"x": 1060,
+				"y": 268
+			}
+		}
+	]
+}

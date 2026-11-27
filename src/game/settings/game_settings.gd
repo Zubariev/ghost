@@ -1,6 +1,6 @@
 ## Player settings (main menu, 2026-11-15): only options that really work — display mode, window
-## size, and two existing game options (the controls help shown at the start of a game, the
-## morale changes floating above people). Saved to [constant PATH] between launches.
+## size, and the game options (the controls help shown at the start of a game, the morale changes
+## floating above people, less motion). Saved to [constant PATH] between launches.
 ## No audio settings: the game has no sound yet (add them with the first audio bus).
 ##
 ## [codeblock]
@@ -22,6 +22,9 @@ var window_size: Vector2i = WINDOW_SIZES[0]
 var show_help_at_start: bool = true
 ## Show a person's morale change floating above them.
 var show_morale_floats: bool = true
+## "Менше руху" (sprint 002, user decision 2026-11-27): screens cut instead of sliding and glow
+## instead of pulsing (the roots screen, design/ux/roots-progression.md).
+var reduced_motion: bool = false
 
 
 ## The settings a new player starts with.
@@ -38,6 +41,7 @@ static func from_config(config: ConfigFile) -> GameSettings:
 		s.window_size = size
 	s.show_help_at_start = bool(config.get_value("game", "show_help_at_start", s.show_help_at_start))
 	s.show_morale_floats = bool(config.get_value("game", "show_morale_floats", s.show_morale_floats))
+	s.reduced_motion = bool(config.get_value("game", "reduced_motion", s.reduced_motion))
 	return s
 
 
@@ -48,6 +52,7 @@ func to_config() -> ConfigFile:
 	config.set_value("display", "window_size", window_size)
 	config.set_value("game", "show_help_at_start", show_help_at_start)
 	config.set_value("game", "show_morale_floats", show_morale_floats)
+	config.set_value("game", "reduced_motion", reduced_motion)
 	return config
 
 
@@ -67,7 +72,8 @@ func save(path: String = PATH) -> Error:
 ## True when both hold the same values.
 func equals(other: GameSettings) -> bool:
 	return other != null and fullscreen == other.fullscreen and window_size == other.window_size \
-		and show_help_at_start == other.show_help_at_start and show_morale_floats == other.show_morale_floats
+		and show_help_at_start == other.show_help_at_start and show_morale_floats == other.show_morale_floats \
+		and reduced_motion == other.reduced_motion
 
 
 ## A copy to edit without touching these settings.

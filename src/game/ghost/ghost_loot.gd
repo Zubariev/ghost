@@ -46,6 +46,9 @@ var lore_found: Array[String] = []
 
 var _search_minutes: float
 var _slots: int
+## Value changes from the crafting tree's owned nodes (sprint 002, P3): search time and slots;
+## null: configured values.
+var modifiers: GhostModifiers = null
 var _grid_sizes: Dictionary
 var _spots: Dictionary
 var _items: Dictionary
@@ -85,9 +88,9 @@ func is_searching() -> bool:
 
 ## How far the running search is, 0..1.
 func search_progress() -> float:
-	if not is_searching() or _search_minutes <= 0.0:
+	if not is_searching() or search_minutes() <= 0.0:
 		return 0.0
-	return clampf(_progress / _search_minutes, 0.0, 1.0)
+	return clampf(_progress / search_minutes(), 0.0, 1.0)
 
 
 ## The spot being searched, or "".
@@ -107,7 +110,7 @@ func update(minutes: float, now: int) -> void:
 	if not is_searching() or minutes <= 0.0:
 		return
 	_progress += minutes
-	if _progress >= _search_minutes:
+	if _progress >= search_minutes():
 		var spot: String = _searching_spot
 		_searching_spot = ""
 		_progress = 0.0
@@ -170,7 +173,7 @@ func uses_slot(item_id: String) -> bool:
 ## True when at least one unit of [param item_id] fits: a kind already held, an item that takes
 ## no slot, or a free slot.
 func can_add(item_id: String) -> bool:
-	return not uses_slot(item_id) or inventory.has(item_id) or slot_items().size() < _slots
+	return not uses_slot(item_id) or inventory.has(item_id) or slot_items().size() < slot_count()
 
 
 ## Adds [param amount] units; returns how many were added (all, or 0 when the kind does not fit).
@@ -206,7 +209,12 @@ func close() -> void:
 
 ## How many inventory slots there are.
 func slot_count() -> int:
-	return _slots
+	return _slots if modifiers == null else roundi(modifiers.value("loot.inventory_slots", float(_slots)))
+
+
+## Game minutes E must be held to search a spot (after owned nodes).
+func search_minutes() -> float:
+	return _search_minutes if modifiers == null else modifiers.value("loot.search_minutes", _search_minutes)
 
 
 ## The items held that take a slot, one per slot, in the order first taken.

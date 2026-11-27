@@ -180,3 +180,30 @@ func test_restoring_above_the_low_level_lifts_the_warning() -> void:
 	assert_bool(energy.is_low()).is_true()
 	energy.restore(40.0)
 	assert_bool(energy.is_low()).is_false()
+
+
+# --- Sprint 002 (P2, S2-03): energy taken by something in the world (the spider's web) ---
+
+func test_drain_takes_energy_and_reports_its_reason() -> void:
+	# Arrange
+	var energy := GhostEnergy.new(Ex.config())
+	var lost: Array = []
+	energy.lost.connect(func(amount: float, reason: String) -> void: lost.append([amount, reason]))
+	# Act
+	var taken: float = energy.drain(10.0, "web")
+	# Assert
+	assert_float(taken).is_equal(10.0)
+	assert_float(energy.value).is_equal(Ex.MAX - 10.0)
+	assert_array(lost).is_equal([[10.0, "web"]])
+
+
+func test_drain_never_goes_below_zero_and_ignores_negative_amounts() -> void:
+	# Arrange
+	var energy := GhostEnergy.new(Ex.config(4.0))
+	# Act
+	var none: float = energy.drain(-5.0, "web")
+	var taken: float = energy.drain(10.0, "web")
+	# Assert
+	assert_float(none).is_equal(0.0)
+	assert_float(taken).is_equal(4.0)
+	assert_float(energy.value).is_equal(0.0)

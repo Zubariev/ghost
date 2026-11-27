@@ -43,6 +43,9 @@ var energy_spent: int = 0
 var person_source: Callable
 
 var _cfg: Dictionary
+## Value changes from the crafting tree's owned nodes (sprint 002, P3): energy lost when glimpsed
+## and the contact fright, per family member; null: configured values.
+var modifiers: GhostModifiers = null
 var _house: HouseState
 var _routines: Array[NpcRoutine]
 var _morale: MoraleSystem
@@ -275,13 +278,13 @@ func _notice(routine: NpcRoutine, at: Vector2, room_id: String) -> void:
 	incident["phase"] = Phase.REACTING
 	incident["last_seen"] = at
 	incident["room"] = room_id
-	_spend("peripheral")
+	_spend("peripheral", routine.schedule.npc_id)
 	noticed.emit(routine.schedule.npc_id)
 
 
 func _contact(routine: NpcRoutine, how: String) -> void:
 	var npc_id: String = routine.schedule.npc_id
-	_spend("deep")
+	_spend("deep", npc_id)
 	contact.emit(npc_id, how)
 	_respawn()
 	var incident: Dictionary = _incidents[npc_id]
@@ -289,7 +292,7 @@ func _contact(routine: NpcRoutine, how: String) -> void:
 	incident["left"] = int(_cfg.get("fright_minutes", 1))
 	if not routine.is_held():
 		routine.hold()
-	_morale.apply_penalty(npc_id, int(_cfg.get("contact_morale_penalty", 10)), "contact")
+	_morale.apply_penalty(npc_id, roundi(_mod("stealth.contact_morale_penalty", float(_cfg.get("contact_morale_penalty", 10)), npc_id)), "contact")
 	if routine.is_broken():
 		_incidents[npc_id] = _empty()
 
@@ -307,8 +310,8 @@ func _respawn() -> void:
 	ghost_returned.emit()
 
 
-func _spend(zone: String) -> void:
-	var amount: int = int(_cfg.get("energy_penalty", {}).get(zone, 0))
+func _spend(zone: String, npc_id: String) -> void:
+	var amount: int = roundi(_mod("energy.detection_penalty." + zone, float(_cfg.get("energy_penalty", {}).get(zone, 0)), npc_id))
 	energy_ledger.append({"zone": zone, "amount": amount, "minute": _minute})
 	energy_spent += amount
 	ghost_energy_penalty.emit(zone, amount)
@@ -354,3 +357,8 @@ func load_state(data: Dictionary) -> void:
 	_incidents = incidents
 	_rng.state = int(data["rng"])
 	_minute = int(data["minute"])
+
+
+## [param base] after the owned nodes' changes for [param npc_id] (unchanged without modifiers).
+func _mod(key: String, base: float, npc_id: String) -> float:
+	return base if modifiers == null else modifiers.value(key, base, {"npc": npc_id})

@@ -18,6 +18,8 @@ extends CanvasLayer
 
 ## The screen closed. [param all_returned]: false when some units stayed in the hollow.
 signal closed(all_returned: bool)
+## A root node was unlocked on the roots screen (sprint 002, P5).
+signal node_unlocked(id: String)
 ## Something to tell the player (shown on the screen; the game may log it too).
 signal message(text: String)
 
@@ -50,6 +52,12 @@ var _upgrade_button: Button
 var _level: Label
 var _upgrade_cost: Label
 var _feedback: Label
+## The tree's roots (sprint 002, P5; design/ux/roots-progression.md): opened from here with the
+## "Коріння" button or R; null progression = no roots button.
+var _progression: CraftingProgression
+var _roots: RootsScreen
+## "Менше руху" (settings): passed on to the roots screen.
+var reduced_motion: bool = false
 
 
 func _ready() -> void:
@@ -62,12 +70,14 @@ func is_open() -> bool:
 	return visible
 
 
-## Opens the hollow on [param board], moving units with [param loot].
-func open(board: CraftingBoard, loot: GhostLoot) -> void:
+## Opens the hollow on [param board], moving units with [param loot]; [param progression] adds
+## the way down to the roots.
+func open(board: CraftingBoard, loot: GhostLoot, progression: CraftingProgression = null) -> void:
 	if visible:
 		return
 	_board = board
 	_loot = loot
+	_progression = progression
 	_build()
 	visible = true
 	_board.changed.connect(_refresh)
@@ -81,6 +91,8 @@ func open(board: CraftingBoard, loot: GhostLoot) -> void:
 func close() -> void:
 	if not visible:
 		return
+	if roots_open():
+		_roots.close()
 	var all_back: bool = _board.return_all()
 	if _board.changed.is_connected(_refresh):
 		_board.changed.disconnect(_refresh)
@@ -94,7 +106,12 @@ func close() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not visible:
+	if not visible or roots_open():
+		return   # the roots screen, on top, takes the keys while it is open
+	var key := event as InputEventKey
+	if key != null and key.pressed and not key.echo and key.physical_keycode == KEY_R and _progression != null:   # physical key: works on Ukrainian layouts
+		get_viewport().set_input_as_handled()
+		open_roots()
 		return
 	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"ui_cancel") or event.is_action_pressed(&"pause"):
 		get_viewport().set_input_as_handled()
@@ -102,6 +119,27 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 # --- Actions (also used by tests and captures) ----------------------------------------------
+
+## Opens the roots screen over the hollow (when a progression was given).
+func open_roots() -> void:
+	if _progression == null or roots_open():
+		return
+	if _roots == null:
+		_roots = RootsScreen.new()
+		add_child(_roots)
+		_roots.closed.connect(_refresh)
+		_roots.node_unlocked.connect(func(id: String) -> void: node_unlocked.emit(id))
+		_roots.message.connect(_say)
+	_roots.open(_progression, _loot, reduced_motion)
+
+
+func roots_open() -> bool:
+	return _roots != null and _roots.is_open()
+
+
+func roots_screen() -> RootsScreen:
+	return _roots
+
 
 ## Drops one unit of [param item_id] on point [param index].
 func place(index: int, item_id: String) -> bool:
@@ -234,6 +272,11 @@ func _build() -> void:
 	var hint := _label(Vector2(986, 230), 270, 13, Color(Palette.SB_CREAM, 0.75))
 	hint.text = tr("CRAFT_HINT")
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if _progression != null:   # the way down to the roots (sprint 002, P5)
+		var roots_button := PlaqueButton.create(tr("ROOTS_BUTTON"), 150.0, 18)
+		roots_button.position = Vector2(170, 12)
+		roots_button.pressed.connect(open_roots)
+		_root.add_child(roots_button)
 	var close_label := _label(Vector2(986, 20), 270, 14, Color(Palette.SB_CREAM, 0.8))
 	close_label.text = tr("CRAFT_CLOSE")
 	close_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

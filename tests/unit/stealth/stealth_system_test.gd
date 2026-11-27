@@ -295,3 +295,36 @@ func test_no_hiding_spots_ends_the_search_at_once() -> void:
 	_stealth.begin_search("tester", "dining", Vector2(0.5, 0.5))
 	assert_int(_stealth.phase_of("tester")).is_equal(StealthSystem.Phase.NONE)
 	assert_bool(_routine.is_held()).is_false()
+
+
+# --- Sprint 002 (P3, S2-04): progression nodes for some family members ---
+
+func _child_mods() -> GhostModifiers:
+	var mods := GhostModifiers.new()
+	var effects: Array[Dictionary] = [
+		{"key": "energy.detection_penalty.peripheral", "op": "add", "value": -3, "npcs": ["tester"]},
+		{"key": "stealth.contact_morale_penalty", "op": "add", "value": 2, "npcs": ["tester"]},
+		{"key": "energy.detection_penalty.peripheral", "op": "add", "value": -100, "npcs": ["someone_else"]},
+	]
+	mods.set_effects(effects)
+	return mods
+
+
+func test_a_node_for_this_person_lowers_the_glimpse_energy_cost() -> void:
+	_setup()
+	_stealth.modifiers = _child_mods()
+	var amounts: Array[int] = []
+	_stealth.ghost_energy_penalty.connect(func(_zone: String, amount: int) -> void: amounts.append(amount))
+	_cook_ten_minutes()
+	_ghost_near_cook(50.0, 0.3)
+	_stealth.observe()
+	assert_array(amounts).is_equal([5 - 3])
+
+
+func test_a_node_for_this_person_makes_contact_frighten_more() -> void:
+	_setup()
+	_stealth.modifiers = _child_mods()
+	_cook_ten_minutes()
+	_ghost_near_cook(0.0, 0.15)
+	_stealth.observe()
+	assert_int(_morale.get_morale("tester")).is_equal(80 - 12)
