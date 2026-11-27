@@ -3,5 +3,34 @@
 	"kind": "spider",
 	"reach_m": 1.6,
 	"give": {"fly": 6},
-	"get": {"spider_nest": 1}
+	"get": {"spider_nest": 1},
+	"_ecology": "Sprint 002 (P2, task S2-03, user brief track C, 2026-11-26): the trade is the feeding (D4). ecology: calories_per_fly, decay_per_day (game days), grown_at (bigger, warning, still trades), hostile_at (hostile; calories capped here), hostile_days, recover_per_day (after hostility), calm_at (friendly again), size_min/size_max (drawing scale, linear in calories up to hostile_at). Targets (checked by tests/integration/data/spider_data_test.gd): one trade a day turns it hostile in 4-6 trades; one every other day never does. web: range_m (attic floor metres), cooldown_seconds / telegraph_seconds (real seconds at any game speed, stopped while paused), speed_mps, hit_radius_m, damage_pct (of the ghost's maximum energy), max_hits_per_day (per game day). A hidden ghost or one outside the attic is never attacked. All values provisional.",
+	"ecology": {
+		"calories_per_fly": 10,
+		"decay_per_day": 30,
+		"grown_at": 100,
+		"hostile_at": 180,
+		"hostile_days": 3,
+		"recover_per_day": 60,
+		"calm_at": 40,
+		"size_min": 1.0,
+		"size_max": 1.6
+	},
+	"_behaviour": "Sprint 002 (P4, S2-05, user brief B3): how it moves, in real seconds. react_m: the ghost this near (metres, not hidden) makes it lower itself; drop_px: how far down (pixels at depth 1); descend_seconds: the time to go all the way down or up; return_delay_seconds: how long the ghost must be away before it climbs back; feed_seconds: the eating animation after a trade.",
+	"behaviour": {
+		"react_m": 2.5,
+		"drop_px": 110,
+		"descend_seconds": 1.2,
+		"return_delay_seconds": 2.5,
+		"feed_seconds": 2.5
+	},
+	"web": {
+		"range_m": 5.0,
+		"cooldown_seconds": 6.0,
+		"telegraph_seconds": 1.2,
+		"speed_mps": 4.0,
+		"hit_radius_m": 0.45,
+		"damage_pct": 10,
+		"max_hits_per_day": 4
+	}
 }

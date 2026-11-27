@@ -5,9 +5,9 @@
 class_name GhostStats
 extends RefCounted
 
-## Energy-loss reasons that are penalties for being seen (energy.json detection_penalty),
-## not the cost of an action.
-const SEEN_REASONS: Array[String] = ["peripheral", "deep"]
+## Energy-loss reasons that are losses, not the cost of an action: being seen (energy.json
+## detection_penalty) and the hostile spider's web (sprint 002).
+const SEEN_REASONS: Array[String] = ["peripheral", "deep", "web"]
 
 var noticed: int = 0
 var caught: int = 0

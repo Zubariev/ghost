@@ -56,3 +56,48 @@ func test_the_trade_takes_flies_and_gives_a_usable_nest() -> void:
 		assert_bool(items.has(item)).is_true()
 		assert_int(int(spider["get"][item])).is_greater(0)
 	assert_str(String(items["spider_nest"]["use"]["effect"])).is_equal("dirty_room")
+
+
+# --- Sprint 002 (P2, S2-03): the shipped appetite and web keep the agreed balance targets ---
+
+## Trades (6 flies each) until the shipped spider turns hostile, one every [param days] game days;
+## -1 when it never does within [param limit] trades.
+func _trades_to_hostile(days: float, limit: int = 40) -> int:
+	var data: Dictionary = JsonData.read(SpiderTrade.SPIDER_PATH)
+	var spider := SpiderEcology.new(data["ecology"])
+	for trade: int in limit:
+		spider.feed(int(data["give"]["fly"]))
+		if spider.mood == SpiderEcology.Mood.HOSTILE:
+			return trade + 1
+		spider.advance(days * GameClock.MINUTES_PER_DAY)
+	return -1
+
+
+func test_a_trade_every_day_turns_the_spider_hostile_in_four_to_six_trades() -> void:
+	assert_int(_trades_to_hostile(1.0)).is_between(4, 6)
+
+
+func test_a_trade_every_other_day_never_turns_it_hostile() -> void:
+	assert_int(_trades_to_hostile(2.0)).is_equal(-1)
+
+
+func test_hostility_and_recovery_last_several_game_days_not_forever() -> void:
+	var data: Dictionary = JsonData.read(SpiderTrade.SPIDER_PATH)
+	var spider := SpiderEcology.new(data["ecology"])
+	spider.feed(100)
+	var days: int = 0
+	while spider.mood != SpiderEcology.Mood.FRIENDLY and days < 30:
+		spider.advance(GameClock.MINUTES_PER_DAY)
+		days += 1
+	assert_int(days).is_between(3, 10)
+
+
+func test_the_web_is_fair_and_capped() -> void:
+	var web: Dictionary = JsonData.read(SpiderTrade.SPIDER_PATH)["web"]
+	var ghost: Dictionary = JsonData.read("res://assets/data/ghost/ghost.json")
+	# a ghost moving at its slowest (a tidy room) leaves the hit circle before the web lands
+	var dodge_m: float = float(ghost["speed"]) * float(ghost["slowest_in_order"]) * float(web["telegraph_seconds"])
+	assert_float(dodge_m).is_greater(float(web["hit_radius_m"]) * 2.0)
+	assert_float(float(web["cooldown_seconds"])).is_greater(float(web["telegraph_seconds"]))
+	# a whole day of hits takes at most half the energy pool
+	assert_float(float(web["damage_pct"]) * float(web["max_hits_per_day"])).is_less_equal(50.0)
